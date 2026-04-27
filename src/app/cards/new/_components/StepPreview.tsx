@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
@@ -31,7 +31,7 @@ export default function StepPreview() {
       }
       toast.success('초대장이 발행되었어요!');
       reset();
-      router.push(`/i/${res.slug}`);
+      router.push(`/cards/${res.slug}/manage`);
     });
   };
 

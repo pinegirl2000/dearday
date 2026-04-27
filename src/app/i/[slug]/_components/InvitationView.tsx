@@ -20,9 +20,11 @@ const ENVELOPE_MAP = {
 interface Props {
   card: BaseCard;
   feed?: React.ReactNode;
+  recipientName?: string;
+  recipientId?: string;
 }
 
-export default function InvitationView({ card, feed }: Props) {
+export default function InvitationView({ card, feed, recipientName, recipientId }: Props) {
   const [open, setOpen] = useState(false);
   const theme = getTheme(card.theme);
   const meta = getEventTypeMeta(card.event_type);
@@ -66,6 +68,11 @@ export default function InvitationView({ card, feed }: Props) {
         className="min-h-screen flex flex-col items-center justify-center p-6"
         style={{ background: `linear-gradient(135deg, ${theme.colors.bg}, ${theme.colors.accent}55)` }}
       >
+        {recipientName && (
+          <p className="mb-4 text-base font-medium" style={{ color: theme.colors.deep }}>
+            {recipientName} 님께
+          </p>
+        )}
         <div onClick={handleOpen} className="cursor-pointer">
           <Envelope isOpen={false} envelopeColor={theme.colors.primary} sealColor={theme.colors.accent} width={320}>
             <div style={{ color: theme.colors.deep }}>
@@ -93,6 +100,11 @@ export default function InvitationView({ card, feed }: Props) {
           <span className="inline-block px-3 py-1 rounded-full text-xs font-medium mb-4 border" style={{ borderColor: theme.colors.accent, color: theme.colors.primary }}>
             {meta.label}
           </span>
+          {recipientName && (
+            <p className="text-sm mb-2 font-medium" style={{ color: theme.colors.primary }}>
+              {recipientName} 님께
+            </p>
+          )}
           <h1 className="text-3xl font-bold mb-3" style={{ color: theme.colors.deep }}>{card.title}</h1>
           {card.greeting_oneliner && <p className="text-sm" style={{ color: theme.colors.muted }}>{card.greeting_oneliner}</p>}
         </header>
@@ -143,7 +155,7 @@ export default function InvitationView({ card, feed }: Props) {
         {/* RSVP */}
         {card.rsvp_enabled && (
           <div className="p-6 border-t" style={{ borderColor: theme.colors.accent + '33' }}>
-            <RsvpForm card={card} theme={theme} />
+            <RsvpForm card={card} theme={theme} recipientId={recipientId} recipientName={recipientName} />
           </div>
         )}
 

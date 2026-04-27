@@ -6,6 +6,7 @@ import { pool } from '@/lib/db';
 interface RsvpInput {
   card_id: string;
   slug: string;
+  recipient_id?: string;
   attend: boolean;
   count: number;
   attendee_names: string[];
@@ -37,9 +38,9 @@ export async function submitRsvp(input: RsvpInput): Promise<RsvpResult> {
     const oneliner = (input.oneliner || '').trim().slice(0, 200) || null;
 
     await pool.query(
-      `INSERT INTO dearday_rsvp (card_id, attend, count, attendee_names, oneliner)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [input.card_id, input.attend, safeCount, input.attendee_names || [], oneliner]
+      `INSERT INTO dearday_rsvp (card_id, recipient_id, attend, count, attendee_names, oneliner)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [input.card_id, input.recipient_id || null, input.attend, safeCount, input.attendee_names || [], oneliner]
     );
 
     revalidatePath(`/i/${input.slug}`);

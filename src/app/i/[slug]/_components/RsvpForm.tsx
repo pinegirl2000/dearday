@@ -11,9 +11,11 @@ import type { BaseCard } from '@/types/card';
 interface Props {
   card: BaseCard;
   theme: ThemeMeta;
+  recipientId?: string;
+  recipientName?: string;
 }
 
-export default function RsvpForm({ card, theme }: Props) {
+export default function RsvpForm({ card, theme, recipientId, recipientName }: Props) {
   const [attend, setAttend] = useState<boolean | null>(null);
   const [count, setCount] = useState(1);
   const [names, setNames] = useState<string[]>(['']);
@@ -44,9 +46,12 @@ export default function RsvpForm({ card, theme }: Props) {
       const res = await submitRsvp({
         card_id: card.id,
         slug: card.slug,
+        recipient_id: recipientId,
         attend,
         count: attend ? count : 0,
-        attendee_names: attend && card.rsvp_collect_names ? names.filter((n) => n.trim()) : [],
+        attendee_names: attend && card.rsvp_collect_names
+          ? names.filter((n) => n.trim())
+          : (recipientName ? [recipientName] : []),
         oneliner: oneliner
       });
       if (!res.ok) {

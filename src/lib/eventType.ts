@@ -77,7 +77,7 @@ export const EVENT_TYPES: EventTypeMeta[] = [
     fields: {
       titleLabel: '모임 이름',
       titlePlaceholder: '예: 동호회 정기모임',
-      bodyPlaceholder: '편하게 오셔서\n맛있는 음식과 즐거운 시간\n함께 보내요.'
+      bodyPlaceholder: '편하게 오셔서 즐거운 시간 함께 해요.'
     }
   },
   {
