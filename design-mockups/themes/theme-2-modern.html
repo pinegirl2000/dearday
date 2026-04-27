@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>DearDay · Modern Theme</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f4f5f7; --card: #ffffff; --navy: #1a2332; --navy-2: #243245;
+    --gold: #d4af37; --gold-soft: #f1e3b6; --ink: #1a2332; --muted: #6b7280;
+    --line: #e5e7eb; --shadow: 0 20px 50px -20px rgba(26,35,50,0.35);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1219; --card: #1a2332; --navy: #f4f5f7; --navy-2: #d1d5db;
+      --gold: #e6c554; --gold-soft: #3a3220; --ink: #f4f5f7; --muted: #9ca3af;
+      --line: #2a3447; --shadow: 0 20px 50px -20px rgba(0,0,0,0.7);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--ink); font-family: 'Pretendard', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { min-height: 100vh; display: flex; justify-content: center; padding: 24px 12px; }
+  .stage { width: 100%; max-width: 420px; position: relative; }
+  .envelope { position: relative; height: 80px; margin-bottom: -24px; z-index: 2; animation: envOpen 1s ease-out both; }
+  .envelope .body { position: absolute; inset: 14px 14px 0 14px; background: linear-gradient(180deg, #243245, #1a2332); border-radius: 4px 4px 0 0; box-shadow: var(--shadow); }
+  .envelope .flap-left, .envelope .flap-right { position: absolute; top: 14px; width: 50%; height: 56px; background: #1a2332; }
+  .envelope .flap-left { left: 14px; clip-path: polygon(0 0, 100% 0, 0 100%); }
+  .envelope .flap-right { right: 14px; clip-path: polygon(0 0, 100% 0, 100% 100%); }
+  .envelope .flap-top { position: absolute; top: -10px; left: 50%; transform: translateX(-50%) rotate(180deg); width: calc(100% - 28px); height: 48px; background: linear-gradient(180deg, #2c3a52, #1a2332); clip-path: polygon(0 0, 50% 100%, 100% 0); transform-origin: bottom center; animation: flapUp 1s ease-out 0.3s both; }
+  .envelope .seal { position: absolute; top: 4px; left: 50%; transform: translateX(-50%); width: 32px; height: 32px; border-radius: 4px; background: linear-gradient(135deg, #d4af37, #b8902a); display: grid; place-items: center; font-size: 14px; color: #1a2332; font-weight: 700; box-shadow: 0 4px 10px rgba(212,175,55,0.5); z-index: 5; font-family: 'Cormorant Garamond', serif; }
+  @keyframes flapUp { 0% { transform: translateX(-50%) rotate(0deg); } 100% { transform: translateX(-50%) rotate(180deg); } }
+  @keyframes envOpen { 0% { opacity: 0; transform: translateY(-10px); } 100% { opacity: 1; transform: translateY(0); } }
+  .card { position: relative; background: var(--card); border-radius: 4px; box-shadow: var(--shadow); overflow: hidden; animation: cardRise .9s cubic-bezier(.2,.8,.2,1) .5s both; border-top: 3px solid var(--gold); }
+  @keyframes cardRise { 0% { opacity: 0; transform: translateY(30px); } 100% { opacity: 1; transform: translateY(0); } }
+  .header { padding: 48px 28px 36px; background: var(--navy); color: #fff; position: relative; overflow: hidden; }
+  .header::before { content: ''; position: absolute; inset: 16px; border: 1px solid rgba(212,175,55,0.3); pointer-events: none; }
+  .label { display: inline-block; font-size: 11px; letter-spacing: 6px; color: var(--gold); text-transform: uppercase; margin-bottom: 24px; padding-left: 28px; position: relative; font-weight: 500; }
+  .label::before { content: ''; position: absolute; left: 0; top: 50%; width: 20px; height: 1px; background: var(--gold); }
+  h1.title { font-family: 'Cormorant Garamond', serif; font-size: 38px; font-weight: 300; line-height: 1.2; letter-spacing: 1px; margin-bottom: 14px; }
+  h1.title .amp { color: var(--gold); font-style: italic; margin: 0 8px; }
+  .subtitle { font-size: 13px; color: rgba(255,255,255,0.65); letter-spacing: 2px; line-height: 1.6; }
+  .date-block { display: flex; align-items: center; gap: 16px; margin-top: 28px; padding-top: 24px; border-top: 1px solid rgba(212,175,55,0.25); }
+  .date-block .day { font-family: 'Cormorant Garamond', serif; font-size: 48px; line-height: 1; color: var(--gold); font-weight: 300; }
+  .date-block .info { font-size: 12px; letter-spacing: 2px; color: rgba(255,255,255,0.8); line-height: 1.8; }
+  .section { padding: 32px 28px; }
+  .meta-grid { display: grid; gap: 0; margin-bottom: 28px; border: 1px solid var(--line); }
+  .meta-cell { padding: 18px 20px; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: 100px 1fr; gap: 16px; align-items: start; }
+  .meta-cell:last-child { border-bottom: none; }
+  .meta-cell .k { font-size: 11px; letter-spacing: 3px; color: var(--muted); text-transform: uppercase; padding-top: 2px; }
+  .meta-cell .v { font-size: 14px; color: var(--ink); line-height: 1.6; }
+  .meta-cell .v a { color: var(--navy); border-bottom: 1px solid var(--gold); text-decoration: none; }
+  .message { padding: 28px 24px; background: var(--bg); border-left: 3px solid var(--gold); margin-bottom: 28px; font-size: 14px; line-height: 2; color: var(--ink); }
+  .gallery { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; margin-bottom: 32px; }
+  .gallery .photo { aspect-ratio: 1; background: linear-gradient(135deg, #2a3447, #1a2332); display: grid; place-items: center; color: var(--gold); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; }
+  .gallery .photo:nth-child(2) { background: linear-gradient(135deg, #d4af37, #b8902a); color: #1a2332; }
+  .rsvp-block { padding: 24px; background: var(--navy); color: #fff; margin-bottom: 24px; }
+  .rsvp-title { font-size: 11px; letter-spacing: 4px; color: var(--gold); text-transform: uppercase; margin-bottom: 6px; }
+  .rsvp-sub { font-size: 13px; color: rgba(255,255,255,0.7); margin-bottom: 18px; }
+  .rsvp-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .rsvp-btn { min-height: 48px; background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.3); font-family: inherit; font-size: 14px; cursor: pointer; letter-spacing: 1px; transition: .2s; }
+  .rsvp-btn.primary { background: var(--gold); color: var(--navy); border-color: var(--gold); font-weight: 600; }
+  .rsvp-btn:active { transform: scale(.97); }
+  .reply-input { width: 100%; min-height: 48px; padding: 14px 16px; border: 1px solid var(--line); background: var(--card); font-family: inherit; font-size: 14px; color: var(--ink); margin-bottom: 18px; }
+  .reply-input:focus { outline: none; border-color: var(--gold); }
+  .reply-feed { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--line); }
+  .reply-item { padding: 14px 0; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: 80px 1fr; gap: 12px; align-items: start; }
+  .reply-item .who { font-size: 12px; color: var(--gold); letter-spacing: 1px; font-weight: 600; }
+  .reply-item .text { font-size: 13px; color: var(--ink); line-height: 1.5; }
+  .footer { padding: 24px; text-align: center; background: var(--navy); color: rgba(255,255,255,0.5); font-size: 11px; letter-spacing: 3px; text-transform: uppercase; }
+  .footer .gold { color: var(--gold); }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="envelope">
+    <div class="body"></div>
+    <div class="flap-left"></div>
+    <div class="flap-right"></div>
+    <div class="flap-top"></div>
+    <div class="seal">D</div>
+  </div>
+  <div class="card">
+    <div class="header">
+      <div class="label">Wedding Invitation</div>
+      <h1 class="title">SUMIN<span class="amp">&amp;</span>JIHO</h1>
+      <p class="subtitle">두 사람이 하나가 되는 날<br>당신을 초대합니다</p>
+      <div class="date-block">
+        <div class="day">13</div>
+        <div class="info">JUNE 2026<br>SAT · 1:30 PM<br>SEOUL, KOREA</div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="meta-grid">
+        <div class="meta-cell"><div class="k">Date</div><div class="v">2026.06.13 SAT<br>오후 1시 30분</div></div>
+        <div class="meta-cell"><div class="k">Venue</div><div class="v">라비두스 웨딩홀 5F<br>서울 강남구 테헤란로 123<br><a href="#">VIEW MAP →</a></div></div>
+        <div class="meta-cell"><div class="k">Contact</div><div class="v">신랑 010-1234-5678<br>신부 010-9876-5432</div></div>
+      </div>
+      <div class="message">
+        같은 곳을 바라보며 걸어온 두 사람이<br>
+        이제 한 길을 함께 걷고자 합니다.<br>
+        귀한 발걸음으로 축복해 주시면<br>
+        더없는 기쁨이 되겠습니다.
+      </div>
+      <div class="gallery">
+        <div class="photo">Photo 1</div>
+        <div class="photo">Photo 2</div>
+        <div class="photo">Photo 3</div>
+      </div>
+      <div class="rsvp-block">
+        <div class="rsvp-title">RSVP</div>
+        <div class="rsvp-sub">참석 여부를 5월 30일까지 알려주세요</div>
+        <div class="rsvp-buttons">
+          <button class="rsvp-btn primary">ATTEND</button>
+          <button class="rsvp-btn">DECLINE</button>
+        </div>
+      </div>
+      <input type="text" class="reply-input" placeholder="한줄 답신을 남겨주세요" />
+      <div class="reply-feed">
+        <div class="reply-item"><div class="who">박서연</div><div class="text">두 분 결혼 진심으로 축하드립니다.</div></div>
+        <div class="reply-item"><div class="who">이준호</div><div class="text">꼭 참석하겠습니다. 행복하세요!</div></div>
+        <div class="reply-item"><div class="who">최민지</div><div class="text">아름다운 날 함께할 수 있어 영광입니다.</div></div>
+      </div>
+    </div>
+    <div class="footer">DearDay <span class="gold">·</span> 2026</div>
+  </div>
+</div>
+</body>
+</html>
