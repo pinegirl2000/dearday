@@ -1,4 +1,4 @@
-import type { EventType } from '@/types/card';
+import type { EventType, BackgroundId } from '@/types/card';
 
 export interface EventTypeMeta {
   id: EventType;
@@ -7,6 +7,8 @@ export interface EventTypeMeta {
   defaultTitle: string;
   recommendTheme: string;
   recommendEnvelope: string;
+  /** 이벤트 타입에 어울리는 배경 추천 — StepTemplate에서 우선 노출 */
+  recommendBackgrounds: BackgroundId[];
   fields: {
     titleLabel: string;
     titlePlaceholder: string;
@@ -21,7 +23,8 @@ export const EVENT_TYPES: EventTypeMeta[] = [
     label: '결혼식',
     defaultTitle: '○○ ♥ ○○',
     recommendTheme: 'hydrangea',
-    recommendEnvelope: 'flip',
+    recommendEnvelope: 'envelope-1',
+    recommendBackgrounds: ['bg-2', 'bg-3', 'bg-4', 'bg-1', 'bg-none'],
     fields: {
       titleLabel: '신랑 ♥ 신부',
       titlePlaceholder: '예: 이수민 ♥ 김지호',
@@ -34,7 +37,8 @@ export const EVENT_TYPES: EventTypeMeta[] = [
     label: '생일·돌',
     defaultTitle: '○○이의 생일',
     recommendTheme: 'modern',
-    recommendEnvelope: 'pop',
+    recommendEnvelope: 'envelope-1',
+    recommendBackgrounds: ['bg-1', 'bg-2', 'bg-none', 'bg-3', 'bg-4'],
     fields: {
       titleLabel: '주인공 이름',
       titlePlaceholder: '예: 하준이 첫 생일',
@@ -47,7 +51,8 @@ export const EVENT_TYPES: EventTypeMeta[] = [
     label: '개업',
     defaultTitle: '○○ Open',
     recommendTheme: 'modern',
-    recommendEnvelope: 'flip',
+    recommendEnvelope: 'envelope-1',
+    recommendBackgrounds: ['bg-4', 'bg-none', 'bg-1', 'bg-3', 'bg-2'],
     fields: {
       titleLabel: '상호 / 업종',
       titlePlaceholder: '예: DearDay Studio 오픈',
@@ -60,7 +65,8 @@ export const EVENT_TYPES: EventTypeMeta[] = [
     label: '세례식',
     defaultTitle: '○○ 세례식',
     recommendTheme: 'hydrangea',
-    recommendEnvelope: 'fold',
+    recommendEnvelope: 'envelope-2',
+    recommendBackgrounds: ['bg-none', 'bg-3', 'bg-1', 'bg-4', 'bg-2'],
     fields: {
       titleLabel: '세례자 이름',
       titlePlaceholder: '예: 이하준 세례식',
@@ -73,7 +79,8 @@ export const EVENT_TYPES: EventTypeMeta[] = [
     label: '모임',
     defaultTitle: '모임',
     recommendTheme: 'minimal',
-    recommendEnvelope: 'none',
+    recommendEnvelope: 'envelope-2',
+    recommendBackgrounds: ['bg-none', 'bg-1', 'bg-2', 'bg-3', 'bg-4'],
     fields: {
       titleLabel: '모임 이름',
       titlePlaceholder: '예: 동호회 정기모임',
@@ -86,7 +93,8 @@ export const EVENT_TYPES: EventTypeMeta[] = [
     label: '기타',
     defaultTitle: '초대장',
     recommendTheme: 'minimal',
-    recommendEnvelope: 'slide',
+    recommendEnvelope: 'envelope-1',
+    recommendBackgrounds: ['bg-none', 'bg-1', 'bg-2', 'bg-3', 'bg-4'],
     fields: {
       titleLabel: '제목',
       titlePlaceholder: '제목을 입력하세요',

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { Sparkles, Plus, Heart, ArrowRight } from 'lucide-react';
+import { Sparkles, Plus, Heart, ArrowRight, List } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { LocaleSwitcher } from '@/components/ui/LocaleSwitcher';
 
@@ -37,6 +37,13 @@ export default function Home() {
           >
             <Plus className="w-5 h-5" />
             {t('createButton')}
+          </Link>
+          <Link
+            href="/cards"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-white/70 backdrop-blur text-hydrangea-700 text-sm font-medium border border-hydrangea-100 active:scale-95 transition"
+          >
+            <List className="w-4 h-4" />
+            발행한 초대장 보기
           </Link>
           <Link
             href="/envelopes-demo"

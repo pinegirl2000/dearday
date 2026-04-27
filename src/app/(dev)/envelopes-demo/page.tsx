@@ -1,27 +1,23 @@
 'use client';
 
 import { useState } from 'react';
-import { FoldEnvelope, SlideEnvelope, FlipEnvelope, PopEnvelope, NoneEnvelope } from '@/components/envelopes';
+import { ClassicEnvelope, EnvelopeBeige, NoneEnvelope } from '@/components/envelopes';
 
-type Key = 'flip' | 'fold' | 'slide' | 'pop' | 'none';
+type Key = 'envelope-1' | 'envelope-2' | 'none';
 
 const ITEMS: {
   key: Key;
   title: string;
   recommend: string;
   Component: React.ComponentType<any>;
-  envelopeColor?: string;
-  sealColor?: string;
   highlight?: boolean;
   content: React.ReactNode;
 }[] = [
   {
-    key: 'flip',
-    title: 'Flip ⭐',
-    recommend: '결혼 / 개업 / 약혼',
-    Component: FlipEnvelope,
-    envelopeColor: '#6B4D9C',
-    sealColor: '#BFA0D8',
+    key: 'envelope-1',
+    title: '보라 클래식 ⭐',
+    recommend: '결혼 / 환영회',
+    Component: ClassicEnvelope,
     highlight: true,
     content: (
       <div>
@@ -31,12 +27,10 @@ const ITEMS: {
     )
   },
   {
-    key: 'fold',
-    title: 'Fold',
-    recommend: '세례 / 환갑',
-    Component: FoldEnvelope,
-    envelopeColor: '#7B5EA7',
-    sealColor: '#C9A0DC',
+    key: 'envelope-2',
+    title: '베이지 입체',
+    recommend: '세례 / 모임',
+    Component: EnvelopeBeige,
     content: (
       <div>
         <p className="font-serif text-lg">하준 세례식</p>
@@ -45,36 +39,8 @@ const ITEMS: {
     )
   },
   {
-    key: 'slide',
-    title: 'Slide',
-    recommend: '생일 / 돌잔치',
-    Component: SlideEnvelope,
-    envelopeColor: '#8E6FB8',
-    sealColor: '#D4B0E0',
-    content: (
-      <div>
-        <p className="font-serif text-lg">하준이 첫 생일</p>
-        <p className="mt-2 text-sm text-neutral-500">2026년 5월 3일 일요일</p>
-      </div>
-    )
-  },
-  {
-    key: 'pop',
-    title: 'Pop',
-    recommend: '캐주얼 모임',
-    Component: PopEnvelope,
-    envelopeColor: '#9B7FC4',
-    sealColor: '#E0BCEB',
-    content: (
-      <div>
-        <p className="font-serif text-lg">금요일 저녁 모임</p>
-        <p className="mt-2 text-sm text-neutral-500">편하게 오세요!</p>
-      </div>
-    )
-  },
-  {
     key: 'none',
-    title: 'None',
+    title: '봉투 없음',
     recommend: '간편 모임',
     Component: NoneEnvelope,
     content: (
@@ -87,19 +53,19 @@ const ITEMS: {
 ];
 
 export default function EnvelopesDemoPage() {
-  const [open, setOpen] = useState<Record<Key, boolean>>({ flip: false, fold: false, slide: false, pop: false, none: false });
+  const [open, setOpen] = useState<Record<Key, boolean>>({ 'envelope-1': false, 'envelope-2': false, none: false });
   const toggle = (k: Key) => setOpen((s) => ({ ...s, [k]: !s[k] }));
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#f7f3fb] to-[#ece2f5] py-10 px-4">
       <div className="max-w-6xl mx-auto">
         <header className="text-center mb-10">
-          <h1 className="text-3xl font-serif text-[#4a3570]">DearDay 봉투 애니메이션</h1>
-          <p className="mt-2 text-neutral-500 text-sm">5가지 옵션 — 카드를 클릭해서 비교해보세요</p>
+          <h1 className="text-3xl font-serif text-[#4a3570]">DearDay 봉투</h1>
+          <p className="mt-2 text-neutral-500 text-sm">카드를 클릭해서 열어보세요</p>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {ITEMS.map(({ key, title, recommend, Component, envelopeColor, sealColor, highlight, content }) => (
+          {ITEMS.map(({ key, title, recommend, Component, highlight, content }) => (
             <section
               key={key}
               className={`bg-white/60 backdrop-blur rounded-2xl p-6 shadow-sm flex flex-col items-center ${highlight ? 'ring-2 ring-[#7B5EA7]/40' : ''}`}
@@ -110,7 +76,7 @@ export default function EnvelopesDemoPage() {
               </div>
 
               <div className="w-full flex justify-center min-h-[420px] items-end">
-                <Component isOpen={open[key]} envelopeColor={envelopeColor} sealColor={sealColor} width={300}>
+                <Component isOpen={open[key]} width={300}>
                   {content}
                 </Component>
               </div>

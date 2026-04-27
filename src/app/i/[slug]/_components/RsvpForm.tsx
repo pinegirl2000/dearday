@@ -13,9 +13,11 @@ interface Props {
   theme: ThemeMeta;
   recipientId?: string;
   recipientName?: string;
+  /** 카드 안 오버레이 등 좁은 공간용 — 버튼/폰트/패딩 축소 */
+  compact?: boolean;
 }
 
-export default function RsvpForm({ card, theme, recipientId, recipientName }: Props) {
+export default function RsvpForm({ card, theme, recipientId, recipientName, compact = false }: Props) {
   const [attend, setAttend] = useState<boolean | null>(null);
   const [count, setCount] = useState(1);
   const [names, setNames] = useState<string[]>(['']);
@@ -68,8 +70,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName }: Pr
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="p-6 text-center rounded-2xl"
-        style={{ background: theme.colors.bg }}
+        className="p-4 text-center"
       >
         <div className="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center" style={{ background: theme.colors.primary }}>
           <Check className="w-6 h-6 text-white" strokeWidth={3} />
@@ -83,70 +84,109 @@ export default function RsvpForm({ card, theme, recipientId, recipientName }: Pr
   }
 
   return (
-    <div className="space-y-4">
+    <div className={compact ? 'space-y-2' : 'space-y-4'}>
       <div className="text-center">
-        <h3 className="text-lg font-semibold" style={{ color: theme.colors.deep }}>참석 여부</h3>
-        {card.rsvp_deadline && (
+        <h3 className={`font-semibold ${compact ? 'text-sm' : 'text-lg'}`} style={{ color: theme.colors.deep }}>참석 여부</h3>
+        {card.rsvp_deadline && !compact && (
           <p className="text-xs mt-1" style={{ color: theme.colors.muted }}>
             {new Date(card.rsvp_deadline).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}까지
           </p>
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
-        <motion.button
-          whileTap={{ scale: 0.96 }}
-          onClick={() => setAttend(true)}
-          className="min-h-[52px] rounded-xl border-2 font-medium transition flex items-center justify-center gap-2"
-          style={{
-            background: attend === true ? theme.colors.primary : 'transparent',
-            color: attend === true ? '#fff' : theme.colors.primary,
-            borderColor: theme.colors.primary
-          }}
-        >
-          <Check className="w-4 h-4" /> 참석
-        </motion.button>
-        <motion.button
-          whileTap={{ scale: 0.96 }}
-          onClick={() => setAttend(false)}
-          className="min-h-[52px] rounded-xl border-2 font-medium transition flex items-center justify-center gap-2"
-          style={{
-            background: attend === false ? theme.colors.muted : 'transparent',
-            color: attend === false ? '#fff' : theme.colors.muted,
-            borderColor: theme.colors.muted
-          }}
-        >
-          <X className="w-4 h-4" /> 불참
-        </motion.button>
-      </div>
+      {compact ? (
+        /* compact: 참석/불참/응답 한 줄 */
+        <div className="grid grid-cols-3 gap-1.5">
+          <motion.button
+            whileTap={{ scale: 0.96 }}
+            onClick={() => setAttend(true)}
+            className="min-h-[34px] text-xs rounded-lg border-2 font-medium transition flex items-center justify-center gap-1"
+            style={{
+              background: attend === true ? theme.colors.primary : 'transparent',
+              color: attend === true ? '#fff' : theme.colors.primary,
+              borderColor: theme.colors.primary
+            }}
+          >
+            <Check className="w-3 h-3" /> 참석
+          </motion.button>
+          <motion.button
+            whileTap={{ scale: 0.96 }}
+            onClick={() => setAttend(false)}
+            className="min-h-[34px] text-xs rounded-lg border-2 font-medium transition flex items-center justify-center gap-1"
+            style={{
+              background: attend === false ? theme.colors.muted : 'transparent',
+              color: attend === false ? '#fff' : theme.colors.muted,
+              borderColor: theme.colors.muted
+            }}
+          >
+            <X className="w-3 h-3" /> 불참
+          </motion.button>
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={handleSubmit}
+            disabled={pending || attend === null}
+            className="min-h-[34px] text-xs rounded-lg font-semibold text-white shadow disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1"
+            style={{ background: theme.colors.primary }}
+          >
+            {pending ? '...' : (<><Heart className="w-3 h-3" /> 응답</>)}
+          </motion.button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-2">
+          <motion.button
+            whileTap={{ scale: 0.96 }}
+            onClick={() => setAttend(true)}
+            className="min-h-[52px] rounded-xl border-2 font-medium transition flex items-center justify-center gap-2"
+            style={{
+              background: attend === true ? theme.colors.primary : 'transparent',
+              color: attend === true ? '#fff' : theme.colors.primary,
+              borderColor: theme.colors.primary
+            }}
+          >
+            <Check className="w-4 h-4" /> 참석
+          </motion.button>
+          <motion.button
+            whileTap={{ scale: 0.96 }}
+            onClick={() => setAttend(false)}
+            className="min-h-[52px] rounded-xl border-2 font-medium transition flex items-center justify-center gap-2"
+            style={{
+              background: attend === false ? theme.colors.muted : 'transparent',
+              color: attend === false ? '#fff' : theme.colors.muted,
+              borderColor: theme.colors.muted
+            }}
+          >
+            <X className="w-4 h-4" /> 불참
+          </motion.button>
+        </div>
+      )}
 
       <AnimatePresence>
-        {attend === true && (
+        {attend === true && max > 1 && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             className="space-y-3 overflow-hidden"
           >
-            <div className="flex items-center justify-between p-4 rounded-xl" style={{ background: theme.colors.bg }}>
-              <span className="text-sm font-medium" style={{ color: theme.colors.deep }}>참석 인원</span>
-              <div className="flex items-center gap-3">
+            <div className={`flex items-center justify-between rounded-xl ${compact ? 'p-2' : 'p-4'}`} style={{ background: theme.colors.bg }}>
+              <span className={`font-medium ${compact ? 'text-xs' : 'text-sm'}`} style={{ color: theme.colors.deep }}>참석 인원</span>
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => adjustCount(-1)}
                   disabled={count <= 1}
-                  className="w-8 h-8 rounded-full flex items-center justify-center active:scale-90 transition disabled:opacity-30"
+                  className={`${compact ? 'w-6 h-6' : 'w-8 h-8'} rounded-full flex items-center justify-center active:scale-90 transition disabled:opacity-30`}
                   style={{ background: theme.colors.bgCard, color: theme.colors.primary }}
                 >
-                  <Minus className="w-4 h-4" />
+                  <Minus className={compact ? 'w-3 h-3' : 'w-4 h-4'} />
                 </button>
-                <span className="font-bold w-8 text-center text-lg" style={{ color: theme.colors.deep }}>{count}</span>
+                <span className={`font-bold text-center ${compact ? 'w-5 text-sm' : 'w-8 text-lg'}`} style={{ color: theme.colors.deep }}>{count}</span>
                 <button
                   onClick={() => adjustCount(1)}
                   disabled={count >= max}
-                  className="w-8 h-8 rounded-full flex items-center justify-center active:scale-90 transition disabled:opacity-30"
+                  className={`${compact ? 'w-6 h-6' : 'w-8 h-8'} rounded-full flex items-center justify-center active:scale-90 transition disabled:opacity-30`}
                   style={{ background: theme.colors.bgCard, color: theme.colors.primary }}
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className={compact ? 'w-3 h-3' : 'w-4 h-4'} />
                 </button>
               </div>
             </div>
@@ -163,7 +203,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName }: Pr
                       arr[i] = e.target.value;
                       setNames(arr);
                     }}
-                    className="w-full min-h-[44px] px-4 rounded-xl border bg-white text-sm focus:outline-none focus:ring-2"
+                    className={`w-full px-3 rounded-xl border bg-white focus:outline-none focus:ring-2 ${compact ? 'min-h-[32px] text-xs' : 'min-h-[44px] text-sm'}`}
                     style={{ borderColor: theme.colors.accent + '66' }}
                   />
                 ))}
@@ -178,13 +218,13 @@ export default function RsvpForm({ card, theme, recipientId, recipientName }: Pr
           placeholder="한줄 답신을 남겨주세요 (선택)"
           value={oneliner}
           onChange={(e) => setOneliner(e.target.value.slice(0, 200))}
-          rows={2}
-          className="w-full px-4 py-3 rounded-xl border bg-white text-sm resize-none focus:outline-none focus:ring-2"
+          rows={compact ? 1 : 2}
+          className={`w-full px-3 rounded-xl border bg-white resize-none focus:outline-none focus:ring-2 ${compact ? 'py-1.5 text-xs' : 'py-3 text-sm'}`}
           style={{ borderColor: theme.colors.accent + '66', color: theme.colors.ink }}
         />
       )}
 
-      <motion.button
+      {!compact && <motion.button
         whileTap={{ scale: 0.97 }}
         onClick={handleSubmit}
         disabled={pending || attend === null}
@@ -196,7 +236,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName }: Pr
             <Heart className="w-4 h-4" /> 응답하기
           </>
         )}
-      </motion.button>
+      </motion.button>}
     </div>
   );
 }
