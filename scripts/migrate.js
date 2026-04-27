@@ -1,0 +1,109 @@
+// DearDay DB Migration Script
+// Run: node scripts/migrate.js
+
+const { Pool } = require('pg');
+
+const DATABASE_URL = process.env.DATABASE_URL ||
+  'postgresql://postgres.eszjejwugedrohsdemdd:akffjq2!ONC@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres';
+
+const pool = new Pool({
+  connectionString: DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
+
+const SQL = `
+-- Cards (이벤트 한 건)
+CREATE TABLE IF NOT EXISTS dearday_card (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  slug TEXT UNIQUE NOT NULL,
+  owner_id UUID,
+
+  event_type TEXT NOT NULL,
+  title TEXT NOT NULL,
+
+  theme TEXT DEFAULT 'hydrangea',
+  envelope_anim TEXT DEFAULT 'fold',
+  custom_bg_url TEXT,
+  font_family TEXT DEFAULT 'serif',
+
+  body TEXT,
+  event_date TIMESTAMPTZ,
+  event_place TEXT,
+  map_url TEXT,
+  contact_name TEXT,
+  contact_phone TEXT,
+  extra_info TEXT,
+  greeting_oneliner TEXT,
+
+  rsvp_enabled BOOLEAN DEFAULT true,
+  rsvp_deadline TIMESTAMPTZ,
+  rsvp_max_per_card INT DEFAULT 4 CHECK (rsvp_max_per_card BETWEEN 1 AND 5),
+  rsvp_collect_names BOOLEAN DEFAULT false,
+
+  expiry_date TIMESTAMPTZ,
+  plan TEXT DEFAULT 'free',
+
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Card 첨부 이미지
+CREATE TABLE IF NOT EXISTS dearday_card_image (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  card_id UUID REFERENCES dearday_card(id) ON DELETE CASCADE,
+  url TEXT NOT NULL,
+  position INT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 수신자 (paid 전용)
+CREATE TABLE IF NOT EXISTS dearday_recipient (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  card_id UUID REFERENCES dearday_card(id) ON DELETE CASCADE,
+  num TEXT NOT NULL,
+  name TEXT NOT NULL,
+  group_name TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(card_id, num)
+);
+
+-- RSVP 응답
+CREATE TABLE IF NOT EXISTS dearday_rsvp (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  card_id UUID REFERENCES dearday_card(id) ON DELETE CASCADE,
+  recipient_id UUID REFERENCES dearday_recipient(id) ON DELETE CASCADE,
+  attend BOOLEAN NOT NULL,
+  count INT DEFAULT 1,
+  attendee_names TEXT[],
+  oneliner TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX IF NOT EXISTS idx_dearday_card_slug ON dearday_card(slug);
+CREATE INDEX IF NOT EXISTS idx_dearday_recipient_card ON dearday_recipient(card_id);
+CREATE INDEX IF NOT EXISTS idx_dearday_rsvp_card ON dearday_rsvp(card_id);
+CREATE INDEX IF NOT EXISTS idx_dearday_card_image_card ON dearday_card_image(card_id);
+`;
+
+(async () => {
+  try {
+    console.log('Connecting to Supabase...');
+    await pool.query(SQL);
+    console.log('✅ DearDay tables created successfully');
+
+    const tables = await pool.query(`
+      SELECT table_name FROM information_schema.tables
+      WHERE table_schema='public' AND table_name LIKE 'dearday_%'
+      ORDER BY table_name
+    `);
+    console.log('\n📋 Created tables:');
+    tables.rows.forEach(r => console.log('  -', r.table_name));
+  } catch (e) {
+    console.error('❌ Migration failed:', e.message);
+    process.exit(1);
+  } finally {
+    await pool.end();
+  }
+})();

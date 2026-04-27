@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: 250 245 255;
+  --fg: 58 45 79;
+}
+
+* { -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  background: rgb(var(--bg));
+  color: rgb(var(--fg));
+  overscroll-behavior-y: none;
+}
+
+/* iOS-style smooth scrolling */
+body { -webkit-overflow-scrolling: touch; }
+
+/* Hide scrollbar (mobile-first feel) */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
