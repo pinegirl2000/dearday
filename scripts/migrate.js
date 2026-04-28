@@ -12,16 +12,31 @@ const pool = new Pool({
 });
 
 const SQL = `
+-- Users (NextAuth Google OAuth)
+CREATE TABLE IF NOT EXISTS dearday_user (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  provider TEXT NOT NULL,
+  provider_id TEXT NOT NULL,
+  email TEXT,
+  name TEXT,
+  image TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(provider, provider_id)
+);
+
 -- Cards (이벤트 한 건)
 CREATE TABLE IF NOT EXISTS dearday_card (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   slug TEXT UNIQUE NOT NULL,
-  owner_id UUID,
+  user_id UUID,
+  owner_token TEXT,
 
   event_type TEXT NOT NULL,
   title TEXT NOT NULL,
 
   theme TEXT DEFAULT 'hydrangea',
+  bg_id TEXT DEFAULT 'bg-none',
+  layout_id TEXT DEFAULT 'layout-classic',
   envelope_anim TEXT DEFAULT 'fold',
   custom_bg_url TEXT,
   font_family TEXT DEFAULT 'serif',
@@ -34,6 +49,7 @@ CREATE TABLE IF NOT EXISTS dearday_card (
   contact_phone TEXT,
   extra_info TEXT,
   greeting_oneliner TEXT,
+  recipient_template TEXT,
 
   rsvp_enabled BOOLEAN DEFAULT true,
   rsvp_deadline TIMESTAMPTZ,
@@ -82,6 +98,7 @@ CREATE TABLE IF NOT EXISTS dearday_rsvp (
 
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_dearday_card_slug ON dearday_card(slug);
+CREATE INDEX IF NOT EXISTS idx_dearday_card_user ON dearday_card(user_id);
 CREATE INDEX IF NOT EXISTS idx_dearday_recipient_card ON dearday_recipient(card_id);
 CREATE INDEX IF NOT EXISTS idx_dearday_rsvp_card ON dearday_rsvp(card_id);
 CREATE INDEX IF NOT EXISTS idx_dearday_card_image_card ON dearday_card_image(card_id);

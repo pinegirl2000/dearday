@@ -1,6 +1,8 @@
 'use server';
 
 import { pool } from '@/lib/db';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { generateSlug, generateOwnerToken } from '@/lib/slug';
 import type { CardDraft } from '@/types/card';
 
@@ -18,27 +20,30 @@ export async function publishCard(draft: CardDraft): Promise<PublishResult> {
 
   const slug = generateSlug();
   const ownerToken = generateOwnerToken();
+  const session = await getServerSession(authOptions);
+  const userId = (session?.user as any)?.id || null;
 
   try {
     await pool.query(
       `INSERT INTO dearday_card (
-        slug, owner_token, event_type, title,
+        slug, owner_token, user_id, event_type, title,
         theme, bg_id, layout_id, envelope_anim, custom_bg_url, font_family,
         body, event_date, event_place, map_url,
         contact_name, contact_phone, extra_info, greeting_oneliner, recipient_template,
         rsvp_enabled, rsvp_deadline, rsvp_max_per_card, rsvp_collect_names,
         expiry_date, plan
       ) VALUES (
-        $1, $2, $3, $4,
-        $5, $6, $7, $8, $9, $10,
-        $11, $12, $13, $14,
-        $15, $16, $17, $18, $19,
-        $20, $21, $22, $23,
-        $24, $25
+        $1, $2, $3, $4, $5,
+        $6, $7, $8, $9, $10, $11,
+        $12, $13, $14, $15,
+        $16, $17, $18, $19, $20,
+        $21, $22, $23, $24,
+        $25, $26
       )`,
       [
         slug,
         ownerToken,
+        userId,
         draft.event_type,
         draft.title,
         draft.theme || 'hydrangea',

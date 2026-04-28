@@ -1,5 +1,7 @@
 import Link from 'next/link';
+import { getServerSession } from 'next-auth';
 import { pool } from '@/lib/db';
+import { authOptions } from '@/lib/auth';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { MobileHeader } from '@/components/layout/MobileHeader';
 import { getEventTypeMeta } from '@/lib/eventType';
@@ -10,13 +12,14 @@ import type { BaseCard } from '@/types/card';
 export const dynamic = 'force-dynamic';
 
 /**
- * 발행된 모든 카드 목록.
- * TODO(auth): 로그인 시 owner_id/owner_token으로 필터링 (`WHERE owner_id = $1`).
- * 지금은 로그인 미구현 상태라 모든 카드를 노출.
+ * 로그인한 사용자의 카드 목록 조회.
+ * 비로그인이면 빈 배열 반환 (목록 페이지에서 로그인 안내).
  */
-async function getAllCards(): Promise<BaseCard[]> {
+async function getMyCards(userId: string | null): Promise<BaseCard[]> {
+  if (!userId) return [];
   const { rows } = await pool.query<BaseCard>(
-    `SELECT * FROM dearday_card ORDER BY created_at DESC LIMIT 200`
+    `SELECT * FROM dearday_card WHERE user_id=$1 ORDER BY created_at DESC LIMIT 200`,
+    [userId]
   );
   return rows;
 }
@@ -30,21 +33,24 @@ function fmtDate(iso?: string | null) {
 }
 
 export default async function CardsListPage() {
-  const cards = await getAllCards();
+  const session = await getServerSession(authOptions);
+  const userId = (session?.user as any)?.id || null;
+  const cards = await getMyCards(userId);
 
   return (
     <PageContainer noPadding>
-      <MobileHeader title="발행한 초대장" back />
+      <MobileHeader title="내 초대장" back />
 
-      <div className="px-4 pt-3 pb-2">
-        <p className="text-xs text-hydrangea-400">
-          ⚠️ 로그인 미구현 — 현재는 발행된 모든 카드가 보입니다 ({cards.length}개)
-        </p>
-      </div>
-
-      {cards.length === 0 ? (
+      {!session ? (
         <div className="px-6 py-16 text-center">
-          <p className="text-sm text-hydrangea-400 mb-4">아직 발행된 초대장이 없습니다.</p>
+          <p className="text-sm text-hydrangea-500 mb-4">로그인하면 발행한 카드를 볼 수 있습니다.</p>
+          <Link href="/" className="inline-block px-5 py-2.5 rounded-full bg-hydrangea-500 text-white text-sm font-medium">
+            홈으로 가서 로그인하기
+          </Link>
+        </div>
+      ) : cards.length === 0 ? (
+        <div className="px-6 py-16 text-center">
+          <p className="text-sm text-hydrangea-400 mb-4">아직 발행한 초대장이 없습니다.</p>
           <Link
             href="/cards/new"
             className="inline-block px-5 py-2.5 rounded-full bg-hydrangea-500 text-white text-sm font-medium"

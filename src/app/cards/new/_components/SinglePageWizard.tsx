@@ -373,6 +373,8 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
               onChange={(e) => setDraft({ title: e.target.value })}
             />
             {(() => {
+              const today = new Date();
+              const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
               const dt = draft.event_date ? new Date(draft.event_date) : null;
               const dateStr = dt && !isNaN(dt.getTime())
                 ? `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}` : '';
@@ -380,15 +382,17 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
                 ? `${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}` : '';
               const update = (date: string, time: string) => {
                 if (!date) { setDraft({ event_date: null }); return; }
-                const [h, m] = (time || '00:00').split(':').map(Number);
                 const [y, mo, d] = date.split('-').map(Number);
+                // 부분 입력(연도 미완성 등) 무시 — 4자리 연도 + 합리적 범위만 commit
+                if (!y || y < 1900 || y > 2999 || !mo || !d) return;
+                const [h, m] = (time || '00:00').split(':').map(Number);
                 setDraft({ event_date: new Date(y, mo - 1, d, h || 0, m || 0).toISOString() });
               };
               return (
                 <div>
                   <label className="block text-sm font-medium text-hydrangea-700 mb-1.5">일시</label>
                   <div className="grid grid-cols-2 gap-2">
-                    <input type="date" value={dateStr} onChange={(e) => update(e.target.value, timeStr)}
+                    <input type="date" value={dateStr} min={todayStr} onChange={(e) => update(e.target.value, timeStr)}
                       className="w-full min-h-[56px] px-4 rounded-xl border border-hydrangea-100 bg-white text-hydrangea-700 text-base focus:outline-none focus:ring-2 focus:ring-hydrangea-300 [color-scheme:light]"
                       style={{ fontSize: '16px' }} />
                     <input type="time" step={300} value={timeStr} onChange={(e) => update(dateStr, e.target.value)}
@@ -449,14 +453,26 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
                       </button>
                     </div>
                     <Input label="RSVP 마감일 (선택)" type="date"
+                      min={(() => { const t = new Date(); return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`; })()}
                       value={draft.rsvp_deadline ? draft.rsvp_deadline.slice(0, 10) : ''}
-                      onChange={(e) => setDraft({ rsvp_deadline: e.target.value ? new Date(e.target.value).toISOString() : null })} />
+                      onChange={(e) => {
+                        if (!e.target.value) { setDraft({ rsvp_deadline: null }); return; }
+                        const [y, mo, d] = e.target.value.split('-').map(Number);
+                        if (!y || y < 1900 || y > 2999 || !mo || !d) return;
+                        setDraft({ rsvp_deadline: new Date(e.target.value).toISOString() });
+                      }} />
                   </>
                 )}
                 <Input label="카드 만료일 (선택)" type="date"
                   hint="만료된 후엔 안내 메시지가 표시됩니다"
+                  min={(() => { const t = new Date(); return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`; })()}
                   value={draft.expiry_date ? draft.expiry_date.slice(0, 10) : ''}
-                  onChange={(e) => setDraft({ expiry_date: e.target.value ? new Date(e.target.value).toISOString() : null })} />
+                  onChange={(e) => {
+                    if (!e.target.value) { setDraft({ expiry_date: null }); return; }
+                    const [y, mo, d] = e.target.value.split('-').map(Number);
+                    if (!y || y < 1900 || y > 2999 || !mo || !d) return;
+                    setDraft({ expiry_date: new Date(e.target.value).toISOString() });
+                  }} />
               </div>
             </div>
 

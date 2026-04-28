@@ -2,7 +2,10 @@ import type { Metadata, Viewport } from 'next';
 import { Noto_Serif_KR, Noto_Sans_KR } from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
+import { getServerSession } from 'next-auth';
 import { Toaster } from 'sonner';
+import { authOptions } from '@/lib/auth';
+import SessionProvider from '@/components/auth/SessionProvider';
 import './globals.css';
 
 const notoSerif = Noto_Serif_KR({
@@ -35,13 +38,16 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale();
   const messages = await getMessages();
+  const session = await getServerSession(authOptions);
 
   return (
     <html lang={locale} className={`${notoSerif.variable} ${notoSans.variable}`}>
       <body className="font-sans bg-hydrangea-50">
-        <NextIntlClientProvider messages={messages} locale={locale}>
-          {children}
-        </NextIntlClientProvider>
+        <SessionProvider session={session}>
+          <NextIntlClientProvider messages={messages} locale={locale}>
+            {children}
+          </NextIntlClientProvider>
+        </SessionProvider>
         <Toaster position="top-center" richColors closeButton duration={3000} />
       </body>
     </html>

@@ -3,6 +3,7 @@ import { useTranslations } from 'next-intl';
 import { Sparkles, Plus, Heart, ArrowRight, List } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { LocaleSwitcher } from '@/components/ui/LocaleSwitcher';
+import AuthButton from '@/components/auth/AuthButton';
 
 const EVENT_KEYS = ['wedding', 'birthday', 'opening', 'baptism', 'meeting', 'etc'] as const;
 const EVENT_EMOJI: Record<string, string> = {
@@ -15,8 +16,9 @@ export default function Home() {
 
   return (
     <PageContainer noPadding className="bg-gradient-to-b from-hydrangea-50 via-white to-hydrangea-100/30">
-      {/* Top bar with locale */}
-      <div className="flex justify-end px-3 pt-3">
+      {/* Top bar with auth + locale */}
+      <div className="flex justify-between items-center px-3 pt-3 gap-2">
+        <AuthButton />
         <LocaleSwitcher />
       </div>
 
