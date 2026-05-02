@@ -40,6 +40,7 @@ export default function ManageClient({ slug, cardTitle }: Props) {
   const [copiedNum, setCopiedNum] = useState<string | null>(null);
   const [origin, setOrigin] = useState('');
   const [expandedNames, setExpandedNames] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<'recent' | 'num' | 'name' | 'attend'>('recent');
 
   const fmtDate = (iso: string | null) => {
     if (!iso) return '—';
@@ -145,9 +146,30 @@ export default function ManageClient({ slug, cardTitle }: Props) {
           </a>
         </div>
 
-        <div className="flex items-center gap-2 text-sm font-semibold text-hydrangea-700 mb-3">
+        <div className="flex items-center gap-2 text-sm font-semibold text-hydrangea-700 mb-2">
           <Users className="w-4 h-4" /> Recipients {recipients.length}
         </div>
+        {recipients.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            {([
+              ['recent', 'Recent reply'],
+              ['num', 'By number'],
+              ['name', 'By name'],
+              ['attend', 'By attendance']
+            ] as const).map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setSortBy(key)}
+                className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition ${
+                  sortBy === key ? 'bg-hydrangea-500 text-white' : 'bg-hydrangea-50 text-hydrangea-600 hover:bg-hydrangea-100'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
 
         {loading ? (
           <p className="text-center py-12 text-hydrangea-300">로딩 중...</p>
@@ -163,13 +185,29 @@ export default function ManageClient({ slug, cardTitle }: Props) {
             <div className="grid grid-cols-[32px_80px_1fr_56px_56px_24px] items-center gap-2 px-3 py-2 border-b border-hydrangea-100 bg-hydrangea-50/40 text-[10px] font-semibold text-hydrangea-500 uppercase tracking-wider">
               <div>#</div>
               <div>Name</div>
-              <div>Link</div>
+              <div>Link / Comment</div>
               <div className="text-center">RSVP</div>
               <div className="text-center">Guests</div>
               <div></div>
             </div>
             <AnimatePresence>
-              {recipients.map((r) => {
+              {[...recipients].sort((a, b) => {
+                if (sortBy === 'name') return a.name.localeCompare(b.name);
+                if (sortBy === 'num') return a.num.localeCompare(b.num);
+                if (sortBy === 'attend') {
+                  // 참석(true) > 미응답(null) > 불참(false), 동률이면 num 오름차순
+                  const rank = (v: boolean | null) => (v === true ? 0 : v === null ? 1 : 2);
+                  const r = rank(a.rsvp_attend) - rank(b.rsvp_attend);
+                  return r !== 0 ? r : a.num.localeCompare(b.num);
+                }
+                // recent: 답변 시각 내림차순, 미응답은 맨 뒤
+                const at = a.rsvp_created_at ? new Date(a.rsvp_created_at).getTime() : -1;
+                const bt = b.rsvp_created_at ? new Date(b.rsvp_created_at).getTime() : -1;
+                if (at === -1 && bt === -1) return a.num.localeCompare(b.num);
+                if (at === -1) return 1;
+                if (bt === -1) return -1;
+                return bt - at;
+              }).map((r) => {
                 const link = `${origin}/i/${slug}/${r.num}`;
                 const copied = copiedNum === r.num;
                 const expanded = expandedNames === r.id;
