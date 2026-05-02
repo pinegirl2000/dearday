@@ -47,7 +47,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <SessionProvider session={session}>
           <NextIntlClientProvider messages={messages} locale={locale}>
             <TopBar />
-            <div className="pt-12">{children}</div>
+            {children}
           </NextIntlClientProvider>
         </SessionProvider>
         <Toaster position="top-center" richColors closeButton duration={3000} />
