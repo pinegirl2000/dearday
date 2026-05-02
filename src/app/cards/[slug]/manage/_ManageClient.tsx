@@ -25,6 +25,7 @@ interface Recipient {
   rsvp_adult_count: number | null;
   rsvp_child_count: number | null;
   rsvp_attendee_names: string[] | null;
+  rsvp_oneliner: string | null;
   rsvp_created_at: string | null;
 }
 
@@ -173,6 +174,8 @@ export default function ManageClient({ slug, cardTitle }: Props) {
                 const copied = copiedNum === r.num;
                 const expanded = expandedNames === r.id;
                 const hasNames = !!r.rsvp_attendee_names && r.rsvp_attendee_names.length > 0;
+                const hasOneliner = !!r.rsvp_oneliner && r.rsvp_oneliner.trim().length > 0;
+                const expandable = hasNames || hasOneliner;
                 const declined = r.rsvp_attend === false;
                 return (
                   <motion.div
@@ -186,21 +189,28 @@ export default function ManageClient({ slug, cardTitle }: Props) {
                     <div className="grid grid-cols-[32px_80px_1fr_56px_56px_24px] items-center gap-2 px-3 py-2.5 text-sm">
                       <span className="text-[10px] font-semibold text-hydrangea-500 bg-hydrangea-100 px-1.5 py-0.5 rounded text-center">{r.num}</span>
                       <span className="font-medium text-hydrangea-700 truncate">{r.name}</span>
-                      <button
-                        onClick={() => copyLink(r.num)}
-                        className={`min-w-0 flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-mono text-left transition ${
-                          copied ? 'bg-green-50 text-green-700' : 'text-hydrangea-500 hover:bg-hydrangea-50 active:scale-95'
-                        }`}
-                        title={copied ? 'Copied!' : 'Copy link'}
-                      >
-                        {copied ? <Check className="w-3 h-3 flex-shrink-0" /> : <Copy className="w-3 h-3 flex-shrink-0" />}
-                        <span className="truncate">{link}</span>
-                      </button>
+                      <div className="min-w-0 flex flex-col gap-0.5">
+                        <button
+                          onClick={() => copyLink(r.num)}
+                          className={`min-w-0 flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-mono text-left transition ${
+                            copied ? 'bg-green-50 text-green-700' : 'text-hydrangea-500 hover:bg-hydrangea-50 active:scale-95'
+                          }`}
+                          title={copied ? 'Copied!' : 'Copy link'}
+                        >
+                          {copied ? <Check className="w-3 h-3 flex-shrink-0" /> : <Copy className="w-3 h-3 flex-shrink-0" />}
+                          <span className="truncate">{link}</span>
+                        </button>
+                        {hasOneliner && (
+                          <div className="px-2 text-[11px] text-hydrangea-600 italic truncate" title={r.rsvp_oneliner!}>
+                            "{r.rsvp_oneliner}"
+                          </div>
+                        )}
+                      </div>
                       <span className="text-[11px] text-hydrangea-500 text-center">{fmtDate(r.rsvp_created_at)}</span>
                       <button
                         type="button"
-                        onClick={() => hasNames && setExpandedNames(expanded ? null : r.id)}
-                        disabled={!hasNames && r.rsvp_count === null}
+                        onClick={() => expandable && setExpandedNames(expanded ? null : r.id)}
+                        disabled={!expandable && r.rsvp_count === null}
                         className={`text-xs font-semibold text-center px-2 py-1 rounded transition ${
                           declined ? 'text-red-500' :
                           r.rsvp_count ? 'text-hydrangea-700 hover:bg-hydrangea-50 active:scale-95' :
@@ -217,11 +227,20 @@ export default function ManageClient({ slug, cardTitle }: Props) {
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
-                    {expanded && hasNames && (
-                      <div className="px-3 pb-3 -mt-1">
-                        <div className="bg-hydrangea-50 rounded-lg p-2 text-xs text-hydrangea-700">
-                          {r.rsvp_attendee_names!.join(', ')}
-                        </div>
+                    {expanded && expandable && (
+                      <div className="px-3 pb-3 -mt-1 space-y-1.5">
+                        {hasNames && (
+                          <div className="bg-hydrangea-50 rounded-lg p-2 text-xs text-hydrangea-700">
+                            <div className="text-[10px] uppercase tracking-wider text-hydrangea-400 mb-0.5">Attendees</div>
+                            {r.rsvp_attendee_names!.join(', ')}
+                          </div>
+                        )}
+                        {hasOneliner && (
+                          <div className="bg-hydrangea-50 rounded-lg p-2 text-xs text-hydrangea-700 italic">
+                            <div className="text-[10px] uppercase tracking-wider text-hydrangea-400 mb-0.5 not-italic">Reply</div>
+                            "{r.rsvp_oneliner}"
+                          </div>
+                        )}
                       </div>
                     )}
                   </motion.div>

@@ -45,10 +45,11 @@ export async function listRecipients(slug: string, ownerToken?: string | null) {
        v.adult_count AS rsvp_adult_count,
        v.child_count AS rsvp_child_count,
        v.attendee_names AS rsvp_attendee_names,
+       v.oneliner AS rsvp_oneliner,
        v.created_at AS rsvp_created_at
      FROM dearday_recipient r
      LEFT JOIN LATERAL (
-       SELECT attend, count, adult_count, child_count, attendee_names, created_at
+       SELECT attend, count, adult_count, child_count, attendee_names, oneliner, created_at
        FROM dearday_rsvp
        WHERE recipient_id = r.id
        ORDER BY created_at DESC
@@ -69,6 +70,7 @@ export async function listRecipients(slug: string, ownerToken?: string | null) {
     rsvp_adult_count: number | null;
     rsvp_child_count: number | null;
     rsvp_attendee_names: string[] | null;
+    rsvp_oneliner: string | null;
     rsvp_created_at: string | null;
   }> };
 }

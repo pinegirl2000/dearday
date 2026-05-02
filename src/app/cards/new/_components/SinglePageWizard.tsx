@@ -138,8 +138,9 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
     if (!hydrated || editingSlug) return;
     if (useWizardStore.getState().draft.event_date) return;
     const now = new Date();
+    // 가장 가까운 토요일 + 7일 (한 주 뒤 토요일), 오전 10시
     const daysToSat = (6 - now.getDay() + 7) % 7;
-    const sat = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysToSat, 11, 0, 0);
+    const sat = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysToSat + 7, 10, 0, 0);
     const iso = sat.toISOString();
     setDraft({ event_date: iso, rsvp_deadline: iso, expiry_date: iso });
     // eslint-disable-next-line react-hooks/exhaustive-deps
