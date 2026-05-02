@@ -19,7 +19,7 @@ const PALETTE = {
   accent:      '#E0C8EE',
   bodyMid:     '#D2B8E5',  // 본체 중간 (그라데이션용)
   bodyTint:    '#E0C8EE',  // 본체 하이라이트 (살짝 핑크 톤)
-  petals:      ['#F4A8A8', '#F8B5B5', '#FFC4C4', '#E89898', '#FCD0D0', '#FFEDED']
+  petals:      ['#C9A0DC', '#D9B6E5', '#E8CFEF', '#A990CC', '#B89AD2', '#E0C8EE']
 } as const;
 
 interface PetalSpec {
@@ -40,10 +40,10 @@ function generatePetals(count: number): PetalSpec[] {
     return {
       id: i,
       angle,
-      distance: 80 + Math.random() * 140,
+      distance: 160 + Math.random() * 280,
       size: 8 + Math.random() * 12,
       rotate: Math.random() * 720 - 360,
-      duration: 1.2 + Math.random() * 0.8,
+      duration: 2.4 + Math.random() * 1.6,
       delay: Math.random() * 0.15,
       color: PALETTE.petals[Math.floor(Math.random() * PALETTE.petals.length)],
       shape: (['petal', 'circle', 'leaf'] as const)[Math.floor(Math.random() * 3)]
@@ -100,7 +100,7 @@ export default function ClassicEnvelope({
   useEffect(() => {
     if (isOpen && !prefersReducedMotion) {
       setParticles(generatePetals(40));
-      const t = setTimeout(() => setParticles(null), 2500);
+      const t = setTimeout(() => setParticles(null), 5000);
       return () => clearTimeout(t);
     }
   }, [isOpen, prefersReducedMotion]);
