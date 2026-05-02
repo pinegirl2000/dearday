@@ -2,7 +2,6 @@ import { notFound } from 'next/navigation';
 import { getCardBySlug } from '@/lib/db/cards';
 import { getTheme } from '@/lib/theme';
 import InvitationView from './_components/InvitationView';
-import FeedSection from './_components/FeedSection';
 
 interface Props {
   params: { slug: string };
@@ -33,7 +32,7 @@ export default async function InvitationPage({ params }: Props) {
 
   const theme = getTheme(card.theme);
   return (
-    <InvitationView card={card} feed={<FeedSection cardId={card.id} theme={theme} />} />
+    <InvitationView card={card} />
   );
 }
 

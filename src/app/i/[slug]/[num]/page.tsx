@@ -3,7 +3,6 @@ import { pool } from '@/lib/db';
 import { getCardBySlug } from '@/lib/db/cards';
 import { getTheme } from '@/lib/theme';
 import InvitationView from '../_components/InvitationView';
-import FeedSection from '../_components/FeedSection';
 
 interface Props {
   params: { slug: string; num: string };
@@ -51,13 +50,11 @@ export default async function PersonalInvitationPage({ params }: Props) {
     );
   }
 
-  const theme = getTheme(card.theme);
   return (
     <InvitationView
       card={card}
       recipientName={recipient?.name}
       recipientId={recipient?.id}
-      feed={<FeedSection cardId={card.id} theme={theme} />}
     />
   );
 }

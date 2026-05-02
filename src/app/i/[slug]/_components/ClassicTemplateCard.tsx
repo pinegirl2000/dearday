@@ -188,12 +188,6 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
                     </div>
                   </div>
                 )}
-                {card.contact_phone && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: COLORS.textDark, letterSpacing: '0.04em' }}>
-                    <Phone size={14} strokeWidth={1.4} style={{ color: COLORS.primary, flexShrink: 0 }} />
-                    <a href={`tel:${card.contact_phone}`} style={{ color: COLORS.textDark, textDecoration: 'none', fontWeight: 500 }}>{card.contact_phone}</a>
-                  </div>
-                )}
               </div>
             )}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', fontFamily: SANS }}>
@@ -224,6 +218,13 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
               <p style={{ fontSize: 13, color: COLORS.textLight, letterSpacing: '0.15em' }}>
                 — {applyName(card.contact_name, recipientName)} —
               </p>
+              {card.contact_phone && (
+                <p style={{ fontSize: 11, color: COLORS.textLight, marginTop: 4, letterSpacing: '0.05em', opacity: 0.8 }}>
+                  <a href={`tel:${card.contact_phone}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                    {card.contact_phone}
+                  </a>
+                </p>
+              )}
             </div>
           </FadeUp>
         )}
