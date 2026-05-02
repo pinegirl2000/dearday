@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useTransition } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Copy, Check, Trash2, Plus, Eye, Users } from 'lucide-react';
+import { Copy, Check, Trash2, Plus, Eye, Users, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { MobileHeader } from '@/components/layout/MobileHeader';
@@ -20,6 +20,12 @@ interface Recipient {
   num: string;
   name: string;
   created_at: string;
+  rsvp_attend: boolean | null;
+  rsvp_count: number | null;
+  rsvp_adult_count: number | null;
+  rsvp_child_count: number | null;
+  rsvp_attendee_names: string[] | null;
+  rsvp_created_at: string | null;
 }
 
 export default function ManageClient({ slug, cardTitle }: Props) {
@@ -32,6 +38,15 @@ export default function ManageClient({ slug, cardTitle }: Props) {
   const [pending, startTransition] = useTransition();
   const [copiedNum, setCopiedNum] = useState<string | null>(null);
   const [origin, setOrigin] = useState('');
+  const [expandedNames, setExpandedNames] = useState<string | null>(null);
+
+  const fmtDate = (iso: string | null) => {
+    if (!iso) return '—';
+    try {
+      const d = new Date(iso);
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    } catch { return '—'; }
+  };
 
   useEffect(() => {
     const t = localStorage.getItem(`dearday:owner:${slug}`);
@@ -98,7 +113,7 @@ export default function ManageClient({ slug, cardTitle }: Props) {
   if (error) {
     return (
       <PageContainer>
-        <MobileHeader title="수신자 관리" back />
+        <MobileHeader title="Manage Recipients" back />
         <div className="text-center py-20">
           <p className="text-hydrangea-400 mb-4">{error}</p>
           <a href={`/i/${slug}`} className="text-hydrangea-500 underline text-sm">초대장 보기</a>
@@ -109,21 +124,35 @@ export default function ManageClient({ slug, cardTitle }: Props) {
 
   return (
     <PageContainer noPadding>
-      <MobileHeader title="수신자 관리" back />
+      <MobileHeader title="Manage Recipients" back />
       <div className="px-5 pt-3">
         <div className="text-xs text-hydrangea-400 mb-1">초대장</div>
-        <h1 className="text-lg font-semibold text-hydrangea-700 mb-1 truncate">{cardTitle}</h1>
-        <a href={`/i/${slug}`} className="inline-flex items-center gap-1 text-xs text-hydrangea-500 mb-6">
-          <Eye className="w-3 h-3" /> 미리보기
-        </a>
+        <h1 className="text-lg font-semibold text-hydrangea-700 mb-3 truncate">{cardTitle}</h1>
 
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2 text-sm font-semibold text-hydrangea-700">
-            <Users className="w-4 h-4" /> 수신자 {recipients.length}명
-          </div>
-          <Button size="sm" onClick={() => setSheetOpen(true)}>
-            <Plus className="w-4 h-4 mr-1" /> 일괄 등록
-          </Button>
+        <div className="grid grid-cols-3 gap-2 mb-6">
+          <button
+            type="button"
+            onClick={() => setSheetOpen(true)}
+            className="inline-flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-hydrangea-500 text-white text-xs font-medium active:scale-95 transition"
+          >
+            <Plus className="w-3.5 h-3.5" /> Bulk add
+          </button>
+          <a
+            href={`/i/${slug}`}
+            className="inline-flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white border border-hydrangea-200 text-hydrangea-700 text-xs font-medium active:scale-95 transition"
+          >
+            <Eye className="w-3.5 h-3.5" /> Preview
+          </a>
+          <a
+            href={`/cards/${slug}/edit`}
+            className="inline-flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white border border-hydrangea-200 text-hydrangea-700 text-xs font-medium active:scale-95 transition"
+          >
+            <Pencil className="w-3.5 h-3.5" /> Edit
+          </a>
+        </div>
+
+        <div className="flex items-center gap-2 text-sm font-semibold text-hydrangea-700 mb-3">
+          <Users className="w-4 h-4" /> Recipients {recipients.length}
         </div>
 
         {loading ? (
@@ -136,11 +165,22 @@ export default function ManageClient({ slug, cardTitle }: Props) {
             </Button>
           </div>
         ) : (
-          <div className="space-y-2 pb-12">
+          <div className="rounded-2xl border border-hydrangea-100 bg-white overflow-hidden pb-1 mb-12">
+            <div className="grid grid-cols-[32px_80px_1fr_56px_56px_24px] items-center gap-2 px-3 py-2 border-b border-hydrangea-100 bg-hydrangea-50/40 text-[10px] font-semibold text-hydrangea-500 uppercase tracking-wider">
+              <div>#</div>
+              <div>Name</div>
+              <div>Link</div>
+              <div className="text-center">RSVP</div>
+              <div className="text-center">Guests</div>
+              <div></div>
+            </div>
             <AnimatePresence>
               {recipients.map((r) => {
                 const link = `${origin}/i/${slug}/${r.num}`;
                 const copied = copiedNum === r.num;
+                const expanded = expandedNames === r.id;
+                const hasNames = !!r.rsvp_attendee_names && r.rsvp_attendee_names.length > 0;
+                const declined = r.rsvp_attend === false;
                 return (
                   <motion.div
                     key={r.id}
@@ -148,40 +188,79 @@ export default function ManageClient({ slug, cardTitle }: Props) {
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="bg-white rounded-2xl border border-hydrangea-100 p-4"
+                    className="border-b border-hydrangea-100/60 last:border-b-0"
                   >
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-[10px] font-semibold text-hydrangea-500 bg-hydrangea-100 px-1.5 py-0.5 rounded">
-                            {r.num}
-                          </span>
-                          <span className="text-sm font-semibold text-hydrangea-700 truncate">{r.name}</span>
-                        </div>
-                        <p className="text-[11px] text-hydrangea-400 truncate font-mono">{link}</p>
-                      </div>
+                    <div className="grid grid-cols-[32px_80px_1fr_56px_56px_24px] items-center gap-2 px-3 py-2.5 text-sm">
+                      <span className="text-[10px] font-semibold text-hydrangea-500 bg-hydrangea-100 px-1.5 py-0.5 rounded text-center">{r.num}</span>
+                      <span className="font-medium text-hydrangea-700 truncate">{r.name}</span>
+                      <button
+                        onClick={() => copyLink(r.num)}
+                        className={`min-w-0 flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-mono text-left transition ${
+                          copied ? 'bg-green-50 text-green-700' : 'text-hydrangea-500 hover:bg-hydrangea-50 active:scale-95'
+                        }`}
+                        title={copied ? 'Copied!' : 'Copy link'}
+                      >
+                        {copied ? <Check className="w-3 h-3 flex-shrink-0" /> : <Copy className="w-3 h-3 flex-shrink-0" />}
+                        <span className="truncate">{link}</span>
+                      </button>
+                      <span className="text-[11px] text-hydrangea-500 text-center">{fmtDate(r.rsvp_created_at)}</span>
+                      <button
+                        type="button"
+                        onClick={() => hasNames && setExpandedNames(expanded ? null : r.id)}
+                        disabled={!hasNames && r.rsvp_count === null}
+                        className={`text-xs font-semibold text-center px-2 py-1 rounded transition ${
+                          declined ? 'text-red-500' :
+                          r.rsvp_count ? 'text-hydrangea-700 hover:bg-hydrangea-50 active:scale-95' :
+                          'text-hydrangea-300'
+                        }`}
+                      >
+                        {declined ? 'Decline' : r.rsvp_count ?? '—'}
+                      </button>
                       <button
                         onClick={() => handleDelete(r.id)}
-                        className="text-hydrangea-300 hover:text-red-500 active:scale-90 transition p-1"
-                        aria-label="삭제"
+                        className="text-hydrangea-300 hover:text-red-500 active:scale-90 transition flex items-center justify-center"
+                        aria-label="Delete"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
-                    <button
-                      onClick={() => copyLink(r.num)}
-                      className={`w-full inline-flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium transition ${
-                        copied ? 'bg-green-100 text-green-700' : 'bg-hydrangea-50 text-hydrangea-700 active:scale-95'
-                      }`}
-                    >
-                      {copied ? <><Check className="w-3.5 h-3.5" /> 복사됨!</> : <><Copy className="w-3.5 h-3.5" /> 링크 복사</>}
-                    </button>
+                    {expanded && hasNames && (
+                      <div className="px-3 pb-3 -mt-1">
+                        <div className="bg-hydrangea-50 rounded-lg p-2 text-xs text-hydrangea-700">
+                          {r.rsvp_attendee_names!.join(', ')}
+                        </div>
+                      </div>
+                    )}
                   </motion.div>
                 );
               })}
             </AnimatePresence>
           </div>
         )}
+
+        {!loading && recipients.length > 0 && (() => {
+          const total = recipients.length;
+          const attendingRows = recipients.filter((r) => r.rsvp_attend === true);
+          const attending = attendingRows.reduce((s, r) => s + (r.rsvp_count || 0), 0);
+          const adults = attendingRows.reduce((s, r) => s + (r.rsvp_adult_count || 0), 0);
+          const children = attendingRows.reduce((s, r) => s + (r.rsvp_child_count || 0), 0);
+          const declined = recipients.filter((r) => r.rsvp_attend === false).length;
+          const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+          return (
+            <div className="rounded-2xl border border-hydrangea-100 bg-hydrangea-50/40 p-4 mb-12">
+              <div className="text-[11px] text-hydrangea-400 mb-3">As of {today} · Total {total}</div>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center justify-between p-2 rounded-lg bg-white/70">
+                  <span className="font-semibold text-green-700">Attending {attending}</span>
+                  <span className="text-xs text-hydrangea-500">Adult: {adults} / Child: {children}</span>
+                </div>
+                <div className="flex items-center justify-between p-2 rounded-lg bg-white/70">
+                  <span className="font-semibold text-red-600">Declined {declined}</span>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen} title="수신자 일괄 등록" description="한 줄에 한 명씩 입력하세요">

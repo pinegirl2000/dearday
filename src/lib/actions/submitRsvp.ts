@@ -8,7 +8,8 @@ interface RsvpInput {
   slug: string;
   recipient_id?: string;
   attend: boolean;
-  count: number;
+  adult_count: number;
+  child_count: number;
   attendee_names: string[];
   oneliner: string;
 }
@@ -34,13 +35,16 @@ export async function submitRsvp(input: RsvpInput): Promise<RsvpResult> {
       return { ok: false, error: 'RSVP 마감일이 지났습니다.' };
     }
 
-    const safeCount = input.attend ? Math.max(1, Math.min(card.rsvp_max_per_card || 4, input.count || 1)) : 0;
+    const max = card.rsvp_max_per_card || 4;
+    const adult = input.attend ? Math.max(0, Math.min(max, input.adult_count ?? 1)) : 0;
+    const child = input.attend ? Math.max(0, Math.min(max, input.child_count ?? 0)) : 0;
+    const safeCount = input.attend ? Math.max(1, Math.min(max, adult + child)) : 0;
     const oneliner = (input.oneliner || '').trim().slice(0, 200) || null;
 
     await pool.query(
-      `INSERT INTO dearday_rsvp (card_id, recipient_id, attend, count, attendee_names, oneliner)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
-      [input.card_id, input.recipient_id || null, input.attend, safeCount, input.attendee_names || [], oneliner]
+      `INSERT INTO dearday_rsvp (card_id, recipient_id, attend, count, adult_count, child_count, attendee_names, oneliner)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [input.card_id, input.recipient_id || null, input.attend, safeCount, adult, child, input.attendee_names || [], oneliner]
     );
 
     revalidatePath(`/i/${input.slug}`);
@@ -56,11 +60,13 @@ export async function getRsvpStats(cardId: string) {
     `SELECT
        COUNT(*) FILTER (WHERE attend = true)::int AS attending_groups,
        COALESCE(SUM(count) FILTER (WHERE attend = true), 0)::int AS attending_count,
+       COALESCE(SUM(adult_count) FILTER (WHERE attend = true), 0)::int AS attending_adults,
+       COALESCE(SUM(child_count) FILTER (WHERE attend = true), 0)::int AS attending_children,
        COUNT(*) FILTER (WHERE attend = false)::int AS declined
      FROM dearday_rsvp WHERE card_id = $1`,
     [cardId]
   );
-  return rows[0] as { attending_groups: number; attending_count: number; declined: number };
+  return rows[0] as { attending_groups: number; attending_count: number; attending_adults: number; attending_children: number; declined: number };
 }
 
 export async function getOnelinerFeed(cardId: string, limit = 50) {

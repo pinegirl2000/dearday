@@ -8,6 +8,7 @@ import { getEventTypeMeta } from '@/lib/eventType';
 import { getBackground } from '@/lib/backgrounds';
 import { ExternalLink, Settings, Pencil } from 'lucide-react';
 import type { BaseCard } from '@/types/card';
+import LoginPrompt from './_LoginPrompt';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,12 +43,7 @@ export default async function CardsListPage() {
       <MobileHeader title="내 초대장" back />
 
       {!session ? (
-        <div className="px-6 py-16 text-center">
-          <p className="text-sm text-hydrangea-500 mb-4">로그인하면 발행한 카드를 볼 수 있습니다.</p>
-          <Link href="/" className="inline-block px-5 py-2.5 rounded-full bg-hydrangea-500 text-white text-sm font-medium">
-            홈으로 가서 로그인하기
-          </Link>
-        </div>
+        <LoginPrompt />
       ) : cards.length === 0 ? (
         <div className="px-6 py-16 text-center">
           <p className="text-sm text-hydrangea-400 mb-4">아직 발행한 초대장이 없습니다.</p>

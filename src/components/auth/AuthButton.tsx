@@ -1,7 +1,7 @@
 'use client';
 
 import { useSession, signIn, signOut } from 'next-auth/react';
-import { LogIn, LogOut } from 'lucide-react';
+import { LogIn, LogOut, User } from 'lucide-react';
 
 export default function AuthButton() {
   const { data: session, status } = useSession();
@@ -15,13 +15,9 @@ export default function AuthButton() {
   if (session?.user) {
     return (
       <div className="flex items-center gap-2">
-        {session.user.image && (
-          <img
-            src={session.user.image}
-            alt={session.user.name || ''}
-            className="w-8 h-8 rounded-full"
-          />
-        )}
+        <div className="w-8 h-8 rounded-full bg-hydrangea-100 flex items-center justify-center text-hydrangea-700 text-xs font-semibold">
+          {session.user.name?.trim()?.[0]?.toUpperCase() || <User className="w-4 h-4" />}
+        </div>
         <span className="text-xs text-hydrangea-700 max-w-[100px] truncate">
           {session.user.name}
         </span>

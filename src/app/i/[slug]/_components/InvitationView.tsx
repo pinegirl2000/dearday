@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Calendar, MapPin, Phone, ExternalLink, Share2 } from 'lucide-react';
+import { Phone, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { ClassicEnvelope, EnvelopeBeige, NoneEnvelope } from '@/components/envelopes';
+import { ClassicEnvelope, EnvelopeBeige, EnvelopeMint, EnvelopeCoral, NoneEnvelope } from '@/components/envelopes';
 import { getTheme } from '@/lib/theme';
 import { getEventTypeMeta } from '@/lib/eventType';
 import { formatGreeting, getLayout, applyName } from '@/lib/layouts';
@@ -14,6 +14,8 @@ import TemplateCard from './TemplateCard';
 const ENVELOPE_MAP = {
   'envelope-1': ClassicEnvelope,
   'envelope-2': EnvelopeBeige,
+  'envelope-3': EnvelopeMint,
+  'envelope-4': EnvelopeCoral,
   'none': NoneEnvelope
 } as const;
 
@@ -33,11 +35,21 @@ export default function InvitationView({ card, feed, recipientName, recipientId 
 
   // 봉투에 어울리는 버튼 색상 (envelope의 메인 톤과 매칭)
   const BUTTON_COLOR: Record<string, string> = {
-    'envelope-1': '#A990CC',  // 라벤더
-    'envelope-2': '#9C8B6E',  // 베이지/브라운
+    'envelope-1': '#A990CC',
+    'envelope-2': '#9C8B6E',
+    'envelope-3': '#82B095',
+    'envelope-4': '#C68676',
     'none':       '#7B5EA7'
   };
+  const ENVELOPE_DEEP: Record<string, string> = {
+    'envelope-1': '#5A3D7A',
+    'envelope-2': '#6E5A3D',
+    'envelope-3': '#476956',
+    'envelope-4': '#8E5A4D',
+    'none':       '#5A3D7A'
+  };
   const buttonBg = BUTTON_COLOR[card.envelope_anim] || '#A990CC';
+  const envelopeDeep = ENVELOPE_DEEP[card.envelope_anim] || '#5A3D7A';
 
   // 편지지 내용 — 선택한 레이아웃의 폰트/색상 적용
   const layout = getLayout(card.layout_id);
@@ -55,7 +67,10 @@ export default function InvitationView({ card, feed, recipientName, recipientId 
     if (!iso) return '';
     try {
       const d = new Date(iso);
-      return d.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long', hour: 'numeric', minute: '2-digit' });
+      const date = d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      const wday = d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+      const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      return `${date} (${wday}) at ${time}`;
     } catch { return iso; }
   };
 
@@ -65,36 +80,30 @@ export default function InvitationView({ card, feed, recipientName, recipientId 
       try { await navigator.share({ title: card.title, url }); } catch {}
     } else {
       await navigator.clipboard.writeText(url);
-      toast.success('링크가 복사되었어요');
+      toast.success('Link copied');
     }
   };
+
+  // 봉투 색상에 어울리는 배경 그라데이션
+  const ENVELOPE_BG: Record<string, string> = {
+    'envelope-1': 'linear-gradient(135deg, #F4ECFA 0%, #E8DFF3 60%, #D5C5E8 100%)',  // Lavender
+    'envelope-2': 'linear-gradient(135deg, #FBF5E8 0%, #F0E5CD 60%, #E8DCC4 100%)',  // Beige
+    'envelope-3': 'linear-gradient(135deg, #F1FAF4 0%, #DBEEDF 60%, #C8E5D2 100%)',  // Mint
+    'envelope-4': 'linear-gradient(135deg, #FFF1EB 0%, #F8D3C9 60%, #F2C0B3 100%)',  // Coral
+    'none':       'linear-gradient(135deg, #F4ECFA 0%, #E8DFF3 60%, #D5C5E8 100%)'
+  };
+  const envelopeBg = ENVELOPE_BG[card.envelope_anim] || ENVELOPE_BG['envelope-1'];
 
   // 봉투 미열림 상태: 봉투만 표시 (전체화면)
   if (!open) {
     return (
       <main
         className="min-h-screen flex flex-col items-center justify-center p-6"
-        style={{ background: `linear-gradient(135deg, ${theme.colors.bg}, ${theme.colors.accent}55)` }}
+        style={{ background: envelopeBg }}
       >
-        {formatGreeting(recipientName, card.recipient_template) && (
-          <p className="mb-4 text-base font-medium" style={{ color: theme.colors.deep }}>
-            {formatGreeting(recipientName, card.recipient_template)}
-          </p>
-        )}
-        <div onClick={handleOpen} className={opening ? '' : 'cursor-pointer'}>
+        <div onClick={handleOpen} className={`relative ${opening ? '' : 'cursor-pointer'}`}>
           <Envelope isOpen={opening} width={320}>
             <div style={{ textAlign: 'center', padding: '0 8px' }}>
-              {formatGreeting(recipientName, card.recipient_template) && (
-                <div style={{
-                  fontSize: 13,
-                  fontWeight: 500,
-                  color: titleField.color,
-                  letterSpacing: '0.06em',
-                  marginBottom: 10
-                }}>
-                  {formatGreeting(recipientName, card.recipient_template)}
-                </div>
-              )}
               <div
                 style={{
                   fontFamily: titleField.fontFamily || "'Noto Serif KR', serif",
@@ -123,6 +132,28 @@ export default function InvitationView({ card, feed, recipientName, recipientId 
               )}
             </div>
           </Envelope>
+          {card.envelope_anim !== 'none' && formatGreeting(recipientName, card.recipient_template) && (() => {
+            const envHeight = Math.round(320 * 0.7);
+            return (
+              <div style={{
+                position: 'absolute',
+                left: '50%',
+                top: `${Math.round(envHeight * 0.78)}px`,
+                transform: 'translateX(-50%)',
+                width: '85%',
+                textAlign: 'center',
+                color: envelopeDeep,
+                fontSize: 14,
+                fontWeight: 500,
+                letterSpacing: '0.04em',
+                textShadow: '0 1px 2px rgba(255,255,255,0.4)',
+                pointerEvents: 'none',
+                zIndex: 10
+              }}>
+                {formatGreeting(recipientName, card.recipient_template)}
+              </div>
+            );
+          })()}
         </div>
         <button
           onClick={handleOpen}
@@ -130,7 +161,7 @@ export default function InvitationView({ card, feed, recipientName, recipientId 
           className="mt-8 px-6 py-3 rounded-full text-white font-medium shadow-lg active:scale-95 transition disabled:opacity-60"
           style={{ background: buttonBg }}
         >
-          {opening ? '열리는 중...' : '초대장 열기'}
+          {opening ? 'Opening...' : 'Open invitation'}
         </button>
       </main>
     );
@@ -139,56 +170,15 @@ export default function InvitationView({ card, feed, recipientName, recipientId 
   // 펼쳐진 카드
   return (
     <main className="min-h-screen flex flex-col items-center py-8 px-4" style={{ background: theme.colors.bg, fontFamily: theme.fontFamily, color: theme.colors.ink }}>
-      {/* 템플릿 배경 카드 + 상단 정보 오버레이 */}
+      {/* 템플릿 카드 (반투명 정보박스 아래에 RSVP 포함) */}
       <div className="relative w-full max-w-md mb-6">
-        <TemplateCard card={card} recipientName={recipientName} />
-
-        {/* 제목 아래에 떠있는 정보 패널 */}
-        <div
-          className="absolute left-1/2 -translate-x-1/2 px-4 py-2 text-center space-y-1 text-xs z-10"
-          style={{
-            top: '40%',
-            color: theme.colors.deep,
-            maxWidth: '88%'
-          }}
-        >
-          {card.event_date && (
-            <div className="flex items-center justify-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5" style={{ color: theme.colors.primary }} />
-              <span>{formatDate(card.event_date)}</span>
-            </div>
-          )}
-          {card.event_place && (
-            <div className="flex items-center justify-center gap-1.5 flex-wrap">
-              <MapPin className="w-3.5 h-3.5" style={{ color: theme.colors.primary }} />
-              <span>{card.event_place}</span>
-              {card.map_url && (
-                <a href={card.map_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-0.5 text-[10px] underline" style={{ color: theme.colors.primary }}>
-                  지도 보기 <ExternalLink className="w-2.5 h-2.5" />
-                </a>
-              )}
-            </div>
-          )}
-          {card.rsvp_enabled && (
-            <p className="text-[10px] pt-0.5" style={{ color: theme.colors.muted }}>
-              아래 참석여부를 기입해 주세요 ↓
-            </p>
-          )}
-        </div>
-
-        {/* RSVP — 카드 안쪽 하단 압축 풀 폼 */}
-        {card.rsvp_enabled && (
-          <div
-            className="absolute left-1/2 -translate-x-1/2 bottom-3 px-3 py-2 rounded-xl backdrop-blur-sm z-10"
-            style={{
-              background: 'rgba(255,255,255,0.78)',
-              width: '88%',
-              boxShadow: '0 4px 14px rgba(0,0,0,0.08)'
-            }}
-          >
+        <TemplateCard
+          card={card}
+          recipientName={recipientName}
+          rsvpSlot={card.rsvp_enabled ? (
             <RsvpForm card={card} theme={theme} recipientId={recipientId} recipientName={recipientName} compact />
-          </div>
-        )}
+          ) : null}
+        />
       </div>
 
       {/* 연락처 + Feed + Share */}
@@ -216,7 +206,7 @@ export default function InvitationView({ card, feed, recipientName, recipientId 
             className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium"
             style={{ color: theme.colors.primary, background: theme.colors.bg }}
           >
-            <Share2 className="w-4 h-4" /> 초대장 공유하기
+            <Share2 className="w-4 h-4" /> Share invitation
           </button>
         </div>
       </article>

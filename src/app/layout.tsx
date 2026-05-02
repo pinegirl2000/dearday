@@ -6,6 +6,7 @@ import { getServerSession } from 'next-auth';
 import { Toaster } from 'sonner';
 import { authOptions } from '@/lib/auth';
 import SessionProvider from '@/components/auth/SessionProvider';
+import TopBar from '@/components/layout/TopBar';
 import './globals.css';
 
 const notoSerif = Noto_Serif_KR({
@@ -45,7 +46,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="font-sans bg-hydrangea-50">
         <SessionProvider session={session}>
           <NextIntlClientProvider messages={messages} locale={locale}>
-            {children}
+            <TopBar />
+            <div className="pt-12">{children}</div>
           </NextIntlClientProvider>
         </SessionProvider>
         <Toaster position="top-center" richColors closeButton duration={3000} />

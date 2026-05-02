@@ -166,7 +166,7 @@ export default function ClassicEnvelope({
             left: Math.round(width * 0.08),
             top: Math.round(height * 0.30),
             width: width - Math.round(width * 0.08) * 2,
-            height: Math.round(height * 0.72),
+            height: Math.round(height * 0.68),
             background: PALETTE.paper,
             borderRadius: 4,
             boxShadow: '0 3px 10px rgba(70,50,110,0.25)',
@@ -194,11 +194,7 @@ export default function ClassicEnvelope({
                 margin: '0 auto 10px'
               }}
             />
-            {children || (
-              <p style={{ fontSize: 15, color: PALETTE.body, letterSpacing: '0.2em', fontWeight: 500 }}>
-                당신을 초대합니다
-              </p>
-            )}
+            {children}
             <div style={{ marginTop: 8, color: PALETTE.accent, fontSize: 16 }}>✿</div>
           </div>
         </motion.div>
@@ -257,7 +253,7 @@ export default function ClassicEnvelope({
           transition={
             isOpen
               ? { duration: D * 0.6, ease: [0.4, 0, 0.2, 1] as const }
-              : { duration: 3.5, repeat: Infinity, ease: 'easeInOut', repeatDelay: 1, times: [0, 0.18, 0.35, 0.55, 0.75, 1] }
+              : { duration: 5.25, repeat: Infinity, ease: 'easeInOut', repeatDelay: 1.5, times: [0, 0.18, 0.35, 0.55, 0.75, 1] }
           }
         >
           {/* 앞면 (외부) — SVG로 끝부분을 둥글게 */}

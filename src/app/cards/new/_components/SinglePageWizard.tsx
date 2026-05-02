@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useTransition } from 'react';
+import { useState, useEffect, useMemo, useRef, useTransition } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
@@ -13,11 +13,13 @@ import { useWizardStore } from '@/stores/wizardStore';
 import { EVENT_TYPES, getEventTypeMeta } from '@/lib/eventType';
 import { BACKGROUNDS, getBackground, getBackgroundsFor } from '@/lib/backgrounds';
 import { LAYOUTS, getLayout } from '@/lib/layouts';
-import { ENVELOPE_ANIMS, ClassicEnvelope, EnvelopeBeige, NoneEnvelope } from '@/components/envelopes';
+import { ENVELOPE_ANIMS, ClassicEnvelope, EnvelopeBeige, EnvelopeMint, EnvelopeCoral, NoneEnvelope } from '@/components/envelopes';
 
 const ENVELOPE_MAP = {
   'envelope-1': ClassicEnvelope,
   'envelope-2': EnvelopeBeige,
+  'envelope-3': EnvelopeMint,
+  'envelope-4': EnvelopeCoral,
   'none': NoneEnvelope
 } as const;
 import { publishCard, updateCard } from '@/lib/actions/publishCard';
@@ -101,6 +103,15 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
   const [envelopeOpen, setEnvelopeOpen] = useState(false);
   const [envelopeOpening, setEnvelopeOpening] = useState(false);
 
+  const [hydrated, setHydrated] = useState(!!skipRehydrate);
+  // Yes/No 토글 시 이전 입력값 유지를 위한 캐시
+  const lastRecipientTemplate = useRef<string>('');
+  useEffect(() => {
+    if (typeof draft.recipient_template === 'string' && draft.recipient_template.length > 0) {
+      lastRecipientTemplate.current = draft.recipient_template;
+    }
+  }, [draft.recipient_template]);
+
   useEffect(() => {
     if (!skipRehydrate) {
       // 신규 발행 진입 — 직전 편집 세션의 editingSlug가 잔존하지 않도록 정리
@@ -108,10 +119,31 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
       const p = useWizardStore.persist.rehydrate();
       Promise.resolve(p).then(() => {
         useWizardStore.setState({ editingSlug: undefined });
+        setHydrated(true);
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // 봉투를 None으로 바꾸면 recipient_template은 null로 정리 (검증/표시 일관성)
+  useEffect(() => {
+    if (draft.envelope_anim === 'none' && draft.recipient_template !== null) {
+      setDraft({ recipient_template: null });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draft.envelope_anim]);
+
+  // 신규 모드에서 일시 미입력 시 기본값: 가장 가까운 토요일 11:00, RSVP/만료일 동일
+  useEffect(() => {
+    if (!hydrated || editingSlug) return;
+    if (useWizardStore.getState().draft.event_date) return;
+    const now = new Date();
+    const daysToSat = (6 - now.getDay() + 7) % 7;
+    const sat = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysToSat, 11, 0, 0);
+    const iso = sat.toISOString();
+    setDraft({ event_date: iso, rsvp_deadline: iso, expiry_date: iso });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated]);
 
   // ?type= 자동 진입
   useEffect(() => {
@@ -129,7 +161,17 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
   const isDone = (id: SectionId): boolean => {
     if (id === 1) return !!draft.event_type;
     if (id === 2) return !!draft.bg_id && !!draft.envelope_anim;
-    if (id === 3) return !!(draft.title && draft.title.trim() && draft.event_date);
+    if (id === 3) {
+      const recipientOk = draft.recipient_template === null
+        || (typeof draft.recipient_template === 'string' && draft.recipient_template.trim().length > 0);
+      return !!(
+        draft.title && draft.title.trim() &&
+        draft.event_date &&
+        draft.event_place && draft.event_place.trim() &&
+        recipientOk &&
+        draft.body && draft.body.trim()
+      );
+    }
     if (id === 4) return !!draft.layout_id;
     return false;
   };
@@ -142,7 +184,15 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
     return true;
   };
 
-  const advance = (next: SectionId) => setOpen(next);
+  const advance = (next: SectionId) => {
+    setOpen(next);
+    // Edit 모드 — 단계 이동 시 자동 저장 (백그라운드, 실패는 toast로 알림)
+    if (editingSlug) {
+      updateCard(editingSlug, draft).then((res) => {
+        if (!res.ok) toast.error(res.error || 'Auto-save failed');
+      }).catch(() => toast.error('Auto-save failed'));
+    }
+  };
 
   // 섹션 3 진입 시 placeholder 자동 채우기
   useEffect(() => {
@@ -185,21 +235,21 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
     startTransition(async () => {
       if (isEditMode && editingSlug) {
         const res = await updateCard(editingSlug, draft);
-        if (!res.ok) { toast.error(res.error || '수정 실패'); return; }
-        toast.success('수정되었어요!');
+        if (!res.ok) { toast.error(res.error || 'Update failed'); return; }
+        toast.success('Saved!');
         reset();
         router.push(`/cards/${editingSlug}/manage`);
         return;
       }
       const res = await publishCard(draft);
       if (!res.ok) {
-        toast.error(res.error || '발행 실패');
+        toast.error(res.error || 'Publish failed');
         return;
       }
       if (res.slug && res.ownerToken) {
         localStorage.setItem(`dearday:owner:${res.slug}`, res.ownerToken);
       }
-      toast.success('초대장이 발행되었어요!');
+      toast.success('Invitation published!');
       reset();
       router.push(`/cards/${res.slug}/manage`);
     });
@@ -215,17 +265,27 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
     5: ''
   };
 
-  const detailsCanProceed = !!(draft.title && draft.title.trim() && draft.event_date);
+  const detailsCanProceed = (() => {
+    const recipientOk = draft.recipient_template === null
+      || (typeof draft.recipient_template === 'string' && draft.recipient_template.trim().length > 0);
+    return !!(
+      draft.title && draft.title.trim() &&
+      draft.event_date &&
+      draft.event_place && draft.event_place.trim() &&
+      recipientOk &&
+      draft.body && draft.body.trim()
+    );
+  })();
 
   return (
     <PageContainer noPadding>
-      <MobileHeader title={isEditMode ? '초대장 수정' : t('headerTitle')} back />
+      <MobileHeader title={isEditMode ? 'Edit Invitation' : t('headerTitle')} back />
 
       <div className="px-4 py-4 space-y-3 pb-24">
         {/* 1. 이벤트 선택 */}
         <SectionShell
           id={1}
-          title="이벤트 선택"
+          title="Event"
           summary={summaries[1]}
           open={open === 1}
           done={isDone(1) && open !== 1}
@@ -258,7 +318,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
         {/* 2. 템플릿 (배경 + 봉투) */}
         <SectionShell
           id={2}
-          title="템플릿 선택"
+          title="Template"
           summary={summaries[2]}
           open={open === 2}
           done={isDone(2) && open !== 2}
@@ -267,30 +327,39 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
         >
           <div className="space-y-5 mt-2">
             <div>
-              <h4 className="text-xs font-semibold text-hydrangea-700 mb-2">💌 봉투</h4>
-              <div className="space-y-2">
+              <h4 className="text-xs font-semibold text-hydrangea-700 mb-2">💌 Envelope</h4>
+              <div className="grid grid-cols-2 gap-2">
                 {ENVELOPE_ANIMS.map((e) => {
                   const selected = draft.envelope_anim === e.id;
                   const recommended = e.id === meta.recommendEnvelope;
+                  const Env = ENVELOPE_MAP[e.id as keyof typeof ENVELOPE_MAP];
                   return (
                     <motion.button
                       key={e.id}
                       onClick={() => setDraft({ envelope_anim: e.id as EnvelopeAnimId })}
                       whileTap={{ scale: 0.98 }}
-                      className={`w-full flex items-center justify-between p-3 rounded-xl border-2 text-left transition ${
+                      className={`relative flex flex-col items-center p-3 rounded-xl border-2 text-center transition ${
                         selected ? 'border-hydrangea-500 bg-hydrangea-50' : 'border-hydrangea-100/60 bg-white'
                       }`}
                     >
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-xs text-hydrangea-700">{e.name}</span>
-                          {recommended && (
-                            <span className="px-1.5 py-0.5 rounded-full bg-hydrangea-100 text-[9px] font-semibold text-hydrangea-700">추천</span>
-                          )}
-                        </div>
-                        <div className="text-[11px] text-hydrangea-400 mt-0.5">{e.desc}</div>
+                      <div className="pointer-events-none mb-2 flex items-center justify-center overflow-hidden" style={{ height: 110, width: 120 }}>
+                        {e.id === 'none' ? (
+                          <div className="w-[100px] h-[72px] rounded-md border-2 border-dashed border-hydrangea-200 bg-white flex items-center justify-center text-[10px] text-hydrangea-400">
+                            No envelope
+                          </div>
+                        ) : (
+                          <Env isOpen={false} width={100}>{null}</Env>
+                        )}
                       </div>
-                      {selected && <Check className="w-4 h-4 text-hydrangea-500" strokeWidth={2.5} />}
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-semibold text-xs text-hydrangea-700">{e.name}</span>
+                        {recommended && (
+                          <span className="px-1.5 py-0.5 rounded-full bg-hydrangea-100 text-[9px] font-semibold text-hydrangea-700">Rec</span>
+                        )}
+                      </div>
+                      {selected && (
+                        <Check className="absolute top-2 right-2 w-4 h-4 text-hydrangea-500" strokeWidth={2.5} />
+                      )}
                     </motion.button>
                   );
                 })}
@@ -298,9 +367,9 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
             </div>
 
             <div>
-              <h4 className="text-xs font-semibold text-hydrangea-700 mb-2">🖼️ 배경</h4>
-              <div className="grid grid-cols-3 gap-2">
-                {sortedBackgrounds.map((bg, idx) => {
+              <h4 className="text-xs font-semibold text-hydrangea-700 mb-2">🖼️ Background</h4>
+              {(() => {
+                const renderTile = (bg: typeof sortedBackgrounds[number]) => {
                   const selected = draft.bg_id === bg.id;
                   return (
                     <motion.button
@@ -316,11 +385,6 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
                       ) : (
                         <div className="absolute inset-0" style={{ background: bg.gradient }} />
                       )}
-                      {idx === 0 && (
-                        <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded-full bg-white/90 text-[9px] font-semibold text-hydrangea-700">
-                          추천
-                        </div>
-                      )}
                       <div className="absolute bottom-0 left-0 right-0 bg-black/40 text-white text-[10px] py-0.5 text-center truncate px-1">
                         {bg.name}
                       </div>
@@ -331,12 +395,20 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
                       )}
                     </motion.button>
                   );
-                })}
-              </div>
+                };
+                const gradientBgs = sortedBackgrounds.filter((b) => b.id.startsWith('bg-') && !b.id.startsWith('bg-img-') && b.id !== 'bg-none');
+                const imageBgs = sortedBackgrounds.filter((b) => b.id.startsWith('bg-img-'));
+                return (
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-4 gap-2">{gradientBgs.map(renderTile)}</div>
+                    {imageBgs.length > 0 && <div className="grid grid-cols-4 gap-2">{imageBgs.map(renderTile)}</div>}
+                  </div>
+                );
+              })()}
             </div>
 
             <Button onClick={() => advance(3)} disabled={!isDone(2)} full size="md">
-              다음
+              Next
             </Button>
           </div>
         </SectionShell>
@@ -344,7 +416,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
         {/* 3. 정보 입력 + RSVP */}
         <SectionShell
           id={3}
-          title="내용 입력"
+          title="Details"
           summary={summaries[3]}
           open={open === 3}
           done={isDone(3) && open !== 3}
@@ -352,26 +424,56 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
           onToggle={() => setOpen(3)}
         >
           <div className="space-y-4 mt-2">
+            {draft.envelope_anim && draft.envelope_anim !== 'none' && (() => {
+              const showName = draft.recipient_template !== null && draft.recipient_template !== undefined;
+              return (
+                <div>
+                  <label className="block text-sm font-medium text-hydrangea-700 mb-1.5">
+                    Show recipient name on the envelope?
+                  </label>
+                  <div className="flex gap-2 mb-2">
+                    <button type="button"
+                      onClick={() => setDraft({ recipient_template: draft.recipient_template ?? lastRecipientTemplate.current ?? '' })}
+                      className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-medium transition ${
+                        showName ? 'border-hydrangea-500 bg-hydrangea-50 text-hydrangea-700' : 'border-hydrangea-100 bg-white text-hydrangea-400'
+                      }`}>
+                      Yes
+                    </button>
+                    <button type="button"
+                      onClick={() => setDraft({ recipient_template: null })}
+                      className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-medium transition ${
+                        !showName ? 'border-hydrangea-500 bg-hydrangea-50 text-hydrangea-700' : 'border-hydrangea-100 bg-white text-hydrangea-400'
+                      }`}>
+                      No
+                    </button>
+                  </div>
+                  {showName && (
+                    <Input
+                      placeholder="e.g. Dear $NAME / $NAME님께"
+                      hint="Use $NAME to insert the recipient's name."
+                      value={draft.recipient_template ?? ''}
+                      onChange={(e) => setDraft({ recipient_template: e.target.value })}
+                    />
+                  )}
+                </div>
+              );
+            })()}
             <Input
-              label="받는 분"
-              placeholder="$NAME님"
-              hint="$NAME 이라고 넣으시면 받는 분 이름이 들어갑니다 (예: $NAME집사님 → 홍길동집사님)"
-              value={draft.recipient_template ?? ''}
-              onChange={(e) => setDraft({ recipient_template: e.target.value })}
-            />
-            <Input
-              label="부제목"
-              placeholder="예: 두 사람이 하나가 되는 날"
-              hint="비워둬도 됩니다"
+              label="Subtitle"
+              placeholder="e.g. The day two become one"
+              hint="Optional"
               value={draft.greeting_oneliner || ''}
               onChange={(e) => setDraft({ greeting_oneliner: e.target.value })}
             />
             <Input
               label={meta.fields.titleLabel}
+              requiredMark
               placeholder={meta.fields.titlePlaceholder}
               value={draft.title || ''}
               onChange={(e) => setDraft({ title: e.target.value })}
             />
+            <Textarea label="Message" requiredMark placeholder={meta.fields.bodyPlaceholder} value={draft.body || ''}
+              onChange={(e) => setDraft({ body: e.target.value })} rows={5} />
             {(() => {
               const today = new Date();
               const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
@@ -386,11 +488,15 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
                 // 부분 입력(연도 미완성 등) 무시 — 4자리 연도 + 합리적 범위만 commit
                 if (!y || y < 1900 || y > 2999 || !mo || !d) return;
                 const [h, m] = (time || '00:00').split(':').map(Number);
-                setDraft({ event_date: new Date(y, mo - 1, d, h || 0, m || 0).toISOString() });
+                const iso = new Date(y, mo - 1, d, h || 0, m || 0).toISOString();
+                // event_date 변경 시 RSVP 마감/만료일도 같이 동기화
+                setDraft({ event_date: iso, rsvp_deadline: iso, expiry_date: iso });
               };
               return (
                 <div>
-                  <label className="block text-sm font-medium text-hydrangea-700 mb-1.5">일시</label>
+                  <label className="block text-sm font-medium text-hydrangea-700 mb-1.5">
+                    Date & Time<span className="text-red-500 ml-1">*</span>
+                  </label>
                   <div className="grid grid-cols-2 gap-2">
                     <input type="date" value={dateStr} min={todayStr} onChange={(e) => update(e.target.value, timeStr)}
                       className="w-full min-h-[56px] px-4 rounded-xl border border-hydrangea-100 bg-white text-hydrangea-700 text-base focus:outline-none focus:ring-2 focus:ring-hydrangea-300 [color-scheme:light]"
@@ -402,24 +508,22 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
                 </div>
               );
             })()}
-            <Input label="장소" placeholder="예: 라비두스 웨딩홀 5F" value={draft.event_place || ''}
+            <Input label="Place" requiredMark placeholder="e.g. Labidus Wedding Hall 5F" value={draft.event_place || ''}
               onChange={(e) => setDraft({ event_place: e.target.value })} />
-            <Input label="지도 링크 (선택)" placeholder="네이버/구글 지도 URL" value={draft.map_url || ''}
+            <Input label="Address" placeholder="Street address or map link" value={draft.map_url || ''}
               onChange={(e) => setDraft({ map_url: e.target.value })} />
-            <Input label="연락처 이름" placeholder="대표" value={draft.contact_name || ''}
+            <Input label="Host" placeholder="e.g. Jane Doe" value={draft.contact_name || ''}
               onChange={(e) => setDraft({ contact_name: e.target.value })} />
-            <PhoneInput label="전화" value={draft.contact_phone || ''}
+            <PhoneInput label="Phone" value={draft.contact_phone || ''}
               onChange={(phone) => setDraft({ contact_phone: phone })} />
-            <Textarea label="본문 메시지" placeholder={meta.fields.bodyPlaceholder} value={draft.body || ''}
-              onChange={(e) => setDraft({ body: e.target.value })} rows={5} />
-            <Textarea label="기타 안내 (선택)" placeholder="주차 안내, 주의사항 등" value={draft.extra_info || ''}
+            <Textarea label="Additional info (optional)" placeholder="Parking, notes, etc." value={draft.extra_info || ''}
               onChange={(e) => setDraft({ extra_info: e.target.value })} rows={3} />
 
             <div className="pt-3 border-t border-hydrangea-100/60">
-              <h4 className="text-xs font-semibold text-hydrangea-700 mb-2">응답(RSVP) 옵션</h4>
+              <h4 className="text-xs font-semibold text-hydrangea-700 mb-2">RSVP options</h4>
               <div className="space-y-2">
                 <div className="flex items-center justify-between p-3 rounded-xl bg-white border border-hydrangea-100/60">
-                  <div className="text-sm text-hydrangea-700">RSVP 받기</div>
+                  <div className="text-sm text-hydrangea-700">Enable RSVP</div>
                   <button type="button" onClick={() => setDraft({ rsvp_enabled: !draft.rsvp_enabled })}
                     className={`relative w-11 h-6 rounded-full transition ${draft.rsvp_enabled ? 'bg-hydrangea-500' : 'bg-hydrangea-100'}`}>
                     <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${draft.rsvp_enabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
@@ -428,7 +532,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
                 {draft.rsvp_enabled && (
                   <>
                     <div className="flex items-center justify-between p-3 rounded-xl bg-white border border-hydrangea-100/60">
-                      <div className="text-sm text-hydrangea-700">한 그룹 최대 인원</div>
+                      <div className="text-sm text-hydrangea-700">Max per group</div>
                       <div className="flex items-center gap-2">
                         <button type="button" onClick={() => {
                           const cur = (draft.rsvp_max_per_card || 4) as number;
@@ -446,41 +550,53 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
                       </div>
                     </div>
                     <div className="flex items-center justify-between p-3 rounded-xl bg-white border border-hydrangea-100/60">
-                      <div className="text-sm text-hydrangea-700">참석자 이름 받기</div>
+                      <div className="text-sm text-hydrangea-700">Collect attendee names</div>
                       <button type="button" onClick={() => setDraft({ rsvp_collect_names: !draft.rsvp_collect_names })}
                         className={`relative w-11 h-6 rounded-full transition ${draft.rsvp_collect_names ? 'bg-hydrangea-500' : 'bg-hydrangea-100'}`}>
                         <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${draft.rsvp_collect_names ? 'translate-x-5' : 'translate-x-0.5'}`} />
                       </button>
                     </div>
-                    <Input label="RSVP 마감일 (선택)" type="date"
-                      min={(() => { const t = new Date(); return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`; })()}
-                      value={draft.rsvp_deadline ? draft.rsvp_deadline.slice(0, 10) : ''}
-                      onChange={(e) => {
-                        if (!e.target.value) { setDraft({ rsvp_deadline: null }); return; }
-                        const [y, mo, d] = e.target.value.split('-').map(Number);
-                        if (!y || y < 1900 || y > 2999 || !mo || !d) return;
-                        setDraft({ rsvp_deadline: new Date(e.target.value).toISOString() });
-                      }} />
+                    {(() => {
+                      const toLocalInput = (iso?: string | null) => {
+                        if (!iso) return '';
+                        const d = new Date(iso);
+                        if (isNaN(d.getTime())) return '';
+                        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}T${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+                      };
+                      const now = new Date();
+                      const minStr = toLocalInput(now.toISOString());
+                      const maxStr = draft.event_date ? toLocalInput(draft.event_date) : undefined;
+                      return (
+                        <Input label="RSVP deadline (optional)" type="datetime-local"
+                          hint={maxStr ? 'Must be before the event start time' : undefined}
+                          min={minStr}
+                          max={maxStr}
+                          value={toLocalInput(draft.rsvp_deadline)}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            if (!v) { setDraft({ rsvp_deadline: null }); return; }
+                            const [datePart, timePart] = v.split('T');
+                            const [y, mo, d] = datePart.split('-').map(Number);
+                            const [h, m] = (timePart || '00:00').split(':').map(Number);
+                            if (!y || y < 1900 || y > 2999 || !mo || !d) return;
+                            const picked = new Date(y, mo - 1, d, h || 0, m || 0);
+                            // 클라이언트 측 가드 — min(현재) 이후 + max(이벤트 시각) 이전
+                            if (picked.getTime() < Date.now() - 60000) return; // 1분 여유
+                            if (draft.event_date && picked.getTime() > new Date(draft.event_date).getTime()) return;
+                            setDraft({ rsvp_deadline: picked.toISOString() });
+                          }} />
+                      );
+                    })()}
                   </>
                 )}
-                <Input label="카드 만료일 (선택)" type="date"
-                  hint="만료된 후엔 안내 메시지가 표시됩니다"
-                  min={(() => { const t = new Date(); return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`; })()}
-                  value={draft.expiry_date ? draft.expiry_date.slice(0, 10) : ''}
-                  onChange={(e) => {
-                    if (!e.target.value) { setDraft({ expiry_date: null }); return; }
-                    const [y, mo, d] = e.target.value.split('-').map(Number);
-                    if (!y || y < 1900 || y > 2999 || !mo || !d) return;
-                    setDraft({ expiry_date: new Date(e.target.value).toISOString() });
-                  }} />
               </div>
             </div>
 
             <Button onClick={() => advance(4)} disabled={!detailsCanProceed} full size="md">
-              다음
+              Next
             </Button>
             {!detailsCanProceed && (
-              <p className="text-xs text-hydrangea-400 text-center">제목과 일시는 필수입니다</p>
+              <p className="text-xs text-hydrangea-400 text-center">All fields marked with * are required</p>
             )}
           </div>
         </SectionShell>
@@ -488,7 +604,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
         {/* 4. 레이아웃 */}
         <SectionShell
           id={4}
-          title="레이아웃 선택"
+          title="Layout"
           summary={summaries[4]}
           open={open === 4}
           done={isDone(4) && open !== 4}
@@ -496,23 +612,29 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
           onToggle={() => setOpen(4)}
         >
           <div className="grid grid-cols-3 gap-2 mt-2">
-            {LAYOUTS.map((l) => {
+            {LAYOUTS.map((l, idx) => {
               const selected = draft.layout_id === l.id;
+              const disabled = idx === 1 || idx === 2;
               return (
                 <motion.button
                   key={l.id}
                   onClick={() => {
+                    if (disabled) return;
                     setDraft({ layout_id: l.id as LayoutId });
-                    setTimeout(() => advance(5), 200);
                   }}
-                  whileTap={{ scale: 0.96 }}
+                  disabled={disabled}
+                  whileTap={disabled ? undefined : { scale: 0.96 }}
                   className={`relative p-3 rounded-xl border-2 text-left transition ${
+                    disabled ? 'border-hydrangea-100/60 bg-hydrangea-50/40 opacity-50 cursor-not-allowed' :
                     selected ? 'border-hydrangea-500 bg-hydrangea-50' : 'border-hydrangea-100/60 bg-white'
                   }`}
                 >
                   <div className="text-xs font-semibold text-hydrangea-700">{l.name}</div>
                   <div className="text-[10px] text-hydrangea-400 mt-1 leading-tight">{l.description}</div>
-                  {selected && (
+                  {disabled && (
+                    <span className="absolute top-1 right-1 px-1.5 py-0.5 rounded-full bg-hydrangea-100 text-[9px] font-semibold text-hydrangea-500">Soon</span>
+                  )}
+                  {!disabled && selected && (
                     <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-hydrangea-500 flex items-center justify-center">
                       <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
                     </div>
@@ -521,12 +643,53 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
               );
             })}
           </div>
+
+          {draft.layout_id && (
+            <div className="mt-4 space-y-3">
+              <div className="text-[11px] text-hydrangea-400 text-center">Preview — actual fonts & positions on the selected background</div>
+              <motion.div
+                key={`${draft.bg_id}-${draft.layout_id}`}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25 }}
+              >
+                <TemplateCard card={previewCard} recipientName="John" />
+              </motion.div>
+
+              {/* RSVP 미리보기 — 비활성 (레이아웃 카드 아래) */}
+              {draft.rsvp_enabled && (() => {
+                const ENVELOPE_PALETTE: Record<string, { primary: string; soft: string; deep: string }> = {
+                  'envelope-1': { primary: '#A990CC', soft: '#E8DFF3', deep: '#7B5EA7' },
+                  'envelope-2': { primary: '#9C8B6E', soft: '#EFE6D4', deep: '#6E5A3D' },
+                  'envelope-3': { primary: '#82B095', soft: '#DFEDDF', deep: '#476956' },
+                  'envelope-4': { primary: '#C68676', soft: '#F8DCD2', deep: '#8E5A4D' },
+                  'none':       { primary: '#7B5EA7', soft: '#E8DFF3', deep: '#5A3D7A' }
+                };
+                const p = ENVELOPE_PALETTE[draft.envelope_anim || 'envelope-1'] || ENVELOPE_PALETTE['envelope-1'];
+                return (
+                  <div className="mx-auto max-w-md rounded-2xl bg-white px-4 py-3" style={{ boxShadow: '0 4px 14px rgba(0,0,0,0.06)' }}>
+                    <h3 className="text-center text-sm font-semibold mb-2" style={{ color: p.deep }}>Will you join?</h3>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      <button type="button" disabled className="min-h-[34px] text-xs rounded-lg border-2 font-medium opacity-90"
+                        style={{ background: p.soft, color: p.deep, borderColor: p.primary }}>Attend</button>
+                      <button type="button" disabled className="min-h-[34px] text-xs rounded-lg border-2 font-medium opacity-90"
+                        style={{ background: p.soft, color: p.deep, borderColor: p.deep }}>Decline</button>
+                      <button type="button" disabled className="min-h-[34px] text-xs rounded-lg font-semibold text-white opacity-50"
+                        style={{ background: p.primary }}>Reply</button>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              <Button onClick={() => advance(5)} full size="md">Next</Button>
+            </div>
+          )}
         </SectionShell>
 
         {/* 5. 미리보기 & 발행 */}
         <SectionShell
           id={5}
-          title="미리보기 & 발행"
+          title="Preview & Publish"
           open={open === 5}
           done={false}
           enabled={isEnabled(5)}
@@ -541,7 +704,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
                   {!envelopeOpen ? (
                     <>
                       <p className="text-xs text-hydrangea-400 mb-4">
-                        {envelopeOpening ? '열리는 중...' : '봉투를 클릭해서 열어보세요'}
+                        {envelopeOpening ? 'Opening...' : 'Click the envelope to open'}
                       </p>
                       <div
                         onClick={() => {
@@ -552,7 +715,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
                             setEnvelopeOpening(false);
                           }, 1500);
                         }}
-                        className={envelopeOpening ? '' : 'cursor-pointer active:scale-95 transition'}
+                        className={`relative ${envelopeOpening ? '' : 'cursor-pointer active:scale-95 transition'}`}
                       >
                         <Env isOpen={envelopeOpening} width={280}>
                           {(() => {
@@ -561,24 +724,11 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
                             const df = lay.fields.date;
                             const dt = draft.event_date ? new Date(draft.event_date) : null;
                             const dateStr = dt && !isNaN(dt.getTime())
-                              ? dt.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })
+                              ? dt.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
                               : '';
-                            const previewName = '홍길동';
-                            const tpl = draft.recipient_template?.trim();
-                            const greetingPreview = tpl ? tpl.replace(/\$NAME/g, previewName) : '';
+                            const previewName = 'John';
                             return (
                               <div style={{ textAlign: 'center', padding: '0 8px' }}>
-                                {greetingPreview && (
-                                  <div style={{
-                                    fontSize: 12,
-                                    fontWeight: 500,
-                                    color: tf.color,
-                                    letterSpacing: '0.06em',
-                                    marginBottom: 8
-                                  }}>
-                                    {greetingPreview}
-                                  </div>
-                                )}
                                 <div style={{
                                   fontFamily: tf.fontFamily || "'Noto Serif KR', serif",
                                   fontWeight: tf.fontWeight,
@@ -588,7 +738,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
                                   lineHeight: tf.lineHeight || 1.2,
                                   marginBottom: 6
                                 }}>
-                                  {(draft.title || '제목').replace(/\$NAME/g, previewName)}
+                                  {(draft.title || 'Title').replace(/\$NAME/g, previewName)}
                                 </div>
                                 {dateStr && (
                                   <div style={{
@@ -604,6 +754,40 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
                             );
                           })()}
                         </Env>
+                        {(() => {
+                          if (draft.envelope_anim === 'none') return null;
+                          const previewName = 'John';
+                          const tpl = draft.recipient_template?.trim();
+                          const greetingPreview = tpl ? tpl.replace(/\$NAME/g, previewName) : '';
+                          if (!greetingPreview) return null;
+                          const ENVELOPE_DEEP: Record<string, string> = {
+                            'envelope-1': '#5A3D7A',
+                            'envelope-2': '#6E5A3D',
+                            'envelope-3': '#476956',
+                            'envelope-4': '#8E5A4D'
+                          };
+                          const deep = ENVELOPE_DEEP[draft.envelope_anim || 'envelope-1'] || '#5A3D7A';
+                          const envHeight = Math.round(280 * 0.7);
+                          return (
+                            <div style={{
+                              position: 'absolute',
+                              left: '50%',
+                              top: `${Math.round(envHeight * 0.78)}px`,
+                              transform: 'translateX(-50%)',
+                              width: '85%',
+                              textAlign: 'center',
+                              color: deep,
+                              fontSize: 13,
+                              fontWeight: 500,
+                              letterSpacing: '0.04em',
+                              textShadow: '0 1px 2px rgba(255,255,255,0.4)',
+                              pointerEvents: 'none',
+                              zIndex: 10
+                            }}>
+                              {greetingPreview}
+                            </div>
+                          );
+                        })()}
                       </div>
                     </>
                   ) : (
@@ -613,7 +797,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
                         onClick={() => { setEnvelopeOpen(false); setEnvelopeOpening(false); }}
                         className="text-xs text-hydrangea-500 mb-3 underline"
                       >
-                        ← 봉투 다시 보기
+                        ← Back to envelope
                       </button>
                       <motion.div
                         key={`${draft.bg_id}-${draft.layout_id}`}
@@ -621,7 +805,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.25 }}
                       >
-                        <TemplateCard card={previewCard} recipientName="홍길동" />
+                        <TemplateCard card={previewCard} recipientName="John" />
                       </motion.div>
                     </div>
                   )}
@@ -633,31 +817,31 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
             {draft.rsvp_enabled && (
               <div className="rounded-2xl border border-hydrangea-100 bg-white p-5">
                 <div className="text-center mb-4">
-                  <div className="text-xs text-hydrangea-400 mb-1">RSVP 미리보기 · 발행 후 응답 가능</div>
-                  <h3 className="text-base font-semibold text-hydrangea-700">참석 여부</h3>
+                  <div className="text-xs text-hydrangea-400 mb-1">RSVP preview · responses enabled after publish</div>
+                  <h3 className="text-base font-semibold text-hydrangea-700">Will you join?</h3>
                 </div>
                 <div className="space-y-3">
                   <div className="flex gap-2">
-                    <button type="button" disabled className="flex-1 py-2.5 rounded-full border-2 border-hydrangea-300 text-sm text-hydrangea-700 font-medium opacity-70">참석합니다</button>
-                    <button type="button" disabled className="flex-1 py-2.5 rounded-full border-2 border-hydrangea-100 text-sm text-hydrangea-500 opacity-70">불참합니다</button>
+                    <button type="button" disabled className="flex-1 py-2.5 rounded-full border-2 border-hydrangea-300 text-sm text-hydrangea-700 font-medium opacity-70">Attend</button>
+                    <button type="button" disabled className="flex-1 py-2.5 rounded-full border-2 border-hydrangea-100 text-sm text-hydrangea-500 opacity-70">Decline</button>
                   </div>
                   <div className="flex items-center justify-center gap-3 py-2">
-                    <span className="text-xs text-hydrangea-400">참석 인원</span>
+                    <span className="text-xs text-hydrangea-400">Attendees</span>
                     <button type="button" disabled className="w-8 h-8 rounded-full border-2 border-hydrangea-200 flex items-center justify-center text-hydrangea-500 opacity-70">−</button>
                     <span className="font-bold text-hydrangea-700 w-6 text-center">1</span>
                     <button type="button" disabled className="w-8 h-8 rounded-full border-2 border-hydrangea-200 flex items-center justify-center text-hydrangea-500 opacity-70">＋</button>
-                    <span className="text-xs text-hydrangea-400">/ 최대 {draft.rsvp_max_per_card || 4}명</span>
+                    <span className="text-xs text-hydrangea-400">/ max {draft.rsvp_max_per_card || 4}</span>
                   </div>
                   {draft.rsvp_collect_names && (
-                    <input type="text" disabled placeholder="참석자 이름" className="w-full px-3 py-2 text-sm rounded-lg border border-hydrangea-100 bg-hydrangea-50/40 placeholder-hydrangea-300" />
+                    <input type="text" disabled placeholder="Attendee name" className="w-full px-3 py-2 text-sm rounded-lg border border-hydrangea-100 bg-hydrangea-50/40 placeholder-hydrangea-300" />
                   )}
-                  <textarea disabled placeholder="한 줄 답신 (선택)" rows={2} className="w-full px-3 py-2 text-sm rounded-lg border border-hydrangea-100 bg-hydrangea-50/40 placeholder-hydrangea-300 resize-none" />
+                  <textarea disabled placeholder="One-line greeting (optional)" rows={2} className="w-full px-3 py-2 text-sm rounded-lg border border-hydrangea-100 bg-hydrangea-50/40 placeholder-hydrangea-300 resize-none" />
                   <button type="button" disabled className="w-full py-3 rounded-xl bg-hydrangea-300 text-white font-medium opacity-70">
-                    응답 보내기
+                    Reply
                   </button>
                   {draft.rsvp_deadline && (
                     <p className="text-xs text-center text-hydrangea-400">
-                      마감 {new Date(draft.rsvp_deadline).toLocaleDateString('ko-KR')}
+                      Deadline {new Date(draft.rsvp_deadline).toLocaleDateString('en-US')}
                     </p>
                   )}
                 </div>
@@ -666,19 +850,19 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
 
             <div className="p-3 rounded-xl bg-hydrangea-50 text-xs space-y-1">
               <div className="flex items-center gap-2 font-semibold text-hydrangea-700 mb-1">
-                <Sparkles className="w-3.5 h-3.5" /> 설정 요약
+                <Sparkles className="w-3.5 h-3.5" /> Settings summary
               </div>
-              <div className="flex justify-between"><span className="text-hydrangea-400">이벤트</span><span className="text-hydrangea-700">{meta.label}</span></div>
-              <div className="flex justify-between"><span className="text-hydrangea-400">배경</span><span className="text-hydrangea-700">{bgMeta.name}</span></div>
-              <div className="flex justify-between"><span className="text-hydrangea-400">레이아웃</span><span className="text-hydrangea-700">{layoutMeta.name}</span></div>
-              <div className="flex justify-between"><span className="text-hydrangea-400">봉투</span><span className="text-hydrangea-700">{envName}</span></div>
-              <div className="flex justify-between"><span className="text-hydrangea-400">RSVP</span><span className="text-hydrangea-700">{draft.rsvp_enabled ? `사용 (최대 ${draft.rsvp_max_per_card}명)` : '미사용'}</span></div>
+              <div className="flex justify-between"><span className="text-hydrangea-400">Event</span><span className="text-hydrangea-700">{meta.label}</span></div>
+              <div className="flex justify-between"><span className="text-hydrangea-400">Background</span><span className="text-hydrangea-700">{bgMeta.name}</span></div>
+              <div className="flex justify-between"><span className="text-hydrangea-400">Layout</span><span className="text-hydrangea-700">{layoutMeta.name}</span></div>
+              <div className="flex justify-between"><span className="text-hydrangea-400">Envelope</span><span className="text-hydrangea-700">{envName}</span></div>
+              <div className="flex justify-between"><span className="text-hydrangea-400">RSVP</span><span className="text-hydrangea-700">{draft.rsvp_enabled ? `Enabled (max ${draft.rsvp_max_per_card})` : 'Disabled'}</span></div>
             </div>
 
             <Button onClick={handlePublish} disabled={pending} full size="lg">
               {pending
-                ? (isEditMode ? '저장 중...' : '발행 중...')
-                : (isEditMode ? '✏️ 수정 저장' : '🎉 발행하기')}
+                ? (isEditMode ? 'Saving...' : 'Publishing...')
+                : (isEditMode ? '✏️ Save changes' : '🎉 Publish')}
             </Button>
           </div>
         </SectionShell>

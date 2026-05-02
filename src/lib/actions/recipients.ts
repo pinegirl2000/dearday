@@ -20,10 +20,39 @@ export async function listRecipients(slug: string, ownerToken: string) {
   const card = await verifyOwner({ slug, ownerToken });
   if (!card) return { ok: false as const, error: '권한이 없습니다.' };
   const { rows } = await pool.query(
-    'SELECT id, num, name, group_name, created_at FROM dearday_recipient WHERE card_id=$1 ORDER BY num ASC',
+    `SELECT
+       r.id, r.num, r.name, r.group_name, r.created_at,
+       v.attend AS rsvp_attend,
+       v.count AS rsvp_count,
+       v.adult_count AS rsvp_adult_count,
+       v.child_count AS rsvp_child_count,
+       v.attendee_names AS rsvp_attendee_names,
+       v.created_at AS rsvp_created_at
+     FROM dearday_recipient r
+     LEFT JOIN LATERAL (
+       SELECT attend, count, adult_count, child_count, attendee_names, created_at
+       FROM dearday_rsvp
+       WHERE recipient_id = r.id
+       ORDER BY created_at DESC
+       LIMIT 1
+     ) v ON true
+     WHERE r.card_id=$1
+     ORDER BY r.num ASC`,
     [card.id]
   );
-  return { ok: true as const, recipients: rows as Array<{ id: string; num: string; name: string; group_name: string; created_at: string }> };
+  return { ok: true as const, recipients: rows as Array<{
+    id: string;
+    num: string;
+    name: string;
+    group_name: string;
+    created_at: string;
+    rsvp_attend: boolean | null;
+    rsvp_count: number | null;
+    rsvp_adult_count: number | null;
+    rsvp_child_count: number | null;
+    rsvp_attendee_names: string[] | null;
+    rsvp_created_at: string | null;
+  }> };
 }
 
 export async function bulkAddRecipients(slug: string, ownerToken: string, names: string[]) {

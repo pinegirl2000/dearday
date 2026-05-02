@@ -4,10 +4,8 @@ import type { EventType } from '@/types/card';
 
 export type BackgroundId =
   | 'bg-none'
-  | 'bg-1'
-  | 'bg-2'
-  | 'bg-3'
-  | 'bg-4';
+  | 'bg-1' | 'bg-2' | 'bg-3' | 'bg-4'
+  | 'bg-img-1' | 'bg-img-2' | 'bg-img-3' | 'bg-img-4';
 
 export interface BackgroundMeta {
   id: BackgroundId;
@@ -29,18 +27,54 @@ const ALL_EVENTS: EventType[] = ['wedding', 'birthday', 'opening', 'baptism', 'm
 
 export const BACKGROUNDS: BackgroundMeta[] = [
   {
-    id: 'bg-none',
-    name: '보라 그라데이션',
+    id: 'bg-1',
+    name: 'Lavender',
     imageUrl: '',
-    gradient: 'linear-gradient(135deg, #E8D5F5 0%, #D5C5E8 30%, #C9A0DC 70%, #9B7FCB 100%)',
-    tone: 'medium',
+    gradient: 'linear-gradient(160deg, #F4ECFA 0%, #E8DFF3 35%, #C9A0DC 80%, #A990CC 100%)',
+    tone: 'light',
     availableEvents: ALL_EVENTS
   },
-  { id: 'bg-1', name: '연두 수채화',  imageUrl: '/templates/template-1-bg.png', tone: 'light', availableEvents: ALL_EVENTS },
-  { id: 'bg-2', name: '핑크 보라 잎', imageUrl: '/templates/template-2-bg.png', tone: 'light', availableEvents: ALL_EVENTS },
-  { id: 'bg-3', name: '보라 수채화',  imageUrl: '/templates/template-3-bg.png', tone: 'light', availableEvents: ALL_EVENTS },
-  { id: 'bg-4', name: '골드 빈티지',  imageUrl: '/templates/template-4-bg.png', tone: 'light', availableEvents: ALL_EVENTS }
+  {
+    id: 'bg-2',
+    name: 'Beige',
+    imageUrl: '',
+    gradient: 'linear-gradient(160deg, #FBF5E8 0%, #F0E5CD 35%, #DACFB6 80%, #B4A485 100%)',
+    tone: 'light',
+    availableEvents: ALL_EVENTS
+  },
+  {
+    id: 'bg-3',
+    name: 'Mint',
+    imageUrl: '',
+    gradient: 'linear-gradient(160deg, #F1FAF4 0%, #DBEEDF 35%, #BFDDC9 80%, #82B095 100%)',
+    tone: 'light',
+    availableEvents: ALL_EVENTS
+  },
+  {
+    id: 'bg-4',
+    name: 'Coral',
+    imageUrl: '',
+    gradient: 'linear-gradient(160deg, #FFF1EB 0%, #F8D3C9 35%, #F2C0B3 80%, #C68676 100%)',
+    tone: 'light',
+    availableEvents: ALL_EVENTS
+  },
+  { id: 'bg-img-1', name: 'Watercolor 1', imageUrl: '/templates/template-1-bg.png', tone: 'light', availableEvents: ALL_EVENTS },
+  { id: 'bg-img-2', name: 'Watercolor 2', imageUrl: '/templates/template-2-bg.png', tone: 'light', availableEvents: ALL_EVENTS },
+  { id: 'bg-img-3', name: 'Watercolor 3', imageUrl: '/templates/template-3-bg.png', tone: 'light', availableEvents: ALL_EVENTS },
+  { id: 'bg-img-4', name: 'Vintage Gold', imageUrl: '/templates/template-4-bg.png', tone: 'light', availableEvents: ALL_EVENTS },
+  // legacy fallback
+  {
+    id: 'bg-none',
+    name: 'Lavender',
+    imageUrl: '',
+    gradient: 'linear-gradient(160deg, #F4ECFA 0%, #E8DFF3 35%, #C9A0DC 80%, #A990CC 100%)',
+    tone: 'medium',
+    availableEvents: ALL_EVENTS
+  }
 ];
+
+export const GRADIENT_BG_IDS: BackgroundId[] = ['bg-1', 'bg-2', 'bg-3', 'bg-4'];
+export const IMAGE_BG_IDS: BackgroundId[] = ['bg-img-1', 'bg-img-2', 'bg-img-3', 'bg-img-4'];
 
 export function getBackground(id: BackgroundId | string | null | undefined): BackgroundMeta {
   return BACKGROUNDS.find((b) => b.id === id) || BACKGROUNDS[0];

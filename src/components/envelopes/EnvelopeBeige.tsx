@@ -18,7 +18,9 @@ const PALETTE = {
   accent:      '#D4C4A2',
   bodyMid:     '#CABF9F',  // 본체 중간 (그라데이션용)
   bodyTint:    '#E8DCC4',  // 본체 하이라이트
-  petals:      ['#F4A8A8', '#F8B5B5', '#FFC4C4', '#E89898', '#FCD0D0', '#FFEDED']
+  petals:      ['#F4A8A8', '#F8B5B5', '#FFC4C4', '#E89898', '#FCD0D0', '#FFEDED'],
+  // 베이지 봉투 전용 — 금색 펄
+  pearls:      ['#E8C76F', '#F2D88A', '#D4A84B', '#FFE3A3', '#C99A3D', '#F8E0A0']
 } as const;
 
 interface PetalSpec {
@@ -36,16 +38,24 @@ interface PetalSpec {
 function generatePetals(count: number): PetalSpec[] {
   return Array.from({ length: count }, (_, i) => {
     const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.4;
+    // 절반은 금색 펄(circle), 절반은 분홍 꽃잎(petal/leaf)
+    const isPearl = i % 2 === 0;
+    const shape: 'petal' | 'circle' | 'leaf' = isPearl
+      ? 'circle'
+      : (Math.random() < 0.5 ? 'petal' : 'leaf');
+    const color = isPearl
+      ? PALETTE.pearls[Math.floor(Math.random() * PALETTE.pearls.length)]
+      : PALETTE.petals[Math.floor(Math.random() * PALETTE.petals.length)];
     return {
       id: i,
       angle,
       distance: 80 + Math.random() * 140,
-      size: 8 + Math.random() * 12,
+      size: isPearl ? 5 + Math.random() * 6 : 8 + Math.random() * 12,
       rotate: Math.random() * 720 - 360,
       duration: 1.2 + Math.random() * 0.8,
       delay: Math.random() * 0.15,
-      color: PALETTE.petals[Math.floor(Math.random() * PALETTE.petals.length)],
-      shape: (['petal', 'circle', 'leaf'] as const)[Math.floor(Math.random() * 3)]
+      color,
+      shape
     };
   });
 }
@@ -160,7 +170,7 @@ export default function EnvelopeBeige({
             left: Math.round(width * 0.08),
             top: Math.round(height * 0.30),
             width: width - Math.round(width * 0.08) * 2,
-            height: Math.round(height * 0.72),
+            height: Math.round(height * 0.68),
             background: PALETTE.paper,
             borderRadius: 4,
             boxShadow: '0 3px 10px rgba(110,90,50,0.22)',
@@ -188,11 +198,7 @@ export default function EnvelopeBeige({
                 margin: '0 auto 10px'
               }}
             />
-            {children || (
-              <p style={{ fontSize: 15, color: PALETTE.bodyDark, letterSpacing: '0.2em', fontWeight: 500 }}>
-                당신을 초대합니다
-              </p>
-            )}
+            {children}
             <div style={{ marginTop: 8, color: PALETTE.accent, fontSize: 16 }}>✿</div>
           </div>
         </motion.div>
@@ -250,7 +256,7 @@ export default function EnvelopeBeige({
           transition={
             isOpen
               ? { duration: D * 0.6, ease: [0.4, 0, 0.2, 1] as const }
-              : { duration: 3.5, repeat: Infinity, ease: 'easeInOut', repeatDelay: 1, times: [0, 0.18, 0.35, 0.55, 0.75, 1] }
+              : { duration: 5.25, repeat: Infinity, ease: 'easeInOut', repeatDelay: 1.5, times: [0, 0.18, 0.35, 0.55, 0.75, 1] }
           }
         >
           <svg

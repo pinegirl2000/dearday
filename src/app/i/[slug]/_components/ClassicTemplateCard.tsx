@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { CalendarDays, MapPin, Phone, ExternalLink } from 'lucide-react';
 import { formatGreeting, applyName } from '@/lib/layouts';
 import type { BackgroundMeta } from '@/lib/backgrounds';
 import type { BaseCard } from '@/types/card';
@@ -24,6 +25,8 @@ interface Props {
   card: BaseCard;
   recipientName?: string;
   background?: BackgroundMeta;
+  /** 카드 정보 박스 바로 아래 들어갈 슬롯 (RSVP 폼 등) */
+  rsvpSlot?: React.ReactNode;
 }
 
 const COLORS = {
@@ -45,24 +48,39 @@ function formatDate(iso?: string | null) {
   if (!iso) return '';
   try {
     const d = new Date(iso);
-    return d.toLocaleDateString('ko-KR', {
-      year: 'numeric', month: 'long', day: 'numeric', weekday: 'long',
-      hour: 'numeric', minute: '2-digit'
-    });
+    const date = d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const wday = d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+    const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    return `${date} (${wday}) at ${time}`;
   } catch { return iso; }
+}
+
+function isUrl(s?: string | null): s is string {
+  if (!s) return false;
+  return /^https?:\/\//i.test(s);
 }
 
 function Divider() {
   return (
     <div style={{ textAlign: 'center', padding: '10px 0' }}>
-      <span style={{ color: COLORS.accent, fontSize: 12 }}>✦</span>
+      <span style={{ color: COLORS.accent, fontSize: 18 }}>✽</span>
     </div>
   );
 }
 
-export default function ClassicTemplateCard({ card, recipientName, background }: Props) {
+// 배경(bg_id)별 본문 색상 팔레트 — 배경 색감과 어울리도록 한 세트씩 정의
+const BG_PALETTE: Record<string, { title: string; subtitle: string; accent: string }> = {
+  'bg-1':     { title: '#5A3D7A', subtitle: '#8B7A9E', accent: '#C9A0DC' },  // Lavender
+  'bg-2':     { title: '#6E5A3D', subtitle: '#9C8B6E', accent: '#D4C4A2' },  // Beige
+  'bg-3':     { title: '#476956', subtitle: '#7AA088', accent: '#A0CCB1' },  // Mint
+  'bg-4':     { title: '#8E5A4D', subtitle: '#B0857A', accent: '#E0A095' },  // Coral
+  'bg-none':  { title: '#5A3D7A', subtitle: '#8B7A9E', accent: '#C9A0DC' }
+};
+
+export default function ClassicTemplateCard({ card, recipientName, background, rsvpSlot }: Props) {
   const greeting = formatGreeting(recipientName, card.recipient_template);
   const hasBgImage = !!background?.imageUrl;
+  const palette = BG_PALETTE[card.bg_id] || BG_PALETTE['bg-1'];
 
   return (
     <div
@@ -89,44 +107,101 @@ export default function ClassicTemplateCard({ card, recipientName, background }:
           }}
         />
       )}
-      <div style={{ position: 'relative', padding: '40px 20px 50px', zIndex: 1 }}>
+      <div style={{ position: 'relative', padding: '24px 20px 40px', zIndex: 1 }}>
         {/* 상단 장식 */}
         <FadeUp delay={0.05}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '20px 0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '8px 0 12px' }}>
             <div style={{ width: 60, height: 1, background: `linear-gradient(90deg, transparent, ${COLORS.accent}, transparent)` }} />
             <div style={{ color: COLORS.accent, fontSize: 18 }}>✽</div>
             <div style={{ width: 60, height: 1, background: `linear-gradient(90deg, transparent, ${COLORS.accent}, transparent)` }} />
           </div>
         </FadeUp>
 
-        {/* 앞면: 부제 / 타이틀 / 인비테이션 */}
+        {/* 앞면: 부제 / 타이틀 / 인비테이션 / 본문 메시지 */}
         <FadeUp delay={0.1}>
-          <div style={{ textAlign: 'center', padding: '20px 10px' }}>
+          <div style={{ textAlign: 'center', padding: '8px 10px 12px' }}>
             {card.greeting_oneliner && (
-              <p style={{ fontSize: 13, color: COLORS.textLight, letterSpacing: '0.4em', marginBottom: 12, fontWeight: 300 }}>
+              <p style={{ fontSize: 13, color: palette.subtitle, letterSpacing: '0.4em', marginBottom: 12, fontWeight: 300 }}>
                 {applyName(card.greeting_oneliner, recipientName)}
               </p>
             )}
-            <h1 style={{ fontSize: 30, fontWeight: 700, color: COLORS.primary, letterSpacing: '0.4em', margin: '0 0 16px', lineHeight: 1.3 }}>
+            <h1 style={{ fontSize: 30, fontWeight: 700, color: palette.title, letterSpacing: '0.4em', margin: '0 0 8px', lineHeight: 1.3 }}>
               {applyName(card.title, recipientName)}
             </h1>
-            <p style={{ fontSize: 15, color: COLORS.textMid, letterSpacing: '0.25em', fontWeight: 300 }}>
-              당신을 초대합니다!
-            </p>
+            {card.body && <Divider />}
+            {card.body && (
+              <div style={{ lineHeight: 2.0, color: COLORS.textDark, fontSize: 15, padding: '0 10px' }}>
+                {applyName(card.body, recipientName).split(/\r?\n/).map((line, i, arr) => (
+                  <span key={i}>
+                    {line}
+                    {i < arr.length - 1 && <br />}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </FadeUp>
 
-        <FadeUp delay={0.2}><Divider /></FadeUp>
-
-        {/* 행사 정보 */}
+        {/* 행사 정보: 일시 / 장소 / 주소 / 전화 */}
         <FadeUp delay={0.3}>
-          <div style={{ textAlign: 'center', padding: '20px 10px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, alignItems: 'center' }}>
-              {/* 일시/장소는 InvitationView 상단 정보 패널에 표시 (중복 방지) */}
+          <div style={{ textAlign: 'center', padding: '0 16px 16px' }}>
+            {(card.event_date || card.event_place || card.map_url || card.contact_phone) && (
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 12,
+                padding: '22px 24px',
+                margin: '0 auto 14px',
+                maxWidth: 320,
+                background: 'rgba(255,255,255,0.55)',
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)',
+                border: '1px solid rgba(255,255,255,0.7)',
+                borderRadius: 18,
+                boxShadow: '0 6px 22px rgba(123,94,167,0.10), inset 0 1px 0 rgba(255,255,255,0.6)',
+                fontFamily: SANS,
+                alignItems: 'stretch',
+                textAlign: 'left'
+              }}>
+                {card.event_date && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: COLORS.textDark, letterSpacing: '0.06em' }}>
+                    <CalendarDays size={16} strokeWidth={1.4} style={{ color: COLORS.primary, flexShrink: 0 }} />
+                    <span style={{ fontWeight: 500 }}>{formatDate(card.event_date)}</span>
+                  </div>
+                )}
+                {(card.event_place || card.map_url) && (
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, color: COLORS.textDark, letterSpacing: '0.04em' }}>
+                    <MapPin size={15} strokeWidth={1.4} style={{ color: COLORS.primary, flexShrink: 0, marginTop: 2 }} />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
+                      {card.event_place && <span style={{ fontWeight: 500 }}>{card.event_place}</span>}
+                      {card.map_url && (
+                        <span style={{ fontSize: 12, color: COLORS.textMid, wordBreak: 'break-word' }}>
+                          {isUrl(card.map_url) ? (
+                            <a href={card.map_url} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: COLORS.primary, textDecoration: 'underline' }}>
+                              View map <ExternalLink size={11} strokeWidth={1.5} />
+                            </a>
+                          ) : (
+                            <span>{card.map_url}</span>
+                          )}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+                {card.contact_phone && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: COLORS.textDark, letterSpacing: '0.04em' }}>
+                    <Phone size={14} strokeWidth={1.4} style={{ color: COLORS.primary, flexShrink: 0 }} />
+                    <a href={`tel:${card.contact_phone}`} style={{ color: COLORS.textDark, textDecoration: 'none', fontWeight: 500 }}>{card.contact_phone}</a>
+                  </div>
+                )}
+              </div>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', fontFamily: SANS }}>
+
               {card.extra_info && (
                 <div style={{
-                  marginTop: 4, padding: '8px 20px', background: COLORS.accentLight,
-                  borderRadius: 20, fontFamily: SANS, fontSize: 13, color: COLORS.primaryDark
+                  marginTop: 8, padding: '8px 20px', background: COLORS.accentLight,
+                  borderRadius: 20, fontSize: 13, color: COLORS.primaryDark
                 }}>
                   {applyName(card.extra_info, recipientName)}
                 </div>
@@ -135,30 +210,24 @@ export default function ClassicTemplateCard({ card, recipientName, background }:
           </div>
         </FadeUp>
 
-        <FadeUp delay={0.4}><Divider /></FadeUp>
+        {rsvpSlot && (
+          <FadeUp delay={0.35}>
+            <div style={{ padding: '0 16px 18px' }}>
+              {rsvpSlot}
+            </div>
+          </FadeUp>
+        )}
 
-        {/* 개인 메시지 */}
-        <FadeUp delay={0.5}>
-          <div style={{ textAlign: 'center', padding: '30px 20px' }}>
-            {card.body && (
-              <div style={{ lineHeight: 2.2, color: COLORS.textDark, fontSize: 15, whiteSpace: 'pre-line' }}>
-                {applyName(card.body, recipientName)}
-              </div>
-            )}
-            {card.contact_name && (
-              <p style={{ marginTop: 30, fontSize: 13, color: COLORS.textLight, letterSpacing: '0.15em' }}>
-                {applyName(card.contact_name, recipientName)} 드림
+        {card.contact_name && (
+          <FadeUp delay={0.4}>
+            <div style={{ textAlign: 'center', padding: '10px 20px 20px' }}>
+              <p style={{ fontSize: 13, color: COLORS.textLight, letterSpacing: '0.15em' }}>
+                — {applyName(card.contact_name, recipientName)} —
               </p>
-            )}
-          </div>
-        </FadeUp>
+            </div>
+          </FadeUp>
+        )}
 
-        {/* 하단 장식 */}
-        <FadeUp delay={0.6}>
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '20px 0' }}>
-            <span style={{ color: COLORS.accent, fontSize: 18 }}>✽</span>
-          </div>
-        </FadeUp>
       </div>
     </div>
   );

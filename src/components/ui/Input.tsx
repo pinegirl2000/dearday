@@ -5,15 +5,17 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
   hint?: string;
+  requiredMark?: boolean;
 }
 
-export const Input = React.forwardRef<HTMLInputElement, InputProps>(({ className, label, error, hint, id, ...rest }, ref) => {
+export const Input = React.forwardRef<HTMLInputElement, InputProps>(({ className, label, error, hint, requiredMark, id, ...rest }, ref) => {
   const inputId = id || React.useId();
   return (
     <div className="w-full">
       {label && (
         <label htmlFor={inputId} className="block text-sm font-medium text-hydrangea-700 mb-1.5">
           {label}
+          {requiredMark && <span className="text-red-500 ml-1">*</span>}
         </label>
       )}
       <input
@@ -37,15 +39,17 @@ Input.displayName = 'Input';
 interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
   error?: string;
+  requiredMark?: boolean;
 }
 
-export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(({ className, label, error, id, ...rest }, ref) => {
+export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(({ className, label, error, requiredMark, id, ...rest }, ref) => {
   const inputId = id || React.useId();
   return (
     <div className="w-full">
       {label && (
         <label htmlFor={inputId} className="block text-sm font-medium text-hydrangea-700 mb-1.5">
           {label}
+          {requiredMark && <span className="text-red-500 ml-1">*</span>}
         </label>
       )}
       <textarea

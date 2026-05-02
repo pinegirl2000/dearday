@@ -82,8 +82,8 @@ export const EVENT_TYPES: EventTypeMeta[] = [
     recommendEnvelope: 'envelope-2',
     recommendBackgrounds: ['bg-none', 'bg-1', 'bg-2', 'bg-3', 'bg-4'],
     fields: {
-      titleLabel: '모임 이름',
-      titlePlaceholder: '예: 동호회 정기모임',
+      titleLabel: 'Main title',
+      titlePlaceholder: 'e.g. Book Club Monthly Meet',
       bodyPlaceholder: '편하게 오셔서 즐거운 시간 함께 해요.'
     }
   },
