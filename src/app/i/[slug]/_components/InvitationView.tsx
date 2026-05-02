@@ -181,7 +181,7 @@ export default function InvitationView({ card, feed, recipientName, recipientId 
       </div>
 
       <footer className="text-center text-xs mt-2" style={{ color: theme.colors.muted }}>
-        made with <span className="font-semibold" style={{ color: theme.colors.primary }}>DearDay</span>
+        made with <span className="font-semibold" style={{ color: theme.colors.primary }}>DearDay</span> · © Steward+AI
       </footer>
     </main>
   );
