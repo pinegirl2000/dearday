@@ -51,21 +51,16 @@ export default function ManageClient({ slug, cardTitle }: Props) {
   useEffect(() => {
     const t = localStorage.getItem(`dearday:owner:${slug}`);
     setOrigin(window.location.origin);
-    if (!t) {
-      setError('이 초대장의 작성자가 아닙니다. 작성한 기기에서 접속해주세요.');
-      setLoading(false);
-      return;
-    }
-    setOwnerToken(t);
+    setOwnerToken(t); // null이어도 진행 — 서버가 세션 사용자로 검증
     refresh(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const refresh = async (token: string) => {
+  const refresh = async (token: string | null) => {
     setLoading(true);
     const res = await listRecipients(slug, token);
     if (!res.ok) {
-      setError(res.error);
+      setError('You are not the author of this invitation, or you are not signed in.');
     } else {
       setRecipients(res.recipients);
       setError(null);
@@ -74,7 +69,6 @@ export default function ManageClient({ slug, cardTitle }: Props) {
   };
 
   const handleBulkAdd = () => {
-    if (!ownerToken) return;
     const names = bulkText.split('\n').map((n) => n.trim()).filter((n) => n.length > 0);
     if (names.length === 0) {
       toast.error('이름을 입력하세요');
@@ -94,8 +88,7 @@ export default function ManageClient({ slug, cardTitle }: Props) {
   };
 
   const handleDelete = (id: string) => {
-    if (!ownerToken) return;
-    if (!confirm('정말 삭제하시겠습니까?')) return;
+    if (!confirm('Are you sure you want to delete?')) return;
     startTransition(async () => {
       await deleteRecipient(slug, ownerToken, id);
       refresh(ownerToken);

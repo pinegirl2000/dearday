@@ -1,22 +1,40 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { getServerSession } from 'next-auth';
 import { pool } from '@/lib/db';
+import { authOptions } from '@/lib/auth';
 
 interface AuthCheck {
   slug: string;
-  ownerToken: string;
+  ownerToken?: string | null;
 }
 
 async function verifyOwner({ slug, ownerToken }: AuthCheck) {
+  const session = await getServerSession(authOptions);
+  const userId = (session?.user as any)?.id || null;
+
+  // owner_token 또는 로그인 사용자 user_id 일치 시 소유자 인정
+  const params: any[] = [slug];
+  const conds: string[] = [];
+  if (ownerToken) {
+    params.push(ownerToken);
+    conds.push(`owner_token = $${params.length}`);
+  }
+  if (userId) {
+    params.push(userId);
+    conds.push(`user_id = $${params.length}`);
+  }
+  if (conds.length === 0) return undefined;
+
   const { rows } = await pool.query<{ id: string; rsvp_max_per_card: number }>(
-    'SELECT id, rsvp_max_per_card FROM dearday_card WHERE slug=$1 AND owner_token=$2',
-    [slug, ownerToken]
+    `SELECT id, rsvp_max_per_card FROM dearday_card WHERE slug=$1 AND (${conds.join(' OR ')}) LIMIT 1`,
+    params
   );
   return rows[0];
 }
 
-export async function listRecipients(slug: string, ownerToken: string) {
+export async function listRecipients(slug: string, ownerToken?: string | null) {
   const card = await verifyOwner({ slug, ownerToken });
   if (!card) return { ok: false as const, error: '권한이 없습니다.' };
   const { rows } = await pool.query(
@@ -55,7 +73,7 @@ export async function listRecipients(slug: string, ownerToken: string) {
   }> };
 }
 
-export async function bulkAddRecipients(slug: string, ownerToken: string, names: string[]) {
+export async function bulkAddRecipients(slug: string, ownerToken: string | null, names: string[]) {
   const card = await verifyOwner({ slug, ownerToken });
   if (!card) return { ok: false as const, error: '권한이 없습니다.' };
 
@@ -88,7 +106,7 @@ export async function bulkAddRecipients(slug: string, ownerToken: string, names:
   return { ok: true as const, count: inserted.length };
 }
 
-export async function deleteRecipient(slug: string, ownerToken: string, recipientId: string) {
+export async function deleteRecipient(slug: string, ownerToken: string | null, recipientId: string) {
   const card = await verifyOwner({ slug, ownerToken });
   if (!card) return { ok: false as const, error: '권한이 없습니다.' };
   await pool.query('DELETE FROM dearday_recipient WHERE id=$1 AND card_id=$2', [recipientId, card.id]);
