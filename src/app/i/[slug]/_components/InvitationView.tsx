@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { Phone, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ClassicEnvelope, EnvelopeBeige, EnvelopeMint, EnvelopeCoral, NoneEnvelope } from '@/components/envelopes';
 import { getTheme } from '@/lib/theme';
@@ -181,37 +180,7 @@ export default function InvitationView({ card, feed, recipientName, recipientId 
         />
       </div>
 
-      {/* 연락처 + Feed + Share */}
-      <article className="w-full max-w-md rounded-3xl overflow-hidden shadow-2xl" style={{ background: theme.colors.bgCard }}>
-        {(card.contact_name || card.contact_phone) && (
-          <div className="p-5 text-sm border-t" style={{ borderColor: theme.colors.accent + '33' }}>
-            <div className="flex items-start gap-3">
-              <Phone className="w-5 h-5 mt-0.5 flex-shrink-0" style={{ color: theme.colors.primary }} />
-              <a href={card.contact_phone ? `tel:${card.contact_phone}` : undefined} className="hover:underline">
-                {card.contact_name} {card.contact_phone}
-              </a>
-            </div>
-          </div>
-        )}
-
-        {feed && (
-          <div className="px-6 pb-6 pt-2 border-t" style={{ borderColor: theme.colors.accent + '33' }}>
-            {feed}
-          </div>
-        )}
-
-        <div className="p-4 border-t" style={{ borderColor: theme.colors.accent + '33' }}>
-          <button
-            onClick={handleShare}
-            className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium"
-            style={{ color: theme.colors.primary, background: theme.colors.bg }}
-          >
-            <Share2 className="w-4 h-4" /> Share invitation
-          </button>
-        </div>
-      </article>
-
-      <footer className="text-center text-xs mt-6" style={{ color: theme.colors.muted }}>
+      <footer className="text-center text-xs mt-2" style={{ color: theme.colors.muted }}>
         made with <span className="font-semibold" style={{ color: theme.colors.primary }}>DearDay</span>
       </footer>
     </main>
