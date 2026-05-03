@@ -7,12 +7,14 @@ export interface EventTypeMeta {
   defaultTitle: string;
   recommendTheme: string;
   recommendEnvelope: string;
-  /** 이벤트 타입에 어울리는 배경 추천 — StepTemplate에서 우선 노출 */
   recommendBackgrounds: BackgroundId[];
   fields: {
     titleLabel: string;
     titlePlaceholder: string;
+    subtitlePlaceholder: string;
+    placePlaceholder: string;
     bodyPlaceholder: string;
+    memoPlaceholder: string;
   };
 }
 
@@ -20,85 +22,103 @@ export const EVENT_TYPES: EventTypeMeta[] = [
   {
     id: 'wedding',
     emoji: '💒',
-    label: '결혼식',
+    label: 'Wedding',
     defaultTitle: '○○ ♥ ○○',
     recommendTheme: 'hydrangea',
     recommendEnvelope: 'envelope-1',
     recommendBackgrounds: ['bg-2', 'bg-3', 'bg-4', 'bg-1', 'bg-none'],
     fields: {
-      titleLabel: '신랑 ♥ 신부',
-      titlePlaceholder: '예: 이수민 ♥ 김지호',
-      bodyPlaceholder: '같은 곳을 바라보며 걸어온 두 사람이\n이제 한 길을 함께 걷고자 합니다.\n귀한 발걸음으로 축복해 주시면\n더없는 기쁨이 되겠습니다.'
+      titleLabel: 'Main title',
+      titlePlaceholder: 'e.g. Together with our families, we invite you to celebrate our union.',
+      subtitlePlaceholder: 'e.g. The Wedding of [Name] & [Name]',
+      placePlaceholder: 'e.g. The Grand Ballroom at St. Regis, 2 East 55th St, New York, NY',
+      bodyPlaceholder: 'e.g. Together with our families, we invite you to celebrate our union.',
+      memoPlaceholder: 'e.g. Kindly RSVP by August 1st. Formal attire requested.'
     }
   },
   {
     id: 'birthday',
     emoji: '🎂',
-    label: '생일·돌',
-    defaultTitle: '○○이의 생일',
+    label: 'Birthday',
+    defaultTitle: '○○ Birthday',
     recommendTheme: 'modern',
     recommendEnvelope: 'envelope-1',
     recommendBackgrounds: ['bg-1', 'bg-2', 'bg-none', 'bg-3', 'bg-4'],
     fields: {
-      titleLabel: '주인공 이름',
-      titlePlaceholder: '예: 하준이 첫 생일',
-      bodyPlaceholder: '소중한 첫 생일을 맞아\n가족과 친구들을 모십니다.\n함께 축하해 주세요!'
+      titleLabel: 'Main title',
+      titlePlaceholder: 'e.g. Join us for a night of drinks, dancing, and celebration in honor of [Name].',
+      subtitlePlaceholder: 'e.g. Cheers to [Age] Years!',
+      placePlaceholder: 'e.g. Skyline Rooftop Lounge, 123 Sunset Blvd, Los Angeles, CA',
+      bodyPlaceholder: 'e.g. Join us for a night of drinks, dancing, and celebration in honor of [Name].',
+      memoPlaceholder: 'e.g. No gifts, please. Your presence is the only present we need!'
     }
   },
   {
     id: 'opening',
     emoji: '🎉',
-    label: '개업',
-    defaultTitle: '○○ Open',
+    label: 'Opening',
+    defaultTitle: 'Grand Opening',
     recommendTheme: 'modern',
     recommendEnvelope: 'envelope-1',
     recommendBackgrounds: ['bg-4', 'bg-none', 'bg-1', 'bg-3', 'bg-2'],
     fields: {
-      titleLabel: '상호 / 업종',
-      titlePlaceholder: '예: DearDay Studio 오픈',
-      bodyPlaceholder: '오랜 준비 끝에\n새로운 공간을 열게 되었습니다.\n오셔서 자리를 빛내 주세요.'
+      titleLabel: 'Main title',
+      titlePlaceholder: 'e.g. We\'re opening our doors! Come see our new space and enjoy some light refreshments.',
+      subtitlePlaceholder: 'e.g. Grand Opening Celebration',
+      placePlaceholder: 'e.g. [Business Name], 456 Innovation Way, Suite 200, Austin, TX',
+      bodyPlaceholder: 'e.g. We\'re opening our doors! Come see our new space and enjoy some light refreshments.',
+      memoPlaceholder: 'e.g. Ribbon cutting ceremony starts promptly at 10:00 AM.'
     }
   },
   {
     id: 'baptism',
     emoji: '🕊️',
-    label: '세례식',
-    defaultTitle: '○○ 세례식',
+    label: 'Baptism',
+    defaultTitle: 'Holy Baptism',
     recommendTheme: 'hydrangea',
     recommendEnvelope: 'envelope-2',
     recommendBackgrounds: ['bg-none', 'bg-3', 'bg-1', 'bg-4', 'bg-2'],
     fields: {
-      titleLabel: '세례자 이름',
-      titlePlaceholder: '예: 이하준 세례식',
-      bodyPlaceholder: '하나님의 자녀로 새로 태어나는\n소중한 순간을 함께 나누고자 합니다.'
+      titleLabel: 'Main title',
+      titlePlaceholder: 'e.g. Please join us as our child is welcomed into the faith.',
+      subtitlePlaceholder: 'e.g. The Holy Baptism of [Name]',
+      placePlaceholder: 'e.g. Grace Community Church, 789 Maple Avenue, Chicago, IL',
+      bodyPlaceholder: 'e.g. Please join us as our child is welcomed into the faith.',
+      memoPlaceholder: 'e.g. A small luncheon will follow the ceremony at the family residence.'
     }
   },
   {
     id: 'meeting',
     emoji: '🤝',
-    label: '모임',
-    defaultTitle: '모임',
+    label: 'Gathering',
+    defaultTitle: 'Gathering',
     recommendTheme: 'minimal',
     recommendEnvelope: 'envelope-2',
     recommendBackgrounds: ['bg-none', 'bg-1', 'bg-2', 'bg-3', 'bg-4'],
     fields: {
       titleLabel: 'Main title',
-      titlePlaceholder: 'e.g. Book Club Monthly Meet',
-      bodyPlaceholder: '편하게 오셔서 즐거운 시간 함께 해요.'
+      titlePlaceholder: 'e.g. You\'re invited to a backyard BBQ to kick off the summer season!',
+      subtitlePlaceholder: 'e.g. Eat, Drink, and Be Merry',
+      placePlaceholder: 'e.g. The Miller Residence, 321 Oak Drive, Miami, FL',
+      bodyPlaceholder: 'e.g. You\'re invited to a backyard BBQ to kick off the summer season!',
+      memoPlaceholder: 'e.g. Please let us know if you have any dietary restrictions (Vegan/GF).'
     }
   },
   {
     id: 'etc',
     emoji: '✉️',
-    label: '기타',
-    defaultTitle: '초대장',
+    label: 'Other',
+    defaultTitle: 'Invitation',
     recommendTheme: 'minimal',
     recommendEnvelope: 'envelope-1',
     recommendBackgrounds: ['bg-none', 'bg-1', 'bg-2', 'bg-3', 'bg-4'],
     fields: {
-      titleLabel: '제목',
-      titlePlaceholder: '제목을 입력하세요',
-      bodyPlaceholder: '메시지를 입력하세요'
+      titleLabel: 'Main title',
+      titlePlaceholder: 'e.g. We\'re getting together and would love to see you there.',
+      subtitlePlaceholder: 'e.g. Save the Date',
+      placePlaceholder: 'e.g. Central Park North Meadow (Entrance at 102nd St), New York, NY',
+      bodyPlaceholder: 'e.g. We\'re getting together and would love to see you there.',
+      memoPlaceholder: "e.g. Dress comfortably and don't forget to bring your sunglasses!"
     }
   }
 ];

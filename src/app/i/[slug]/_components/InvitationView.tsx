@@ -157,7 +157,7 @@ export default function InvitationView({ card, feed, recipientName, recipientId 
         <button
           onClick={handleOpen}
           disabled={opening}
-          className="mt-8 px-6 py-3 rounded-full text-white font-medium shadow-lg active:scale-95 transition disabled:opacity-60"
+          className="mt-8 px-5 py-2.5 rounded-full text-white text-sm font-medium shadow-lg active:scale-95 transition disabled:opacity-60"
           style={{ background: buttonBg }}
         >
           {opening ? 'Opening...' : 'Open invitation'}

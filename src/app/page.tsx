@@ -37,7 +37,7 @@ export default function Home() {
             className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-white/70 backdrop-blur text-hydrangea-700 text-sm font-medium border border-hydrangea-100 active:scale-95 transition"
           >
             <List className="w-4 h-4" />
-            발행한 초대장 보기
+            {t('myInvitations')}
           </Link>
           <Link
             href="/envelopes-demo"

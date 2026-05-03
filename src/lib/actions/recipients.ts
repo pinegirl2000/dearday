@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { getServerSession } from 'next-auth';
 import { pool } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
+import { isAdminEmail } from '@/lib/admin';
 
 interface AuthCheck {
   slug: string;
@@ -13,6 +14,16 @@ interface AuthCheck {
 async function verifyOwner({ slug, ownerToken }: AuthCheck) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id || null;
+  const email = session?.user?.email || null;
+
+  // 시스템 관리자는 모든 카드 접근 가능
+  if (isAdminEmail(email)) {
+    const { rows } = await pool.query<{ id: string; rsvp_max_per_card: number }>(
+      'SELECT id, rsvp_max_per_card FROM dearday_card WHERE slug=$1 LIMIT 1',
+      [slug]
+    );
+    return rows[0];
+  }
 
   // owner_token 또는 로그인 사용자 user_id 일치 시 소유자 인정
   const params: any[] = [slug];
@@ -106,6 +117,14 @@ export async function bulkAddRecipients(slug: string, ownerToken: string | null,
   }
   revalidatePath(`/cards/${slug}/manage`);
   return { ok: true as const, count: inserted.length };
+}
+
+export async function deleteCard(slug: string, ownerToken: string | null) {
+  const card = await verifyOwner({ slug, ownerToken });
+  if (!card) return { ok: false as const, error: 'Permission denied' };
+  await pool.query('DELETE FROM dearday_card WHERE id=$1', [card.id]);
+  revalidatePath('/cards');
+  return { ok: true as const };
 }
 
 export async function deleteRecipient(slug: string, ownerToken: string | null, recipientId: string) {

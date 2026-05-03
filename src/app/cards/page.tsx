@@ -40,18 +40,18 @@ export default async function CardsListPage() {
 
   return (
     <PageContainer noPadding>
-      <MobileHeader title="내 초대장" back />
+      <MobileHeader title="My invitations" back />
 
       {!session ? (
         <LoginPrompt />
       ) : cards.length === 0 ? (
         <div className="px-6 py-16 text-center">
-          <p className="text-sm text-hydrangea-400 mb-4">아직 발행한 초대장이 없습니다.</p>
+          <p className="text-sm text-hydrangea-400 mb-4">You haven't created any invitations yet.</p>
           <Link
             href="/cards/new"
             className="inline-block px-5 py-2.5 rounded-full bg-hydrangea-500 text-white text-sm font-medium"
           >
-            초대장 만들기
+            Create invitation
           </Link>
         </div>
       ) : (
@@ -103,7 +103,7 @@ export default async function CardsListPage() {
                     className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs text-hydrangea-700 hover:bg-hydrangea-50 transition"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
-                    보기
+                    View
                   </Link>
                   <div className="w-px bg-hydrangea-100/60" />
                   <Link
@@ -111,7 +111,7 @@ export default async function CardsListPage() {
                     className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs text-hydrangea-700 hover:bg-hydrangea-50 transition"
                   >
                     <Pencil className="w-3.5 h-3.5" />
-                    수정
+                    Edit
                   </Link>
                   <div className="w-px bg-hydrangea-100/60" />
                   <Link
@@ -119,7 +119,7 @@ export default async function CardsListPage() {
                     className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs text-hydrangea-700 hover:bg-hydrangea-50 transition"
                   >
                     <Settings className="w-3.5 h-3.5" />
-                    관리
+                    Manage
                   </Link>
                 </div>
               </div>

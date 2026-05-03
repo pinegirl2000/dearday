@@ -30,7 +30,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, comp
   const [attend, setAttend] = useState<boolean | null>(null);
   const [adultCount, setAdultCount] = useState(1);
   const [childCount, setChildCount] = useState(0);
-  const [names, setNames] = useState<string[]>(['']);
+  const [names, setNames] = useState<string[]>([recipientName || '']);
   const [oneliner, setOneliner] = useState('');
   const [done, setDone] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -252,21 +252,28 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, comp
               </div>
             )}
 
-            {card.rsvp_collect_names && (
-              <div className="space-y-1.5">
+            {card.rsvp_collect_names && count > 1 && (
+              <div className="grid grid-cols-2 gap-1.5">
                 {Array.from({ length: count }).map((_, i) => (
-                  <input
-                    key={i}
-                    placeholder={`Attendee ${i + 1} name`}
-                    value={names[i] || ''}
-                    onChange={(e) => {
-                      const arr = [...names];
-                      arr[i] = e.target.value;
-                      setNames(arr);
-                    }}
-                    className={`w-full px-3 rounded-xl border bg-white focus:outline-none focus:ring-2 ${compact ? 'min-h-[32px] text-xs' : 'min-h-[44px] text-sm'}`}
-                    style={{ borderColor: theme.colors.accent + '66' }}
-                  />
+                  <label key={i} className="flex flex-col gap-0.5 min-w-0">
+                    <span
+                      className={`${compact ? 'text-[10px]' : 'text-[11px]'} font-medium`}
+                      style={{ color: theme.colors.deep, opacity: 0.8 }}
+                    >
+                      attendee#{i + 1}
+                    </span>
+                    <input
+                      placeholder=""
+                      value={names[i] || ''}
+                      onChange={(e) => {
+                        const arr = [...names];
+                        arr[i] = e.target.value;
+                        setNames(arr);
+                      }}
+                      className={`w-full px-2 rounded-md bg-white focus:outline-none focus:ring-1 ${compact ? 'h-7 text-[11px]' : 'h-8 text-xs'}`}
+                      style={{ border: `1.5px solid ${theme.colors.accent}` }}
+                    />
+                  </label>
                 ))}
               </div>
             )}
@@ -287,9 +294,9 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, comp
         </motion.button>
       )}
 
-      {attend !== null && (
+      {attend !== null && (card.rsvp_allow_oneliner ?? true) && (
         <textarea
-          placeholder="한줄 답신을 남겨주세요 (선택)"
+          placeholder="Leave a one-line reply to host (optional)"
           value={oneliner}
           onChange={(e) => setOneliner(e.target.value.slice(0, 200))}
           rows={compact ? 1 : 2}

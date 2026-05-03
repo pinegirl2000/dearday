@@ -38,6 +38,7 @@ export interface BaseCard {
   rsvp_deadline: string | null;
   rsvp_max_per_card: 1 | 2 | 3 | 4 | 5;
   rsvp_collect_names: boolean;
+  rsvp_allow_oneliner: boolean;
   expiry_date: string | null;
   plan: Plan;
   created_at: string;

@@ -52,6 +52,7 @@ export default function EditCardClient({ card }: Props) {
       rsvp_deadline: toIso(card.rsvp_deadline),
       rsvp_max_per_card: card.rsvp_max_per_card,
       rsvp_collect_names: card.rsvp_collect_names,
+      rsvp_allow_oneliner: card.rsvp_allow_oneliner ?? true,
       expiry_date: toIso(card.expiry_date),
       plan: card.plan
     };

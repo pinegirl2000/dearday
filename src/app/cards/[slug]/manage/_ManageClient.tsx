@@ -7,7 +7,9 @@ import { toast } from 'sonner';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { MobileHeader } from '@/components/layout/MobileHeader';
 import { Button, Sheet, Textarea } from '@/components/ui';
-import { listRecipients, bulkAddRecipients, deleteRecipient } from '@/lib/actions/recipients';
+import { listRecipients, bulkAddRecipients, deleteRecipient, deleteCard } from '@/lib/actions/recipients';
+import { useRouter } from 'next/navigation';
+import { Trash } from 'lucide-react';
 
 interface Props {
   slug: string;
@@ -41,6 +43,25 @@ export default function ManageClient({ slug, cardTitle }: Props) {
   const [origin, setOrigin] = useState('');
   const [expandedNames, setExpandedNames] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'recent' | 'num' | 'name' | 'attend'>('recent');
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deletingCard, setDeletingCard] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState('');
+  const [showAttendingList, setShowAttendingList] = useState(false);
+  const [showDeclinedList, setShowDeclinedList] = useState(false);
+  const router = useRouter();
+
+  const handleDeleteCard = async () => {
+    setDeletingCard(true);
+    const res = await deleteCard(slug, ownerToken);
+    setDeletingCard(false);
+    if (!res.ok) {
+      toast.error(res.error || 'Delete failed');
+      return;
+    }
+    toast.success('Invitation deleted');
+    setDeleteOpen(false);
+    router.push('/cards');
+  };
 
   const fmtDate = (iso: string | null) => {
     if (!iso) return '—';
@@ -296,22 +317,133 @@ export default function ManageClient({ slug, cardTitle }: Props) {
           const children = attendingRows.reduce((s, r) => s + (r.rsvp_child_count || 0), 0);
           const declined = recipients.filter((r) => r.rsvp_attend === false).length;
           const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+          const declinedRows = recipients.filter((r) => r.rsvp_attend === false);
           return (
             <div className="rounded-2xl border border-hydrangea-100 bg-hydrangea-50/40 p-4 mb-12">
               <div className="text-[11px] text-hydrangea-400 mb-3">As of {today} · Total {total}</div>
               <div className="space-y-2 text-sm">
-                <div className="flex items-center justify-between p-2 rounded-lg bg-white/70">
-                  <span className="font-semibold text-green-700">Attending {attending}</span>
-                  <span className="text-xs text-hydrangea-500">Adult: {adults} / Child: {children}</span>
+                <div className="rounded-lg bg-white/70 overflow-hidden">
+                  <div className="flex items-center justify-between p-2">
+                    <span className="font-semibold text-green-700">Attending {attending}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-hydrangea-500">Adult: {adults} / Child: {children}</span>
+                      <button
+                        type="button"
+                        onClick={() => setShowAttendingList((v) => !v)}
+                        className="text-[11px] text-green-700 underline hover:no-underline"
+                      >
+                        {showAttendingList ? 'Hide list' : 'Attending list'}
+                      </button>
+                    </div>
+                  </div>
+                  {showAttendingList && (
+                    <div className="px-3 pb-2 text-xs text-hydrangea-700 border-t border-hydrangea-100/60 pt-2">
+                      {(() => {
+                        const names = attendingRows.flatMap((r) =>
+                          (r.rsvp_attendee_names && r.rsvp_attendee_names.length > 0)
+                            ? r.rsvp_attendee_names
+                            : [r.name]
+                        );
+                        return names.length === 0
+                          ? <span className="text-hydrangea-400">No attendees yet</span>
+                          : names.join(', ');
+                      })()}
+                    </div>
+                  )}
                 </div>
-                <div className="flex items-center justify-between p-2 rounded-lg bg-white/70">
-                  <span className="font-semibold text-red-600">Declined {declined}</span>
+                <div className="rounded-lg bg-white/70 overflow-hidden">
+                  <div className="flex items-center justify-between p-2">
+                    <span className="font-semibold text-red-600">Declined {declined}</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowDeclinedList((v) => !v)}
+                      className="text-[11px] text-red-600 underline hover:no-underline"
+                    >
+                      {showDeclinedList ? 'Hide list' : 'Declined list'}
+                    </button>
+                  </div>
+                  {showDeclinedList && (
+                    <div className="px-3 pb-2 text-xs text-hydrangea-700 border-t border-hydrangea-100/60 pt-2">
+                      {declinedRows.length === 0
+                        ? <span className="text-hydrangea-400">No declines yet</span>
+                        : declinedRows.map((r) => r.name).join(', ')}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           );
         })()}
+
+        {/* Danger zone: 카드 + 데이터 모두 삭제 */}
+        {!loading && !error && (
+          <div className="mt-4 mb-12 rounded-2xl border border-red-200 bg-red-50/40 p-4">
+            <p className="text-[11px] text-red-500 mb-3">
+              Clicking the button below will permanently delete this invitation along with all recipients and RSVP data.
+            </p>
+            <button
+              type="button"
+              onClick={() => setDeleteOpen(true)}
+              className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-red-500 text-white text-sm font-semibold active:scale-95 transition"
+            >
+              <Trash className="w-4 h-4" />
+              Delete this invitation and all data
+            </button>
+          </div>
+        )}
       </div>
+
+      {/* 삭제 확인 모달 */}
+      {deleteOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
+          onClick={() => {
+            if (!deletingCard) { setDeleteOpen(false); setDeleteConfirm(''); }
+          }}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl bg-white shadow-2xl p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-3 w-10 h-10 mx-auto rounded-full bg-red-100 flex items-center justify-center">
+              <Trash className="w-5 h-5 text-red-600" />
+            </div>
+            <h3 className="text-base font-semibold text-hydrangea-700 text-center mb-1.5">Are you sure you want to delete?</h3>
+            <p className="text-xs text-hydrangea-500 text-center mb-3">
+              "{cardTitle}" — this action cannot be undone. All recipients and RSVP responses will be removed.
+            </p>
+            <p className="text-xs text-hydrangea-600 text-center mb-2">
+              Type <span className="font-mono font-semibold text-red-600">yes</span> in the box below to confirm.
+            </p>
+            <input
+              type="text"
+              value={deleteConfirm}
+              onChange={(e) => setDeleteConfirm(e.target.value)}
+              placeholder="yes"
+              autoFocus
+              className="w-full px-3 py-2 mb-4 rounded-xl border border-hydrangea-200 text-sm font-mono text-center focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-transparent"
+            />
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => { setDeleteOpen(false); setDeleteConfirm(''); }}
+                disabled={deletingCard}
+                className="flex-1 py-2.5 rounded-xl border border-hydrangea-200 text-sm text-hydrangea-700 font-medium active:scale-95 transition disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteCard}
+                disabled={deletingCard || deleteConfirm !== 'yes'}
+                className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-semibold active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {deletingCard ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen} title="수신자 일괄 등록" description="한 줄에 한 명씩 입력하세요">
         <Textarea

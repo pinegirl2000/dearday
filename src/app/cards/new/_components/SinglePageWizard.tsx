@@ -104,6 +104,32 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
   const [envelopeOpening, setEnvelopeOpening] = useState(false);
 
   const [hydrated, setHydrated] = useState(!!skipRehydrate);
+  const [savedSnapshot, setSavedSnapshot] = useState<string | null>(null);
+  const [savingSticky, setSavingSticky] = useState(false);
+
+  // Edit 모드: 첫 로드 후 현재 draft 스냅샷 저장 (변경 감지 기준)
+  useEffect(() => {
+    if (isEditMode && savedSnapshot === null && draft.title) {
+      setSavedSnapshot(JSON.stringify(draft));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditMode, draft.title, draft.event_type]);
+
+  const isDirty = isEditMode && savedSnapshot !== null && JSON.stringify(draft) !== savedSnapshot;
+
+  const handleStickySave = () => {
+    if (!editingSlug) return;
+    setSavingSticky(true);
+    updateCard(editingSlug, draft).then((res) => {
+      setSavingSticky(false);
+      if (!res.ok) { toast.error(res.error || 'Save failed'); return; }
+      toast.success('Saved!');
+      setSavedSnapshot(JSON.stringify(draft));
+    }).catch(() => {
+      setSavingSticky(false);
+      toast.error('Save failed');
+    });
+  };
   // Yes/No 토글 시 이전 입력값 유지를 위한 캐시
   const lastRecipientTemplate = useRef<string>('');
   useEffect(() => {
@@ -124,6 +150,14 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // max per group이 1이면 collect_names 자동 해제
+  useEffect(() => {
+    if ((draft.rsvp_max_per_card || 4) === 1 && draft.rsvp_collect_names) {
+      setDraft({ rsvp_collect_names: false });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draft.rsvp_max_per_card]);
 
   // 봉투를 None으로 바꾸면 recipient_template은 null로 정리 (검증/표시 일관성)
   useEffect(() => {
@@ -461,7 +495,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
             })()}
             <Input
               label="Subtitle"
-              placeholder="e.g. The day two become one"
+              placeholder={meta.fields.subtitlePlaceholder}
               hint="Optional"
               value={draft.greeting_oneliner || ''}
               onChange={(e) => setDraft({ greeting_oneliner: e.target.value })}
@@ -509,7 +543,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
                 </div>
               );
             })()}
-            <Input label="Place" requiredMark placeholder="e.g. Labidus Wedding Hall 5F" value={draft.event_place || ''}
+            <Input label="Place" requiredMark placeholder={meta.fields.placePlaceholder} value={draft.event_place || ''}
               onChange={(e) => setDraft({ event_place: e.target.value })} />
             <Input label="Address" placeholder="Street address or map link" value={draft.map_url || ''}
               onChange={(e) => setDraft({ map_url: e.target.value })} />
@@ -517,7 +551,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
               onChange={(e) => setDraft({ contact_name: e.target.value })} />
             <PhoneInput label="Phone" value={draft.contact_phone || ''}
               onChange={(phone) => setDraft({ contact_phone: phone })} />
-            <Textarea label="Additional info (optional)" placeholder="Parking, notes, etc." value={draft.extra_info || ''}
+            <Textarea label="Additional info (optional)" placeholder={meta.fields.memoPlaceholder} value={draft.extra_info || ''}
               onChange={(e) => setDraft({ extra_info: e.target.value })} rows={3} />
 
             <div className="pt-3 border-t border-hydrangea-100/60">
@@ -533,7 +567,12 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
                 {draft.rsvp_enabled && (
                   <>
                     <div className="flex items-center justify-between p-3 rounded-xl bg-white border border-hydrangea-100/60">
-                      <div className="text-sm text-hydrangea-700">Max per group</div>
+                      <div>
+                        <div className="text-sm text-hydrangea-700">Max group size</div>
+                        <div className="text-[11px] text-hydrangea-400 mt-0.5">
+                          Total people in my group including myself
+                        </div>
+                      </div>
                       <div className="flex items-center gap-2">
                         <button type="button" onClick={() => {
                           const cur = (draft.rsvp_max_per_card || 4) as number;
@@ -550,11 +589,20 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
                         </button>
                       </div>
                     </div>
+                    {(draft.rsvp_max_per_card || 4) > 1 && (
+                      <div className="flex items-center justify-between p-3 rounded-xl bg-white border border-hydrangea-100/60">
+                        <div className="text-sm text-hydrangea-700">Collect attendee names</div>
+                        <button type="button" onClick={() => setDraft({ rsvp_collect_names: !draft.rsvp_collect_names })}
+                          className={`relative w-11 h-6 rounded-full transition ${draft.rsvp_collect_names ? 'bg-hydrangea-500' : 'bg-hydrangea-100'}`}>
+                          <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${draft.rsvp_collect_names ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                        </button>
+                      </div>
+                    )}
                     <div className="flex items-center justify-between p-3 rounded-xl bg-white border border-hydrangea-100/60">
-                      <div className="text-sm text-hydrangea-700">Collect attendee names</div>
-                      <button type="button" onClick={() => setDraft({ rsvp_collect_names: !draft.rsvp_collect_names })}
-                        className={`relative w-11 h-6 rounded-full transition ${draft.rsvp_collect_names ? 'bg-hydrangea-500' : 'bg-hydrangea-100'}`}>
-                        <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${draft.rsvp_collect_names ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                      <div className="text-sm text-hydrangea-700">Allow one-line reply</div>
+                      <button type="button" onClick={() => setDraft({ rsvp_allow_oneliner: !(draft.rsvp_allow_oneliner ?? true) })}
+                        className={`relative w-11 h-6 rounded-full transition ${(draft.rsvp_allow_oneliner ?? true) ? 'bg-hydrangea-500' : 'bg-hydrangea-100'}`}>
+                        <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${(draft.rsvp_allow_oneliner ?? true) ? 'translate-x-5' : 'translate-x-0.5'}`} />
                       </button>
                     </div>
                     {(() => {
@@ -868,6 +916,23 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
           </div>
         </SectionShell>
       </div>
+
+      {/* Edit 모드: 변경사항 있을 때 sticky save bar */}
+      {isDirty && (
+        <div className="fixed bottom-0 left-0 right-0 z-30 px-4 py-3 bg-white/95 backdrop-blur border-t border-hydrangea-200 shadow-lg">
+          <div className="max-w-md mx-auto flex items-center gap-3">
+            <span className="text-xs text-hydrangea-500 flex-1">You have unsaved changes</span>
+            <button
+              type="button"
+              onClick={handleStickySave}
+              disabled={savingSticky}
+              className="px-4 py-2 rounded-full bg-hydrangea-500 text-white text-sm font-medium shadow active:scale-95 transition disabled:opacity-50"
+            >
+              {savingSticky ? 'Saving...' : 'Save changes'}
+            </button>
+          </div>
+        </div>
+      )}
     </PageContainer>
   );
 }
