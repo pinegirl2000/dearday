@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import Script from 'next/script';
 import { Noto_Serif_KR, Noto_Sans_KR } from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
@@ -8,6 +9,8 @@ import { authOptions } from '@/lib/auth';
 import SessionProvider from '@/components/auth/SessionProvider';
 import TopBar from '@/components/layout/TopBar';
 import './globals.css';
+
+const ADSENSE_CLIENT = 'ca-pub-1846879536072566';
 
 const notoSerif = Noto_Serif_KR({
   subsets: ['latin'],
@@ -43,6 +46,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang={locale} className={`${notoSerif.variable} ${notoSans.variable}`}>
+      <head>
+        <Script
+          id="adsense-script"
+          async
+          strategy="afterInteractive"
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
+          crossOrigin="anonymous"
+        />
+      </head>
       <body className="font-sans bg-hydrangea-50">
         <SessionProvider session={session}>
           <NextIntlClientProvider messages={messages} locale={locale}>

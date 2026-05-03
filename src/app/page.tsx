@@ -77,10 +77,22 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="px-6 pb-10 text-center">
+      <footer className="px-6 pb-10 text-center space-y-3">
         <p className="text-xs text-hydrangea-300 flex items-center justify-center gap-1">
           {t('footer')} <Heart className="w-3 h-3 fill-current text-hydrangea-400" /> DearDay
         </p>
+        <nav className="flex items-center justify-center gap-3 text-[11px] text-hydrangea-400">
+          <Link href="/about" className="hover:text-hydrangea-700">About</Link>
+          <span>·</span>
+          <Link href="/blog" className="hover:text-hydrangea-700">Blog</Link>
+          <span>·</span>
+          <Link href="/privacy" className="hover:text-hydrangea-700">Privacy</Link>
+          <span>·</span>
+          <Link href="/terms" className="hover:text-hydrangea-700">Terms</Link>
+          <span>·</span>
+          <Link href="/contact" className="hover:text-hydrangea-700">Contact</Link>
+        </nav>
+        <p className="text-[10px] text-hydrangea-300">© {new Date().getFullYear()} Steward+AI</p>
       </footer>
     </PageContainer>
   );
