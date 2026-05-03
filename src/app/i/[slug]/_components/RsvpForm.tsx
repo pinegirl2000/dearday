@@ -72,20 +72,28 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, comp
     }
   };
 
-  const handleSubmit = () => {
-    if (attend === null) {
+  const handleSubmit = (overrideAttend?: boolean) => {
+    const attendVal = overrideAttend !== undefined ? overrideAttend : attend;
+    if (attendVal === null) {
       toast.error('Please select Attend or Decline');
       return;
+    }
+    if (attendVal && card.rsvp_collect_names && count > 1) {
+      const filled = names.slice(0, count).filter((n) => n && n.trim().length > 0);
+      if (filled.length < count) {
+        toast.error(`Please enter all ${count} attendee names`);
+        return;
+      }
     }
     startTransition(async () => {
       const res = await submitRsvp({
         card_id: card.id,
         slug: card.slug,
         recipient_id: recipientId,
-        attend,
-        adult_count: attend ? adultCount : 0,
-        child_count: attend ? childCount : 0,
-        attendee_names: attend && card.rsvp_collect_names
+        attend: attendVal,
+        adult_count: attendVal ? adultCount : 0,
+        child_count: attendVal ? childCount : 0,
+        attendee_names: attendVal && card.rsvp_collect_names
           ? names.filter((n) => n.trim())
           : (recipientName ? [recipientName] : []),
         oneliner: oneliner
@@ -129,11 +137,12 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, comp
       </div>
 
       {compact ? (
-        <div className="grid grid-cols-3 gap-1.5 items-stretch">
+        <div className={`grid ${attend === true && max > 1 ? 'grid-cols-3' : 'grid-cols-2'} gap-1.5 items-stretch`}>
           <motion.button
             whileTap={{ scale: 0.96 }}
-            onClick={() => setAttend(true)}
-            className="min-h-[34px] text-xs rounded-lg border-2 font-medium transition flex items-center justify-center gap-1"
+            onClick={() => { setAttend(true); if (max <= 1) handleSubmit(true); }}
+            disabled={pending}
+            className="min-h-[34px] text-xs rounded-lg border-2 font-medium transition flex items-center justify-center gap-1 disabled:opacity-50"
             style={{
               background: attend === true ? ACCENT : ACCENT_SOFT,
               color: attend === true ? '#fff' : ACCENT_DEEP,
@@ -144,8 +153,9 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, comp
           </motion.button>
           <motion.button
             whileTap={{ scale: 0.96 }}
-            onClick={() => setAttend(false)}
-            className="min-h-[34px] text-xs rounded-lg border-2 font-medium transition flex items-center justify-center gap-1"
+            onClick={() => { setAttend(false); if (max <= 1) handleSubmit(false); }}
+            disabled={pending}
+            className="min-h-[34px] text-xs rounded-lg border-2 font-medium transition flex items-center justify-center gap-1 disabled:opacity-50"
             style={{
               background: attend === false ? ACCENT_DEEP : ACCENT_SOFT,
               color: attend === false ? '#fff' : ACCENT_DEEP,
@@ -154,7 +164,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, comp
           >
             <X className="w-3 h-3" /> Decline
           </motion.button>
-          {attend === true && max > 1 ? (
+          {attend === true && max > 1 && (
             <div className="min-h-[34px] rounded-lg border-2 flex items-center justify-between px-1.5"
               style={{ borderColor: ACCENT, background: ACCENT_SOFT }}>
               <button
@@ -177,24 +187,15 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, comp
                 <Plus className="w-3 h-3" />
               </button>
             </div>
-          ) : (
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              onClick={handleSubmit}
-              disabled={pending || attend === null}
-              className="min-h-[34px] text-xs rounded-lg font-semibold text-white shadow disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1"
-              style={{ background: ACCENT }}
-            >
-              {pending ? '...' : (<><Heart className="w-3 h-3" /> Reply</>)}
-            </motion.button>
           )}
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-2">
           <motion.button
             whileTap={{ scale: 0.96 }}
-            onClick={() => setAttend(true)}
-            className="min-h-[52px] rounded-xl border-2 font-medium transition flex items-center justify-center gap-2"
+            onClick={() => { setAttend(true); if (max <= 1) handleSubmit(true); }}
+            disabled={pending}
+            className="min-h-[52px] rounded-xl border-2 font-medium transition flex items-center justify-center gap-2 disabled:opacity-50"
             style={{
               background: attend === true ? ACCENT : ACCENT_SOFT,
               color: attend === true ? '#fff' : ACCENT_DEEP,
@@ -205,8 +206,9 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, comp
           </motion.button>
           <motion.button
             whileTap={{ scale: 0.96 }}
-            onClick={() => setAttend(false)}
-            className="min-h-[52px] rounded-xl border-2 font-medium transition flex items-center justify-center gap-2"
+            onClick={() => { setAttend(false); if (max <= 1) handleSubmit(false); }}
+            disabled={pending}
+            className="min-h-[52px] rounded-xl border-2 font-medium transition flex items-center justify-center gap-2 disabled:opacity-50"
             style={{
               background: attend === false ? ACCENT_DEEP : ACCENT_SOFT,
               color: attend === false ? '#fff' : ACCENT_DEEP,
@@ -281,19 +283,6 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, comp
         )}
       </AnimatePresence>
 
-      {/* compact 모드에서 attend===true && max>1 인 경우, 위 3열에 카운트가 들어가서 Reply가 필요함 */}
-      {compact && attend === true && max > 1 && (
-        <motion.button
-          whileTap={{ scale: 0.97 }}
-          onClick={handleSubmit}
-          disabled={pending}
-          className="w-full min-h-[34px] text-xs rounded-lg font-semibold text-white shadow disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1"
-          style={{ background: ACCENT }}
-        >
-          {pending ? 'Sending...' : (<><Heart className="w-3 h-3" /> Reply</>)}
-        </motion.button>
-      )}
-
       {attend !== null && (card.rsvp_allow_oneliner ?? true) && (
         <textarea
           placeholder="Leave a one-line reply to host (optional)"
@@ -305,19 +294,18 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, comp
         />
       )}
 
-      {!compact && <motion.button
-        whileTap={{ scale: 0.97 }}
-        onClick={handleSubmit}
-        disabled={pending || attend === null}
-        className="w-full min-h-[52px] rounded-xl font-semibold text-white shadow-lg disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-        style={{ background: ACCENT }}
-      >
-        {pending ? 'Sending...' : (
-          <>
-            <Heart className="w-4 h-4" /> Reply
-          </>
-        )}
-      </motion.button>}
+      {/* Reply 버튼: max>1 케이스에서만 노출 (max=1은 Attend/Decline 클릭이 곧 제출) */}
+      {attend !== null && max > 1 && (
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={() => handleSubmit()}
+          disabled={pending}
+          className={`w-full font-semibold text-white shadow disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1 ${compact ? 'min-h-[34px] text-xs rounded-lg' : 'min-h-[52px] text-base rounded-xl'}`}
+          style={{ background: ACCENT }}
+        >
+          {pending ? 'Sending...' : (<><Heart className={compact ? 'w-3 h-3' : 'w-4 h-4'} /> Reply</>)}
+        </motion.button>
+      )}
     </div>
   );
 }

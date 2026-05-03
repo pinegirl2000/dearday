@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useTransition } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Copy, Check, Trash2, Plus, Eye, Users, Pencil } from 'lucide-react';
+import { Copy, Check, Trash2, Plus, Eye, Users, Pencil, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { MobileHeader } from '@/components/layout/MobileHeader';
@@ -48,6 +48,7 @@ export default function ManageClient({ slug, cardTitle }: Props) {
   const [deleteConfirm, setDeleteConfirm] = useState('');
   const [showAttendingList, setShowAttendingList] = useState(false);
   const [showDeclinedList, setShowDeclinedList] = useState(false);
+  const [showPendingList, setShowPendingList] = useState(false);
   const router = useRouter();
 
   const handleDeleteCard = async () => {
@@ -312,29 +313,33 @@ export default function ManageClient({ slug, cardTitle }: Props) {
         {!loading && recipients.length > 0 && (() => {
           const total = recipients.length;
           const attendingRows = recipients.filter((r) => r.rsvp_attend === true);
-          const attending = attendingRows.reduce((s, r) => s + (r.rsvp_count || 0), 0);
+          const attendingGroups = attendingRows.length;
+          const attendingPeople = attendingRows.reduce((s, r) => s + (r.rsvp_count || 0), 0);
           const adults = attendingRows.reduce((s, r) => s + (r.rsvp_adult_count || 0), 0);
           const children = attendingRows.reduce((s, r) => s + (r.rsvp_child_count || 0), 0);
           const declined = recipients.filter((r) => r.rsvp_attend === false).length;
           const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
           const declinedRows = recipients.filter((r) => r.rsvp_attend === false);
+          const pendingRows = recipients.filter((r) => r.rsvp_attend === null || r.rsvp_attend === undefined);
           return (
             <div className="rounded-2xl border border-hydrangea-100 bg-hydrangea-50/40 p-4 mb-12">
               <div className="text-[11px] text-hydrangea-400 mb-3">As of {today} · Total {total}</div>
               <div className="space-y-2 text-sm">
                 <div className="rounded-lg bg-white/70 overflow-hidden">
                   <div className="flex items-center justify-between p-2">
-                    <span className="font-semibold text-green-700">Attending {attending}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-hydrangea-500">Adult: {adults} / Child: {children}</span>
-                      <button
-                        type="button"
-                        onClick={() => setShowAttendingList((v) => !v)}
-                        className="text-[11px] text-green-700 underline hover:no-underline"
-                      >
-                        {showAttendingList ? 'Hide list' : 'Attending list'}
-                      </button>
-                    </div>
+                    <span className="font-semibold text-green-700">
+                      Attending {attendingGroups} group{attendingGroups === 1 ? '' : 's'} <span className="text-xs font-normal text-green-600">- total {attendingPeople} {attendingPeople === 1 ? 'person' : 'people'}</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setShowAttendingList((v) => !v)}
+                      className="inline-flex items-center gap-0.5 text-green-700 active:scale-90 transition"
+                      title={showAttendingList ? 'Hide list' : 'Show attending list'}
+                      aria-label={showAttendingList ? 'Hide list' : 'Show attending list'}
+                    >
+                      <Users className="w-4 h-4" />
+                      {showAttendingList ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                    </button>
                   </div>
                   {showAttendingList && (
                     <div className="px-3 pb-2 text-xs text-hydrangea-700 border-t border-hydrangea-100/60 pt-2">
@@ -357,9 +362,12 @@ export default function ManageClient({ slug, cardTitle }: Props) {
                     <button
                       type="button"
                       onClick={() => setShowDeclinedList((v) => !v)}
-                      className="text-[11px] text-red-600 underline hover:no-underline"
+                      className="inline-flex items-center gap-0.5 text-red-600 active:scale-90 transition"
+                      title={showDeclinedList ? 'Hide list' : 'Show declined list'}
+                      aria-label={showDeclinedList ? 'Hide list' : 'Show declined list'}
                     >
-                      {showDeclinedList ? 'Hide list' : 'Declined list'}
+                      <Users className="w-4 h-4" />
+                      {showDeclinedList ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                     </button>
                   </div>
                   {showDeclinedList && (
@@ -367,6 +375,28 @@ export default function ManageClient({ slug, cardTitle }: Props) {
                       {declinedRows.length === 0
                         ? <span className="text-hydrangea-400">No declines yet</span>
                         : declinedRows.map((r) => r.name).join(', ')}
+                    </div>
+                  )}
+                </div>
+                <div className="rounded-lg bg-white/70 overflow-hidden">
+                  <div className="flex items-center justify-between p-2">
+                    <span className="font-semibold text-hydrangea-500">No response {pendingRows.length}</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowPendingList((v) => !v)}
+                      className="inline-flex items-center gap-0.5 text-hydrangea-500 active:scale-90 transition"
+                      title={showPendingList ? 'Hide list' : 'Show pending list'}
+                      aria-label={showPendingList ? 'Hide list' : 'Show pending list'}
+                    >
+                      <Users className="w-4 h-4" />
+                      {showPendingList ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                    </button>
+                  </div>
+                  {showPendingList && (
+                    <div className="px-3 pb-2 text-xs text-hydrangea-700 border-t border-hydrangea-100/60 pt-2">
+                      {pendingRows.length === 0
+                        ? <span className="text-hydrangea-400">All recipients have replied</span>
+                        : pendingRows.map((r) => r.name).join(', ')}
                     </div>
                   )}
                 </div>
