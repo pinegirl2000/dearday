@@ -173,7 +173,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
             left: '8%',
             right: '8%',
             top: `calc(${Math.min(f.date.y, f.place.y) - 3}% )`,
-            bottom: `calc(${100 - (f.place.y + 12)}%)`,
+            bottom: `calc(${100 - (f.place.y + 5)}%)`,
             background: 'linear-gradient(180deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.30) 100%)',
             backdropFilter: 'blur(8px)',
             WebkitBackdropFilter: 'blur(8px)',
@@ -203,13 +203,15 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
           </span>
         </FieldText>
       )}
-      {/* 전화/호스트는 place 아래 인라인 배치 (map_url은 place와 함께 한 줄에 합쳐짐) */}
+      {/* 전화/호스트는 place 아래 인라인 배치. layout-4는 정보박스 밖으로 더 내려서 배치. */}
       {(card.contact_phone || card.contact_name) && f.place && (
         <div
           style={{
             position: 'absolute',
             left: `${f.place.x}%`,
-            top: `calc(${f.place.y}% + 24px)`,
+            top: layout.id === 'layout-4'
+              ? `calc(${f.place.y + 8}%)`
+              : `calc(${f.place.y}% + 24px)`,
             width: `${f.place.w}%`,
             textAlign: f.place.align,
             fontSize: 11,
