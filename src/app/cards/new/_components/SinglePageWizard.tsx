@@ -44,46 +44,31 @@ interface SectionShellProps {
 }
 
 function SectionShell({ id, title, summary, open, done, enabled, onToggle, children }: SectionShellProps) {
+  // 닫힌 섹션은 렌더하지 않음 — 상단 탭바가 네비게이션 담당
+  if (!open) return null;
   return (
     <section className="rounded-2xl border border-hydrangea-100 bg-white overflow-hidden">
-      <button
-        type="button"
-        onClick={enabled ? onToggle : undefined}
-        disabled={!enabled}
-        className={`w-full flex items-center gap-3 p-4 text-left transition ${
-          enabled ? 'active:bg-hydrangea-50' : 'cursor-default opacity-60'
-        }`}
-      >
+      <div className="w-full flex items-center gap-3 p-4 text-left">
         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${
-          done ? 'bg-hydrangea-500 text-white' : open ? 'bg-hydrangea-100 text-hydrangea-700' : 'bg-hydrangea-50 text-hydrangea-400'
+          done ? 'bg-hydrangea-500 text-white' : 'bg-hydrangea-100 text-hydrangea-700'
         }`}>
           {done ? <Check className="w-4 h-4" strokeWidth={3} /> : id}
         </div>
         <div className="flex-1 min-w-0">
           <div className="font-semibold text-sm text-hydrangea-700">{title}</div>
-          {summary && !open && (
+          {summary && (
             <div className="text-xs text-hydrangea-400 mt-0.5 truncate">{summary}</div>
           )}
         </div>
-        {enabled && (open ? (
-          <ChevronUp className="w-4 h-4 text-hydrangea-400 flex-shrink-0" />
-        ) : (
-          <ChevronDown className="w-4 h-4 text-hydrangea-400 flex-shrink-0" />
-        ))}
-      </button>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="overflow-hidden"
-          >
-            <div className="p-4 pt-0">{children}</div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      </div>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.2 }}
+        className="overflow-hidden"
+      >
+        <div className="p-4 pt-0">{children}</div>
+      </motion.div>
     </section>
   );
 }
@@ -324,9 +309,56 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
     );
   })();
 
+  const SECTION_LABELS: Record<SectionId, string> = {
+    1: 'Event & Template',
+    2: 'Envelope',
+    3: 'Details',
+    4: 'Layout, Preview & Publish'
+  };
+
   return (
     <PageContainer noPadding>
       <MobileHeader title={isEditMode ? 'Edit Invitation' : t('headerTitle')} back />
+
+      {/* 상단 단계 탭바 (sticky) — 활성 탭만 라벨 표시, 나머지는 번호만 */}
+      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur border-b border-hydrangea-100 px-3 py-2">
+        <div className="flex items-center gap-1.5">
+          {([1, 2, 3, 4] as SectionId[]).map((id) => {
+            const active = open === id;
+            const enabled = isEnabled(id);
+            const done = isDone(id);
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => enabled && setOpen(id)}
+                disabled={!enabled}
+                className={`relative flex items-center gap-1.5 transition ${
+                  active ? 'flex-1 px-3 py-1.5 rounded-full bg-hydrangea-500 text-white font-semibold' :
+                  'flex-shrink-0 w-8 h-8 rounded-full ' + (
+                    done ? 'bg-hydrangea-100 text-hydrangea-700' :
+                    enabled ? 'bg-white border border-hydrangea-200 text-hydrangea-500' :
+                    'bg-white border border-hydrangea-100 text-hydrangea-300 cursor-not-allowed'
+                  )
+                } ${active ? '' : 'justify-center'}`}
+              >
+                {active ? (
+                  <>
+                    <span className="w-5 h-5 rounded-full bg-white/25 flex items-center justify-center text-xs font-bold">
+                      {done ? <Check className="w-3 h-3" strokeWidth={3} /> : id}
+                    </span>
+                    <span className="text-xs truncate">{SECTION_LABELS[id]}</span>
+                  </>
+                ) : (
+                  <span className="text-sm font-bold">
+                    {done ? <Check className="w-3.5 h-3.5" strokeWidth={3} /> : id}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       <div className="px-4 py-4 space-y-3 pb-24">
         {/* 1. 이벤트 선택 */}
