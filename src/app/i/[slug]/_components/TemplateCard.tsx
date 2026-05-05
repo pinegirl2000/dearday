@@ -261,7 +261,10 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
               position: 'absolute',
               left: '6%', right: '6%',
               top: `calc(${f.date.y - 1}%)`,
-              bottom: `calc(${100 - (f.place.y + 3)}%)`,
+              // layout-6: extra(Lunch will be served 등)도 박스 안에 포함
+              bottom: layout.id === 'layout-6' && f.extra
+                ? `calc(${100 - (f.extra.y + 4)}%)`
+                : `calc(${100 - (f.place.y + 3)}%)`,
               // sub 있으면: 흰색 반투명 위에 sub 솔리드 → 톤 비치는 frosted
               // sub 없으면: 그냥 흰색 그라디언트
               background: hasSub
@@ -354,11 +357,13 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
           style={{
             position: 'absolute',
             left: `${f.place.x}%`,
-            top: (layout.id === 'layout-4' || layout.id === 'layout-6')
+            top: layout.id === 'layout-4'
               ? `calc(${f.place.y + 8}%)`
-              : layout.id === 'layout-3'
-                ? `calc(${f.place.y + 6}%)`
-                : `calc(${f.place.y}% + 24px)`,
+              : layout.id === 'layout-6'
+                ? `calc(${f.place.y + 14}%)`  // 박스(extra 포함) 아래로
+                : layout.id === 'layout-3'
+                  ? `calc(${f.place.y + 6}%)`
+                  : `calc(${f.place.y}% + 24px)`,
             width: `${f.place.w}%`,
             textAlign: f.place.align,
             fontSize: 11,

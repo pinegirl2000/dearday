@@ -46,9 +46,9 @@ export const LAYOUT_6: LayoutMeta = {
       letterSpacing: '0.16em', lineHeight: 1.6,
       fontFamily: "'Cormorant Garamond', 'Noto Serif KR', serif"
     },
-    // Reception to follow — script (phone+host 블록 아래)
+    // Reception to follow — script (정보 박스 안, place 바로 아래)
     extra: {
-      x: 12, y: 95, w: 76, align: 'center',
+      x: 12, y: 84, w: 76, align: 'center',
       fontSize: 16, fontWeight: 400, color: '#1A2A3A',
       lineHeight: 1.2, letterSpacing: '0',
       fontFamily: "'Sacramento', 'Great Vibes', cursive"
