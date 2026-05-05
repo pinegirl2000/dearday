@@ -64,6 +64,17 @@ export const TEMPLATES: TemplateMeta[] = [
     badge: 'Romantic'
   },
   {
+    id: 'tpl-watercolor-purple-soft',
+    name: 'Watercolor Lavender Soft',
+    description: 'Soft purple florals with lavender leaves — feminine and gentle',
+    bg_id: 'bg-img-3',
+    layout_id: 'layout-classic',
+    colorMain: '#7B5EA7',
+    colorSub: '#9B7FCB',
+    recommendEvents: ['wedding', 'baptism', 'meeting', 'etc'],
+    allowedLayouts: ['layout-classic', 'layout-4', 'layout-7']
+  },
+  {
     id: 'tpl-watercolor-green',
     name: 'Watercolor Eucalyptus',
     description: 'Fresh green watercolor leaves',
