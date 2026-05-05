@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { ClassicEnvelope, EnvelopeBeige, NoneEnvelope } from '@/components/envelopes';
+import { ClassicEnvelope, EnvelopeBeige, EnvelopeMint, EnvelopeCoral, NoneEnvelope } from '@/components/envelopes';
 
-type Key = 'envelope-1' | 'envelope-2' | 'none';
+type Key = 'envelope-1' | 'envelope-2' | 'envelope-3' | 'envelope-4' | 'none';
 
 const ITEMS: {
   key: Key;
@@ -39,6 +39,30 @@ const ITEMS: {
     )
   },
   {
+    key: 'envelope-3',
+    title: '민트 입체',
+    recommend: '봄 / 캐주얼',
+    Component: EnvelopeMint,
+    content: (
+      <div>
+        <p className="font-serif text-lg">봄날의 모임</p>
+        <p className="mt-2 text-sm text-neutral-500">2026년 4월 12일 일요일</p>
+      </div>
+    )
+  },
+  {
+    key: 'envelope-4',
+    title: '코랄 입체',
+    recommend: '생일 / 오픈',
+    Component: EnvelopeCoral,
+    content: (
+      <div>
+        <p className="font-serif text-lg">소율의 첫 생일</p>
+        <p className="mt-2 text-sm text-neutral-500">2026년 7월 5일 토요일</p>
+      </div>
+    )
+  },
+  {
     key: 'none',
     title: '봉투 없음',
     recommend: '간편 모임',
@@ -53,7 +77,9 @@ const ITEMS: {
 ];
 
 export default function EnvelopesDemoPage() {
-  const [open, setOpen] = useState<Record<Key, boolean>>({ 'envelope-1': false, 'envelope-2': false, none: false });
+  const [open, setOpen] = useState<Record<Key, boolean>>({
+    'envelope-1': false, 'envelope-2': false, 'envelope-3': false, 'envelope-4': false, none: false
+  });
   const toggle = (k: Key) => setOpen((s) => ({ ...s, [k]: !s[k] }));
 
   return (
