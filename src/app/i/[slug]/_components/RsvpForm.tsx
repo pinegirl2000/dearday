@@ -8,6 +8,7 @@ import { submitRsvp } from '@/lib/actions/submitRsvp';
 import type { MyRsvp } from '@/lib/actions/submitRsvp';
 import type { ThemeMeta } from '@/lib/theme';
 import type { BaseCard } from '@/types/card';
+import { findTemplateByPair } from '@/lib/templates';
 
 interface Props {
   card: BaseCard;
@@ -45,10 +46,12 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
 
   const max = card.rsvp_max_per_card || 4;
   const count = adultCount + childCount;
-  const palette = ENVELOPE_PALETTE[card.envelope_anim] || ENVELOPE_PALETTE['envelope-1'];
-  const ACCENT = palette.primary;
-  const ACCENT_SOFT = palette.soft;
-  const ACCENT_DEEP = palette.deep;
+  // 템플릿 페어링 색상 우선 — main(텍스트) / sub(버튼 배경). 없으면 envelope 팔레트 fallback.
+  const tpl = findTemplateByPair(card.bg_id, card.layout_id);
+  const envPalette = ENVELOPE_PALETTE[card.envelope_anim] || ENVELOPE_PALETTE['envelope-1'];
+  const ACCENT = tpl?.colorMain || envPalette.primary;        // 텍스트/이름/Reply 버튼 배경
+  const ACCENT_SOFT = tpl?.colorSub || envPalette.soft;       // Attend/Decline 버튼 배경
+  const ACCENT_DEEP = tpl?.colorMain || envPalette.deep;       // 텍스트 진한 색상
 
   const adjustAdult = (delta: number) => {
     const next = Math.max(0, Math.min(max - childCount, adultCount + delta));
