@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useTransition } from 'react';
+import { Fragment, useState, useEffect, useRef, useTransition } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
@@ -91,6 +91,11 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
   const { draft, setDraft, setEventType, reset, editingSlug } = useWizardStore();
   const isEditMode = !!editingSlug;
   const [open, setOpen] = useState<SectionId>((initialOpen as SectionId) || 1);
+  // 사용자가 Next 버튼으로 실제로 진행한 최대 단계 — 시각적 완료 표시용
+  // edit 모드(initialOpen=4)는 처음부터 4단계까지 다 통과한 것으로 시작
+  const [maxStepCompleted, setMaxStepCompleted] = useState<number>(
+    initialOpen ? (initialOpen - 1) : 0
+  );
   const [pending, startTransition] = useTransition();
   // Section 4 미리보기는 봉투 단계 건너뛰고 항상 카드 펼친 상태로 시작
   const [envelopeOpen, setEnvelopeOpen] = useState(true);
@@ -222,6 +227,8 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
 
   const advance = (next: SectionId) => {
     setOpen(next);
+    // 사용자가 Next로 진행 → 직전 단계를 완료 표시
+    setMaxStepCompleted((m) => Math.max(m, next - 1));
     // Edit 모드 — 단계 이동 시 자동 저장 (백그라운드, 실패는 toast로 알림)
     if (editingSlug) {
       updateCard(editingSlug, draft).then((res) => {
@@ -320,24 +327,24 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
     <PageContainer noPadding>
       <MobileHeader title={isEditMode ? 'Edit Invitation' : t('headerTitle')} back />
 
-      {/* 상단 단계 탭바 (sticky) — 1,2,3,4 모두 항상 가로로 표시, 순차 진입 강제 */}
+      {/* 상단 단계 탭바 (sticky) — 1→2→3→4 화살표로 연결, 순차 진입 강제 */}
       <div className="sticky top-0 z-20 bg-white/95 backdrop-blur border-b border-hydrangea-100 px-3 py-2">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           {([1, 2, 3, 4] as SectionId[]).map((id, idx) => {
             const active = open === id;
             const enabled = isEnabled(id);
-            const done = isDone(id);
+            const completed = id <= maxStepCompleted;
             return (
-              <div key={id} className="flex-1 flex items-center min-w-0">
+              <Fragment key={id}>
                 <button
                   type="button"
                   onClick={() => enabled && setOpen(id)}
                   disabled={!enabled}
                   title={!enabled ? '이전 단계를 먼저 완료하세요' : SECTION_LABELS[id]}
-                  className={`relative w-full flex flex-col items-center gap-0.5 py-1.5 px-1 rounded-lg transition ${
+                  className={`flex-1 min-w-0 flex flex-col items-center gap-0.5 py-1.5 px-1 rounded-lg transition ${
                     active
                       ? 'bg-hydrangea-500 text-white shadow'
-                      : done
+                      : completed
                         ? 'bg-hydrangea-100 text-hydrangea-700'
                         : enabled
                           ? 'bg-white text-hydrangea-500 border border-hydrangea-200'
@@ -346,7 +353,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                 >
                   <div className="flex items-center justify-center gap-1">
                     <span className="text-sm font-bold leading-none">{id}</span>
-                    {done && (
+                    {completed && (
                       <Check
                         className={`w-3 h-3 ${active ? 'text-white' : 'text-hydrangea-600'}`}
                         strokeWidth={3}
@@ -357,7 +364,17 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                     {SECTION_LABELS[id]}
                   </span>
                 </button>
-              </div>
+                {idx < 3 && (
+                  <span
+                    aria-hidden="true"
+                    className={`flex-shrink-0 select-none text-sm font-bold ${
+                      completed ? 'text-hydrangea-500' : 'text-hydrangea-300'
+                    }`}
+                  >
+                    →
+                  </span>
+                )}
+              </Fragment>
             );
           })}
         </div>
