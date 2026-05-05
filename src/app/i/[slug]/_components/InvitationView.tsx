@@ -182,7 +182,6 @@ export default function InvitationView({ card, feed, recipientName, recipientId 
 
       <footer className="text-center text-xs mt-2" style={{ color: theme.colors.muted }}>
         made with <a href="https://dearday.sg" className="font-semibold" style={{ color: theme.colors.primary }}>dearday.sg</a>
-        <span className="ml-1.5" style={{ opacity: 0.5 }}>· © Steward+AI</span>
       </footer>
     </main>
   );
