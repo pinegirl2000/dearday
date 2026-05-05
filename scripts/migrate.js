@@ -1,7 +1,29 @@
 // DearDay DB Migration Script
 // Run: node scripts/migrate.js
+// 우선순위: process.env.DATABASE_URL > .env.local > 하드코드 fallback
 
 const { Pool } = require('pg');
+const fs = require('fs');
+const path = require('path');
+
+// .env.local 자동 로드 (env에 DATABASE_URL 없을 때)
+function loadEnvLocal() {
+  if (process.env.DATABASE_URL) return;
+  const envPath = path.join(__dirname, '..', '.env.local');
+  if (!fs.existsSync(envPath)) return;
+  const content = fs.readFileSync(envPath, 'utf-8');
+  for (const line of content.split('\n')) {
+    const m = line.match(/^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.*)\s*$/);
+    if (!m) continue;
+    const key = m[1];
+    let val = m[2].trim();
+    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+      val = val.slice(1, -1);
+    }
+    if (!process.env[key]) process.env[key] = val;
+  }
+}
+loadEnvLocal();
 
 const DATABASE_URL = process.env.DATABASE_URL ||
   'postgresql://postgres.eszjejwugedrohsdemdd:akffjq2!ONC@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres';
