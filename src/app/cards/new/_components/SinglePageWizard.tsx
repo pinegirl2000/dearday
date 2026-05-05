@@ -425,7 +425,9 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
 
                 {/* 활성 이벤트의 템플릿 그리드 */}
                 <div>
-                  <h4 className="text-xs font-semibold text-hydrangea-700 mb-2">🎨 Template</h4>
+                  <h4 className="text-xs font-semibold text-hydrangea-700 mb-2">
+                    🎨 {(EVENT_TYPES.find((e) => e.id === activeEvent)?.label) || ''} Templates
+                  </h4>
                   {tpls.length === 0 ? (
                     <div className="text-center py-8 text-sm text-hydrangea-400">
                       이 이벤트에 등록된 템플릿이 없습니다.
