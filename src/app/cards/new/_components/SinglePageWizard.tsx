@@ -484,6 +484,41 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
           onToggle={() => setOpen(2)}
         >
           <div className="space-y-5 mt-2">
+            {/* 수신자 이름 봉투 표시 — Yes 시 textbox에 $NAME 기본 */}
+            {draft.envelope_anim && draft.envelope_anim !== 'none' && (() => {
+              const showName = draft.recipient_template !== null && draft.recipient_template !== undefined;
+              return (
+                <div>
+                  <label className="block text-sm font-medium text-hydrangea-700 mb-1.5">
+                    Show recipient name on the envelope?
+                  </label>
+                  <div className="flex gap-2 mb-2">
+                    <button type="button"
+                      onClick={() => setDraft({ recipient_template: draft.recipient_template ?? lastRecipientTemplate.current ?? '$NAME' })}
+                      className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-medium transition ${
+                        showName ? 'border-hydrangea-500 bg-hydrangea-50 text-hydrangea-700' : 'border-hydrangea-100 bg-white text-hydrangea-400'
+                      }`}>
+                      Yes
+                    </button>
+                    <button type="button"
+                      onClick={() => setDraft({ recipient_template: null })}
+                      className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-medium transition ${
+                        !showName ? 'border-hydrangea-500 bg-hydrangea-50 text-hydrangea-700' : 'border-hydrangea-100 bg-white text-hydrangea-400'
+                      }`}>
+                      No
+                    </button>
+                  </div>
+                  {showName && (
+                    <Input
+                      placeholder="e.g. Dear $NAME / $NAME님께"
+                      hint="Use $NAME to insert the recipient's name."
+                      value={draft.recipient_template ?? ''}
+                      onChange={(e) => setDraft({ recipient_template: e.target.value })}
+                    />
+                  )}
+                </div>
+              );
+            })()}
             <div>
               <div className="grid grid-cols-3 gap-1">
                 {ENVELOPE_ANIMS.map((e) => {
@@ -540,40 +575,6 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
           onToggle={() => setOpen(3)}
         >
           <div className="space-y-4 mt-2">
-            {draft.envelope_anim && draft.envelope_anim !== 'none' && (() => {
-              const showName = draft.recipient_template !== null && draft.recipient_template !== undefined;
-              return (
-                <div>
-                  <label className="block text-sm font-medium text-hydrangea-700 mb-1.5">
-                    Show recipient name on the envelope?
-                  </label>
-                  <div className="flex gap-2 mb-2">
-                    <button type="button"
-                      onClick={() => setDraft({ recipient_template: draft.recipient_template ?? lastRecipientTemplate.current ?? '$NAME' })}
-                      className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-medium transition ${
-                        showName ? 'border-hydrangea-500 bg-hydrangea-50 text-hydrangea-700' : 'border-hydrangea-100 bg-white text-hydrangea-400'
-                      }`}>
-                      Yes
-                    </button>
-                    <button type="button"
-                      onClick={() => setDraft({ recipient_template: null })}
-                      className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-medium transition ${
-                        !showName ? 'border-hydrangea-500 bg-hydrangea-50 text-hydrangea-700' : 'border-hydrangea-100 bg-white text-hydrangea-400'
-                      }`}>
-                      No
-                    </button>
-                  </div>
-                  {showName && (
-                    <Input
-                      placeholder="e.g. Dear $NAME / $NAME님께"
-                      hint="Use $NAME to insert the recipient's name."
-                      value={draft.recipient_template ?? ''}
-                      onChange={(e) => setDraft({ recipient_template: e.target.value })}
-                    />
-                  )}
-                </div>
-              );
-            })()}
             <Input
               label="Subtitle"
               placeholder={meta.fields.subtitlePlaceholder}
