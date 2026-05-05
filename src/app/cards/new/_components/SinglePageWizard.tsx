@@ -516,7 +516,9 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
               value={draft.title || ''}
               onChange={(e) => setDraft({ title: e.target.value })}
             />
-            <Textarea label="Message" requiredMark placeholder={meta.fields.bodyPlaceholder} value={draft.body || ''}
+            <Textarea label="Message" requiredMark
+              labelHint="Centered · Press Enter to break lines · Words won't split"
+              placeholder={meta.fields.bodyPlaceholder} value={draft.body || ''}
               onChange={(e) => setDraft({ body: e.target.value })} rows={5} />
             {(() => {
               const today = new Date();

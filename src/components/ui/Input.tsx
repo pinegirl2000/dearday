@@ -40,9 +40,11 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
   label?: string;
   error?: string;
   requiredMark?: boolean;
+  /** 라벨 옆에 작은 글씨로 표시되는 안내 */
+  labelHint?: string;
 }
 
-export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(({ className, label, error, requiredMark, id, ...rest }, ref) => {
+export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(({ className, label, error, requiredMark, labelHint, id, ...rest }, ref) => {
   const inputId = id || React.useId();
   return (
     <div className="w-full">
@@ -50,6 +52,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(({ 
         <label htmlFor={inputId} className="block text-sm font-medium text-hydrangea-700 mb-1.5">
           {label}
           {requiredMark && <span className="text-red-500 ml-1">*</span>}
+          {labelHint && <span className="ml-2 text-[11px] font-normal text-hydrangea-400">{labelHint}</span>}
         </label>
       )}
       <textarea
