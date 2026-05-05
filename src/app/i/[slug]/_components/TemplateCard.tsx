@@ -246,8 +246,8 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
       )}
       {card.greeting_oneliner && f.subtitle && <FieldText field={f.subtitle} delay={0.1}>{applyName(card.greeting_oneliner, recipientName)}</FieldText>}
       <FieldText field={f.title} delay={0.2}>{applyName(card.title, recipientName)}</FieldText>
-      {/* Side Text 전용: 하단 date+place 영역 정보 박스 — 템플릿 sub 색상 톤 (없으면 흰색) */}
-      {layout.id === 'layout-5' && (card.event_date || card.event_place) && f.date && f.place && (() => {
+      {/* Side Text + Center Text: 하단 date+place 영역 정보 박스 — 템플릿 sub 색상 톤 (없으면 흰색) */}
+      {(layout.id === 'layout-5' || layout.id === 'layout-6') && (card.event_date || card.event_place) && f.date && f.place && (() => {
         // sub 색상이 정의된 경우에만 sub 톤 적용. 없으면 순수 흰색 박스 + 중성 그림자.
         const hasSub = !!tplSub;
         const subTint = tplSub || '#FFFFFF';
@@ -260,8 +260,8 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
             style={{
               position: 'absolute',
               left: '6%', right: '6%',
-              top: `calc(${f.date.y - 2}%)`,
-              bottom: `calc(${100 - (f.place.y + 5)}%)`,
+              top: `calc(${f.date.y - 1}%)`,
+              bottom: `calc(${100 - (f.place.y + 3)}%)`,
               // sub 있으면: 흰색 반투명 위에 sub 솔리드 → 톤 비치는 frosted
               // sub 없으면: 그냥 흰색 그라디언트
               background: hasSub
@@ -354,7 +354,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
           style={{
             position: 'absolute',
             left: `${f.place.x}%`,
-            top: layout.id === 'layout-4'
+            top: (layout.id === 'layout-4' || layout.id === 'layout-6')
               ? `calc(${f.place.y + 8}%)`
               : layout.id === 'layout-3'
                 ? `calc(${f.place.y + 6}%)`
