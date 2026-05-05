@@ -17,16 +17,12 @@ export const LAYOUT_3: LayoutMeta = {
   aspectRatio: '420/700',
   accent: '#A07C2C',
   fields: {
-    // 작은 small caps 안내 — eventLabel 위
-    subtitle: {
-      x: 12, y: 7, w: 76, align: 'center',
-      fontSize: 11, fontWeight: 500, color: '#1A2A3A',
-      letterSpacing: '0.22em', lineHeight: 1.7,
-      fontFamily: "'Cormorant Garamond', 'Noto Serif KR', serif"
-    },
+    // subtitle(greeting_oneliner)은 모던 레이아웃에서는 의도적으로 노출하지 않음
+    // — eventLabel 스크립트가 충분히 컨텍스트를 줌. 다른 layout에서는 정상 표시.
+
     // 큰 스크립트 라벨 — 이벤트별 자동 ("The Wedding" 등)
     eventLabel: {
-      x: 8, y: 14, w: 84, align: 'center',
+      x: 8, y: 12, w: 84, align: 'center',
       fontSize: 50, fontWeight: 400, color: '#1A2A3A',
       letterSpacing: '0', lineHeight: 1.0,
       fontFamily: "'Sacramento', 'Great Vibes', cursive"
