@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
-import { Noto_Serif_KR, Noto_Sans_KR, Italiana } from 'next/font/google';
+import { Noto_Serif_KR, Noto_Sans_KR } from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 import { getServerSession } from 'next-auth';
@@ -26,13 +26,6 @@ const notoSans = Noto_Sans_KR({
   display: 'swap'
 });
 
-const italiana = Italiana({
-  subsets: ['latin'],
-  weight: ['400'],
-  variable: '--font-brand',
-  display: 'swap'
-});
-
 export const metadata: Metadata = {
   title: 'DearDay — Invite the dearest day',
   description: 'Wedding · Birthday · Opening — invite anyone to your most precious moments'
@@ -52,7 +45,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const session = await getServerSession(authOptions);
 
   return (
-    <html lang={locale} className={`${notoSerif.variable} ${notoSans.variable} ${italiana.variable}`}>
+    <html lang={locale} className={`${notoSerif.variable} ${notoSans.variable}`}>
       <head>
         <Script
           id="adsense-script"
