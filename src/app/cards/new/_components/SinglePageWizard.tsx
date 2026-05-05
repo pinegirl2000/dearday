@@ -884,13 +884,6 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                     </>
                   ) : (
                     <div className="w-full px-2">
-                      <button
-                        type="button"
-                        onClick={() => { setEnvelopeOpen(false); setEnvelopeOpening(false); }}
-                        className="text-xs text-hydrangea-500 mb-3 underline"
-                      >
-                        ← Back to envelope
-                      </button>
                       <motion.div
                         key={`${draft.bg_id}-${draft.layout_id}`}
                         initial={{ opacity: 0, y: 8 }}
