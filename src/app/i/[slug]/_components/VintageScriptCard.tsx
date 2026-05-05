@@ -107,9 +107,8 @@ export default function VintageScriptCard({ card, recipientName, background, rsv
         <FadeUp delay={0.1}>
           <div style={{
             fontFamily: SCRIPT,
-            fontSize: 19, fontWeight: 700, color: main,
-            // 사이즈 절반으로 줄이고 자간을 크게 늘려 원래 박스 폭을 유지
-            letterSpacing: '0.5em',
+            fontSize: 14, fontWeight: 700, color: main,
+            letterSpacing: '0.6em',
             lineHeight: 1.1, marginTop: 28, marginBottom: 18
           }}>
             {getEventLabelScript(card.event_type)}
