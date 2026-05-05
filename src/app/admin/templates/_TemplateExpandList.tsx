@@ -45,7 +45,7 @@ const SAMPLE_BY_EVENT: Record<string, SampleData> = {
     greeting_oneliner: 'A precious first year',
     body: "Please join us in celebrating\nRiley's first year of life.",
     event_date: '2026-07-05T11:00:00.000Z',
-    event_place: 'Ritz-Carlton Ballroom',
+    event_place: 'The Lounge function room',
     contact_name: "Love, Riley's Family",
     contact_phone: '+65-2222-3333',
     extra_info: 'Lunch will be served'
