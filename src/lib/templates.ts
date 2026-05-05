@@ -180,7 +180,7 @@ export const TEMPLATES: TemplateMeta[] = [
     bg_id: 'bg-img-10',
     layout_id: 'layout-classic',
     colorMain: '#A07C2C',
-    colorSub: '#476956',
+    colorSub: '#D4E0CC',
     recommendEvents: ['wedding', 'opening', 'meeting', 'etc'],
     allowedLayouts: ['layout-classic', 'layout-3']
   },
