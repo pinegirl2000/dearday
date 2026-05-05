@@ -191,7 +191,9 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
                 WebkitBackdropFilter: 'blur(10px)',
                 border: '1px solid rgba(255,255,255,0.65)',
                 borderRadius: 18,
-                boxShadow: '0 14px 32px rgba(123,94,167,0.22), 0 4px 10px rgba(123,94,167,0.12), inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -1px 0 rgba(123,94,167,0.06)',
+                boxShadow: tpl?.colorMain
+                  ? `0 14px 32px ${tpl.colorMain}38, 0 4px 10px ${tpl.colorMain}1F, inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -1px 0 ${tpl.colorMain}10`
+                  : '0 14px 32px rgba(0,0,0,0.18), 0 4px 10px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.95)',
                 fontFamily: SANS,
                 alignItems: 'stretch',
                 textAlign: 'left'
