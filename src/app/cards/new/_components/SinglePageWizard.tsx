@@ -492,7 +492,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                   <label className="block text-sm font-medium text-hydrangea-700 mb-1.5">
                     Show recipient name on the envelope?
                   </label>
-                  <div className="flex gap-2 items-center">
+                  <div className="flex gap-2 items-center flex-wrap">
                     <button type="button"
                       onClick={() => setDraft({ recipient_template: draft.recipient_template ?? lastRecipientTemplate.current ?? 'To. $NAME' })}
                       className={`px-4 min-h-[44px] rounded-xl border-2 text-sm font-medium transition flex-shrink-0 ${
@@ -507,19 +507,40 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                       }`}>
                       No
                     </button>
-                    {showName && (
-                      <input
-                        type="text"
-                        placeholder="To. $NAME"
-                        value={draft.recipient_template ?? ''}
-                        onChange={(e) => setDraft({ recipient_template: e.target.value })}
-                        className="flex-1 min-h-[44px] px-3 rounded-xl border border-hydrangea-100 bg-white text-hydrangea-700 placeholder:text-hydrangea-300 text-sm focus:outline-none focus:ring-2 focus:ring-hydrangea-300"
-                      />
-                    )}
+                    {showName && (() => {
+                      const opt1 = 'To. $NAME';
+                      const opt2 = '$NAME님께';
+                      const current = draft.recipient_template;
+                      return (
+                        <div className="flex gap-2 items-center">
+                          <label className={`inline-flex items-center gap-1.5 px-3 min-h-[44px] rounded-xl border-2 text-sm cursor-pointer transition ${
+                            current === opt1 ? 'border-hydrangea-500 bg-hydrangea-50 text-hydrangea-700 font-medium' : 'border-hydrangea-100 bg-white text-hydrangea-500'
+                          }`}>
+                            <input
+                              type="radio"
+                              name="recipient_format"
+                              checked={current === opt1}
+                              onChange={() => setDraft({ recipient_template: opt1 })}
+                              className="accent-hydrangea-500"
+                            />
+                            To. {'$NAME'}
+                          </label>
+                          <label className={`inline-flex items-center gap-1.5 px-3 min-h-[44px] rounded-xl border-2 text-sm cursor-pointer transition ${
+                            current === opt2 ? 'border-hydrangea-500 bg-hydrangea-50 text-hydrangea-700 font-medium' : 'border-hydrangea-100 bg-white text-hydrangea-500'
+                          }`}>
+                            <input
+                              type="radio"
+                              name="recipient_format"
+                              checked={current === opt2}
+                              onChange={() => setDraft({ recipient_template: opt2 })}
+                              className="accent-hydrangea-500"
+                            />
+                            {'$NAME'}님께
+                          </label>
+                        </div>
+                      );
+                    })()}
                   </div>
-                  {showName && (
-                    <p className="text-[11px] text-hydrangea-400 mt-1">Use $NAME to insert the recipient's name.</p>
-                  )}
                 </div>
               );
             })()}
