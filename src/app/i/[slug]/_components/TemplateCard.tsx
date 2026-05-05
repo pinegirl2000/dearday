@@ -409,14 +409,15 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
       )}
       {card.body && f.body && <FieldText field={f.body} delay={0.65}>{applyName(card.body, recipientName)}</FieldText>}
       {card.extra_info && f.extra && <FieldText field={f.extra} delay={0.75}>{applyName(card.extra_info, recipientName)}</FieldText>}
-      {/* RSVP — 카드 디자인 하단 위에 오버레이 */}
+      {/* RSVP — 카드 디자인 위에 오버레이 (Editorial은 더 위로) */}
       {rsvpSlot && (
         <div
           style={{
             position: 'absolute',
             left: '5%',
             right: '5%',
-            bottom: '4%',
+            // Editorial(layout-3) / Center Text(layout-6)는 컴팩트하므로 더 위쪽에 배치
+            bottom: (layout.id === 'layout-3' || layout.id === 'layout-6') ? '20%' : '4%',
             zIndex: 8
           }}
         >
