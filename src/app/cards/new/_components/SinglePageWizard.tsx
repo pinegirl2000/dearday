@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef, useTransition } from 'react';
+import { useState, useEffect, useRef, useTransition } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
@@ -12,8 +12,8 @@ import { MobileHeader } from '@/components/layout/MobileHeader';
 import { Input, Textarea, Button, PhoneInput } from '@/components/ui';
 import { useWizardStore } from '@/stores/wizardStore';
 import { EVENT_TYPES, getEventTypeMeta } from '@/lib/eventType';
-import { BACKGROUNDS, getBackground, getBackgroundsFor } from '@/lib/backgrounds';
-import { LAYOUTS, getLayout } from '@/lib/layouts';
+import { getBackground } from '@/lib/backgrounds';
+import { getLayout } from '@/lib/layouts';
 import { ENVELOPE_ANIMS, ClassicEnvelope, EnvelopeBeige, EnvelopeMint, EnvelopeCoral, NoneEnvelope } from '@/components/envelopes';
 
 const ENVELOPE_MAP = {
@@ -25,9 +25,10 @@ const ENVELOPE_MAP = {
 } as const;
 import { publishCard, updateCard } from '@/lib/actions/publishCard';
 import TemplateCard from '@/app/i/[slug]/_components/TemplateCard';
+import { TEMPLATES, getTemplate, findTemplateByPair, getTemplatesFor } from '@/lib/templates';
 import type { BackgroundId, BaseCard, EnvelopeAnimId, EventType, LayoutId } from '@/types/card';
 
-type SectionId = 1 | 2 | 3 | 4 | 5;
+type SectionId = 1 | 2 | 3 | 4;
 
 interface SectionShellProps {
   id: SectionId;
@@ -197,7 +198,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
   // 섹션 완료 여부
   const isDone = (id: SectionId): boolean => {
     if (id === 1) return !!draft.event_type;
-    if (id === 2) return !!draft.bg_id && !!draft.envelope_anim;
+    if (id === 2) return !!draft.envelope_anim && !!draft.bg_id && !!draft.layout_id;
     if (id === 3) {
       const recipientOk = draft.recipient_template === null
         || (typeof draft.recipient_template === 'string' && draft.recipient_template.trim().length > 0);
@@ -209,7 +210,6 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
         draft.body && draft.body.trim()
       );
     }
-    if (id === 4) return !!draft.layout_id;
     return false;
   };
 
@@ -241,18 +241,6 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
-
-  // 이벤트 타입에 사용 가능한 배경만 필터 + 추천 순 정렬
-  const sortedBackgrounds = useMemo(() => {
-    const event = (draft.event_type as EventType) || 'etc';
-    const available = getBackgroundsFor(event);
-    const order = meta.recommendBackgrounds;
-    return [...available].sort((a, b) => {
-      const ai = order.indexOf(a.id);
-      const bi = order.indexOf(b.id);
-      return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
-    });
-  }, [meta, draft.event_type]);
 
   // 미리보기용 카드 객체
   const previewCard = {
@@ -301,12 +289,13 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
 
   // 요약 라벨
   const envName = ENVELOPE_ANIMS.find((e) => e.id === draft.envelope_anim)?.name || '-';
+  const tplMeta = findTemplateByPair(draft.bg_id, draft.layout_id);
+  const tplName = tplMeta?.name || bgMeta.name;
   const summaries = {
     1: meta.label,
-    2: `${envName} · ${bgMeta.name}`,
+    2: `${envName} · ${tplName}`,
     3: draft.title || '',
-    4: layoutMeta.name,
-    5: ''
+    4: ''
   };
 
   const detailsCanProceed = (() => {
@@ -411,41 +400,44 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
             </div>
 
             <div>
-              <h4 className="text-xs font-semibold text-hydrangea-700 mb-2">🖼️ Background</h4>
+              <h4 className="text-xs font-semibold text-hydrangea-700 mb-2">🎨 Template</h4>
               {(() => {
-                const renderTile = (bg: typeof sortedBackgrounds[number]) => {
-                  const selected = draft.bg_id === bg.id;
-                  return (
-                    <motion.button
-                      key={bg.id}
-                      onClick={() => setDraft({ bg_id: bg.id as BackgroundId })}
-                      whileTap={{ scale: 0.96 }}
-                      className={`relative aspect-[3/4] rounded-xl border-2 overflow-hidden transition ${
-                        selected ? 'border-hydrangea-500 ring-2 ring-hydrangea-300' : 'border-hydrangea-100/60'
-                      }`}
-                    >
-                      {bg.imageUrl ? (
-                        <img src={bg.imageUrl} alt={bg.name} className="absolute inset-0 w-full h-full object-cover" />
-                      ) : (
-                        <div className="absolute inset-0" style={{ background: bg.gradient }} />
-                      )}
-                      <div className="absolute bottom-0 left-0 right-0 bg-black/40 text-white text-[10px] py-0.5 text-center truncate px-1">
-                        {bg.name}
-                      </div>
-                      {selected && (
-                        <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-hydrangea-500 flex items-center justify-center">
-                          <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
-                        </div>
-                      )}
-                    </motion.button>
-                  );
-                };
-                const gradientBgs = sortedBackgrounds.filter((b) => b.id.startsWith('bg-') && !b.id.startsWith('bg-img-') && b.id !== 'bg-none');
-                const imageBgs = sortedBackgrounds.filter((b) => b.id.startsWith('bg-img-'));
+                const event = (draft.event_type as EventType) || 'etc';
+                const tpls = getTemplatesFor(event);
                 return (
-                  <div className="space-y-2">
-                    <div className="grid grid-cols-4 gap-2">{gradientBgs.map(renderTile)}</div>
-                    {imageBgs.length > 0 && <div className="grid grid-cols-4 gap-2">{imageBgs.map(renderTile)}</div>}
+                  <div className="grid grid-cols-3 gap-2">
+                    {tpls.map((t) => {
+                      const bg = getBackground(t.bg_id);
+                      const selected = draft.bg_id === t.bg_id && draft.layout_id === t.layout_id;
+                      const recommended = t.recommendEvents.includes(event);
+                      return (
+                        <motion.button
+                          key={t.id}
+                          onClick={() => setDraft({ bg_id: t.bg_id as BackgroundId, layout_id: t.layout_id as LayoutId })}
+                          whileTap={{ scale: 0.96 }}
+                          className={`relative aspect-[3/4] rounded-xl border-2 overflow-hidden transition ${
+                            selected ? 'border-hydrangea-500 ring-2 ring-hydrangea-300' : 'border-hydrangea-100/60'
+                          }`}
+                        >
+                          {bg.imageUrl ? (
+                            <img src={bg.imageUrl} alt={t.name} className="absolute inset-0 w-full h-full object-cover" />
+                          ) : (
+                            <div className="absolute inset-0" style={{ background: bg.gradient }} />
+                          )}
+                          {recommended && !selected && (
+                            <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded-full bg-white/90 text-[9px] font-semibold text-hydrangea-600">Rec</span>
+                          )}
+                          <div className="absolute bottom-0 left-0 right-0 bg-black/45 text-white text-[10px] py-0.5 text-center truncate px-1">
+                            {t.name}
+                          </div>
+                          {selected && (
+                            <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-hydrangea-500 flex items-center justify-center">
+                              <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
+                            </div>
+                          )}
+                        </motion.button>
+                      );
+                    })}
                   </div>
                 );
               })()}
@@ -661,99 +653,14 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
           </div>
         </SectionShell>
 
-        {/* 4. 레이아웃 */}
+        {/* 4. 미리보기 & 발행 */}
         <SectionShell
           id={4}
-          title="Layout"
-          summary={summaries[4]}
+          title="Preview & Publish"
           open={open === 4}
-          done={isDone(4) && open !== 4}
+          done={false}
           enabled={isEnabled(4)}
           onToggle={() => setOpen(4)}
-        >
-          <div className="grid grid-cols-3 gap-2 mt-2">
-            {LAYOUTS.map((l, idx) => {
-              const selected = draft.layout_id === l.id;
-              const disabled = idx === 1 || idx === 2;
-              return (
-                <motion.button
-                  key={l.id}
-                  onClick={() => {
-                    if (disabled) return;
-                    setDraft({ layout_id: l.id as LayoutId });
-                  }}
-                  disabled={disabled}
-                  whileTap={disabled ? undefined : { scale: 0.96 }}
-                  className={`relative p-3 rounded-xl border-2 text-left transition ${
-                    disabled ? 'border-hydrangea-100/60 bg-hydrangea-50/40 opacity-50 cursor-not-allowed' :
-                    selected ? 'border-hydrangea-500 bg-hydrangea-50' : 'border-hydrangea-100/60 bg-white'
-                  }`}
-                >
-                  <div className="text-xs font-semibold text-hydrangea-700">{l.name}</div>
-                  <div className="text-[10px] text-hydrangea-400 mt-1 leading-tight">{l.description}</div>
-                  {disabled && (
-                    <span className="absolute top-1 right-1 px-1.5 py-0.5 rounded-full bg-hydrangea-100 text-[9px] font-semibold text-hydrangea-500">Soon</span>
-                  )}
-                  {!disabled && selected && (
-                    <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-hydrangea-500 flex items-center justify-center">
-                      <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
-                    </div>
-                  )}
-                </motion.button>
-              );
-            })}
-          </div>
-
-          {draft.layout_id && (
-            <div className="mt-4 space-y-3">
-              <div className="text-[11px] text-hydrangea-400 text-center">Preview — actual fonts & positions on the selected background</div>
-              <motion.div
-                key={`${draft.bg_id}-${draft.layout_id}`}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.25 }}
-              >
-                <TemplateCard card={previewCard} recipientName="John" />
-              </motion.div>
-
-              {/* RSVP 미리보기 — 비활성 (레이아웃 카드 아래) */}
-              {draft.rsvp_enabled && (() => {
-                const ENVELOPE_PALETTE: Record<string, { primary: string; soft: string; deep: string }> = {
-                  'envelope-1': { primary: '#A990CC', soft: '#E8DFF3', deep: '#7B5EA7' },
-                  'envelope-2': { primary: '#9C8B6E', soft: '#EFE6D4', deep: '#6E5A3D' },
-                  'envelope-3': { primary: '#82B095', soft: '#DFEDDF', deep: '#476956' },
-                  'envelope-4': { primary: '#C68676', soft: '#F8DCD2', deep: '#8E5A4D' },
-                  'none':       { primary: '#7B5EA7', soft: '#E8DFF3', deep: '#5A3D7A' }
-                };
-                const p = ENVELOPE_PALETTE[draft.envelope_anim || 'envelope-1'] || ENVELOPE_PALETTE['envelope-1'];
-                return (
-                  <div className="mx-auto max-w-md rounded-2xl bg-white px-4 py-3" style={{ boxShadow: '0 4px 14px rgba(0,0,0,0.06)' }}>
-                    <h3 className="text-center text-sm font-semibold mb-2" style={{ color: p.deep }}>Will you join?</h3>
-                    <div className="grid grid-cols-3 gap-1.5">
-                      <button type="button" disabled className="min-h-[34px] text-xs rounded-lg border-2 font-medium opacity-90"
-                        style={{ background: p.soft, color: p.deep, borderColor: p.primary }}>Attend</button>
-                      <button type="button" disabled className="min-h-[34px] text-xs rounded-lg border-2 font-medium opacity-90"
-                        style={{ background: p.soft, color: p.deep, borderColor: p.deep }}>Decline</button>
-                      <button type="button" disabled className="min-h-[34px] text-xs rounded-lg font-semibold text-white opacity-50"
-                        style={{ background: p.primary }}>Reply</button>
-                    </div>
-                  </div>
-                );
-              })()}
-
-              <Button onClick={() => advance(5)} full size="md">Next</Button>
-            </div>
-          )}
-        </SectionShell>
-
-        {/* 5. 미리보기 & 발행 */}
-        <SectionShell
-          id={5}
-          title="Preview & Publish"
-          open={open === 5}
-          done={false}
-          enabled={isEnabled(5)}
-          onToggle={() => setOpen(5)}
         >
           <div className="space-y-4 mt-2">
             {/* 봉투 → 클릭하면 초대장 카드 표시 (실제 동작 미리보기) */}
@@ -913,8 +820,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
                 <Sparkles className="w-3.5 h-3.5" /> Settings summary
               </div>
               <div className="flex justify-between"><span className="text-hydrangea-400">Event</span><span className="text-hydrangea-700">{meta.label}</span></div>
-              <div className="flex justify-between"><span className="text-hydrangea-400">Background</span><span className="text-hydrangea-700">{bgMeta.name}</span></div>
-              <div className="flex justify-between"><span className="text-hydrangea-400">Layout</span><span className="text-hydrangea-700">{layoutMeta.name}</span></div>
+              <div className="flex justify-between"><span className="text-hydrangea-400">Template</span><span className="text-hydrangea-700">{tplName}</span></div>
               <div className="flex justify-between"><span className="text-hydrangea-400">Envelope</span><span className="text-hydrangea-700">{envName}</span></div>
               <div className="flex justify-between"><span className="text-hydrangea-400">RSVP</span><span className="text-hydrangea-700">{draft.rsvp_enabled ? `Enabled (max ${draft.rsvp_max_per_card})` : 'Disabled'}</span></div>
             </div>

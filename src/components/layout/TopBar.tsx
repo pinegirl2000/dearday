@@ -40,7 +40,7 @@ export default function TopBar() {
         <div className="flex items-center gap-2">
           {isAdmin && (
             <Link
-              href="/admin/cards"
+              href="/admin"
               className="inline-flex items-center justify-center w-8 h-8 rounded-full text-hydrangea-700 hover:bg-hydrangea-50 active:scale-90 transition"
               title="Admin"
               aria-label="Admin"
