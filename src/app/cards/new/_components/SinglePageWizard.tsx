@@ -397,7 +397,8 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
             const tpls = getTemplatesFor(activeEvent);
             return (
               <div className="space-y-3 mt-2">
-                {/* 이벤트 탭 — 6개 그리드 (한 화면에 모두 표시, 스크롤 없음) */}
+                {/* 이벤트 선택 */}
+                <h4 className="text-xs font-semibold text-hydrangea-700 mb-2">📅 Event</h4>
                 <div className="grid grid-cols-6 gap-1">
                   {EVENT_TYPES.map((e) => {
                     const selected = activeEvent === e.id;
