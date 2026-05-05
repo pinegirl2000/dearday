@@ -559,14 +559,14 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                         selected ? 'border-hydrangea-500 bg-hydrangea-50' : 'border-hydrangea-100/60 bg-white'
                       }`}
                     >
-                      <div className="pointer-events-none mb-2 flex items-center justify-center overflow-hidden w-full" style={{ height: 130 }}>
+                      <div className="pointer-events-none mb-2 flex items-center justify-center overflow-hidden w-full" style={{ height: 170 }}>
                         {e.id === 'none' ? (
-                          <div className="w-[120px] h-[86px] rounded-md border-2 border-dashed border-hydrangea-200 bg-white flex items-center justify-center text-[11px] text-hydrangea-400">
+                          <div className="w-[160px] h-[112px] rounded-md border-2 border-dashed border-hydrangea-200 bg-white flex items-center justify-center text-[11px] text-hydrangea-400">
                             None
                           </div>
                         ) : (
-                          <div className="relative" style={{ width: 120 }}>
-                            <Env isOpen={false} width={120}>{null}</Env>
+                          <div className="relative" style={{ width: 160 }}>
+                            <Env isOpen={false} width={160}>{null}</Env>
                             {/* 봉투에 표시될 이름 오버레이 — 실제 초청장과 동일 비율로 작게 */}
                             {(() => {
                               const tpl = draft.recipient_template?.trim();
@@ -580,7 +580,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                                 'envelope-5': '#5A7B96'
                               };
                               const deep = ENVELOPE_DEEP_MAP[e.id] || '#5A3D7A';
-                              const envH = Math.round(120 * 0.7); // = 84px
+                              const envH = Math.round(160 * 0.7); // = 112px
                               return (
                                 <div style={{
                                   position: 'absolute',
@@ -590,7 +590,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                                   width: '85%',
                                   textAlign: 'center',
                                   color: deep,
-                                  fontSize: 6,
+                                  fontSize: 8,
                                   fontWeight: 500,
                                   letterSpacing: '0.04em',
                                   textShadow: '0 1px 1px rgba(255,255,255,0.5)',
