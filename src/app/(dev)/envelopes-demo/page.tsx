@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ClassicEnvelope, EnvelopeBeige, EnvelopeMint, EnvelopeCoral, NoneEnvelope } from '@/components/envelopes';
+import { ClassicEnvelope, EnvelopeBeige, EnvelopeMint, EnvelopeCoral, EnvelopeBlue, NoneEnvelope } from '@/components/envelopes';
 import TemplateCard from '@/app/i/[slug]/_components/TemplateCard';
 import type { BaseCard, BackgroundId, EnvelopeAnimId } from '@/types/card';
 
@@ -34,48 +34,48 @@ const SETS: PairSet[] = [
     }
   },
   {
-    key: 'beige-set',
-    label: 'Baptism · Warm',
-    description: 'Cream beige — gentle and reverent',
-    envelopeId: 'envelope-2',
-    EnvelopeComponent: EnvelopeBeige,
-    bg_id: 'bg-2',
+    key: 'pink-teddy-set',
+    label: 'Baptism · Sweet',
+    description: 'Pink teddy with watercolor balloons — gentle baby vibe',
+    envelopeId: 'envelope-1',
+    EnvelopeComponent: ClassicEnvelope,
+    bg_id: 'bg-img-6',
     card: {
-      title: '하준 세례식',
-      greeting_oneliner: '귀한 자녀의 첫 걸음',
-      body: '하나님의 자녀로\n새 이름을 받는 날\n함께해주세요.',
+      title: "Avery's Baptism Day",
+      greeting_oneliner: 'A blessed first step',
+      body: 'Please join us as we celebrate\nAvery\'s baptism in the Lord.',
       event_date: '2026-05-03T10:30:00.000Z',
-      event_place: '평강교회 본당'
+      event_place: 'Grace Church'
     }
   },
   {
-    key: 'mint-set',
-    label: 'Spring · Casual',
-    description: 'Soft mint — fresh and breezy',
+    key: 'eucalyptus-gold-set',
+    label: 'Wedding · Modern Gold',
+    description: 'Eucalyptus + gold geometric — elegant editorial',
     envelopeId: 'envelope-3',
     EnvelopeComponent: EnvelopeMint,
-    bg_id: 'bg-3',
+    bg_id: 'bg-img-10',
     card: {
-      title: '봄날의 모임',
-      greeting_oneliner: '오랜만에 함께',
-      body: '새로 핀 꽃처럼\n반갑게 만나요.',
-      event_date: '2026-04-12T14:00:00.000Z',
-      event_place: '한강공원 잔디광장'
+      title: 'Daniel ♥ Olivia',
+      greeting_oneliner: 'Together with our families',
+      body: 'We invite you to share in\nthe joy of our wedding day.',
+      event_date: '2026-06-14T19:00:00.000Z',
+      event_place: 'The Grand Ballroom'
     }
   },
   {
-    key: 'coral-set',
-    label: 'Birthday · Lively',
-    description: 'Light coral — joyful and bright',
-    envelopeId: 'envelope-4',
-    EnvelopeComponent: EnvelopeCoral,
-    bg_id: 'bg-4',
+    key: 'blue-teddy-set',
+    label: 'Birthday · Baby Boy',
+    description: 'Blue teddy on soft cloud — playful pastel',
+    envelopeId: 'envelope-5',
+    EnvelopeComponent: EnvelopeBlue,
+    bg_id: 'bg-img-7',
     card: {
-      title: '소율의 첫 생일',
-      greeting_oneliner: '아기의 첫 1년',
-      body: '소중한 첫 생일을\n함께 축하해주세요.',
-      event_date: '2026-07-05T12:00:00.000Z',
-      event_place: '리츠칼튼 그랜드볼룸'
+      title: "Riley's First Birthday",
+      greeting_oneliner: 'A precious first year',
+      body: "Please join us in celebrating\nRiley's first year of life.",
+      event_date: '2026-07-05T11:00:00.000Z',
+      event_place: 'The Lounge function room'
     }
   },
   {
