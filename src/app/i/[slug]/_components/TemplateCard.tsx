@@ -360,7 +360,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
             top: layout.id === 'layout-4'
               ? `calc(${f.place.y + 8}%)`
               : layout.id === 'layout-6'
-                ? `calc(${f.place.y + 14}%)`  // 박스(extra 포함) 아래로
+                ? `calc(${f.place.y + 11}%)`  // 박스(extra 포함) 아래로
                 : layout.id === 'layout-3'
                   ? `calc(${f.place.y + 6}%)`
                   : `calc(${f.place.y}% + 24px)`,
