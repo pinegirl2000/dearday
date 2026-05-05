@@ -24,6 +24,8 @@ const ENVELOPE_MAP = {
 } as const;
 import { publishCard, updateCard } from '@/lib/actions/publishCard';
 import TemplateCard from '@/app/i/[slug]/_components/TemplateCard';
+import RsvpForm from '@/app/i/[slug]/_components/RsvpForm';
+import { getTheme } from '@/lib/theme';
 import { TEMPLATES, getTemplate, findTemplateByPair, getTemplatesFor, getTemplateLayouts } from '@/lib/templates';
 import { LAYOUTS, getLayout } from '@/lib/layouts';
 import type { BackgroundId, BaseCard, EnvelopeAnimId, EventType, LayoutId } from '@/types/card';
@@ -836,48 +838,19 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.25 }}
                       >
-                        <TemplateCard card={previewCard} recipientName="John" />
+                        <TemplateCard
+                          card={previewCard}
+                          recipientName="John"
+                          rsvpSlot={draft.rsvp_enabled ? (
+                            <RsvpForm card={previewCard} theme={getTheme(previewCard.theme)} compact />
+                          ) : null}
+                        />
                       </motion.div>
                     </div>
                   )}
                 </div>
               );
             })()}
-
-            {/* RSVP 미리보기 (실제 응답은 발행 후 가능) */}
-            {draft.rsvp_enabled && (
-              <div className="rounded-2xl border border-hydrangea-100 bg-white p-5">
-                <div className="text-center mb-4">
-                  <div className="text-xs text-hydrangea-400 mb-1">RSVP preview · responses enabled after publish</div>
-                  <h3 className="text-base font-semibold text-hydrangea-700">Will you join?</h3>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex gap-2">
-                    <button type="button" disabled className="flex-1 py-2.5 rounded-full border-2 border-hydrangea-300 text-sm text-hydrangea-700 font-medium opacity-70">Attend</button>
-                    <button type="button" disabled className="flex-1 py-2.5 rounded-full border-2 border-hydrangea-100 text-sm text-hydrangea-500 opacity-70">Decline</button>
-                  </div>
-                  <div className="flex items-center justify-center gap-3 py-2">
-                    <span className="text-xs text-hydrangea-400">Attendees</span>
-                    <button type="button" disabled className="w-8 h-8 rounded-full border-2 border-hydrangea-200 flex items-center justify-center text-hydrangea-500 opacity-70">−</button>
-                    <span className="font-bold text-hydrangea-700 w-6 text-center">1</span>
-                    <button type="button" disabled className="w-8 h-8 rounded-full border-2 border-hydrangea-200 flex items-center justify-center text-hydrangea-500 opacity-70">＋</button>
-                    <span className="text-xs text-hydrangea-400">/ max {draft.rsvp_max_per_card || 4}</span>
-                  </div>
-                  {draft.rsvp_collect_names && (
-                    <input type="text" disabled placeholder="Attendee name" className="w-full px-3 py-2 text-sm rounded-lg border border-hydrangea-100 bg-hydrangea-50/40 placeholder-hydrangea-300" />
-                  )}
-                  <textarea disabled placeholder="One-line greeting (optional)" rows={2} className="w-full px-3 py-2 text-sm rounded-lg border border-hydrangea-100 bg-hydrangea-50/40 placeholder-hydrangea-300 resize-none" />
-                  <button type="button" disabled className="w-full py-3 rounded-xl bg-hydrangea-300 text-white font-medium opacity-70">
-                    Reply
-                  </button>
-                  {draft.rsvp_deadline && (
-                    <p className="text-xs text-center text-hydrangea-400">
-                      Deadline {new Date(draft.rsvp_deadline).toLocaleDateString('en-US')}
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
 
             <div className="p-3 rounded-xl bg-hydrangea-50 text-xs space-y-1">
               <div className="flex items-center gap-2 font-semibold text-hydrangea-700 mb-1">
