@@ -202,8 +202,9 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
   const greeting = formatGreeting(recipientName, card.recipient_template);
 
   return (
+    <div className="w-full max-w-md mx-auto">
     <div
-      className="relative w-full max-w-md mx-auto rounded-3xl overflow-hidden shadow-2xl"
+      className="relative w-full rounded-3xl overflow-hidden shadow-2xl"
       style={{
         aspectRatio: layout.aspectRatio.replace('/', ' / '),
         background: bg.imageUrl ? undefined : bg.gradient
@@ -408,6 +409,13 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
       )}
       {card.body && f.body && <FieldText field={f.body} delay={0.65}>{applyName(card.body, recipientName)}</FieldText>}
       {card.extra_info && f.extra && <FieldText field={f.extra} delay={0.75}>{applyName(card.extra_info, recipientName)}</FieldText>}
+    </div>
+    {/* RSVP — 카드(고정 비율) 아래에 별도 컨테이너로 배치 */}
+    {rsvpSlot && (
+      <div className="mt-3 px-4">
+        {rsvpSlot}
+      </div>
+    )}
     </div>
   );
 }
