@@ -26,8 +26,8 @@ body { -webkit-overflow-scrolling: touch; }
 .dearday-logo {
   position: relative;
   display: inline-flex;
-  width: 44px;
-  height: 22px;
+  width: 28px;
+  height: 28px;
   overflow: hidden;
 }
 .dearday-logo-half {
@@ -38,8 +38,8 @@ body { -webkit-overflow-scrolling: touch; }
   height: 100%;
   position: relative;
 }
-.dearday-logo-left { padding-left: 4px; }
-.dearday-logo-right { padding-right: 4px; }
+.dearday-logo-left { padding-left: 2px; }
+.dearday-logo-right { padding-right: 2px; }
 .dearday-logo-half svg { display: block; }
 .dearday-logo-left {
   background: #7B5EA7;

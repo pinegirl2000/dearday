@@ -35,7 +35,7 @@ export default function TopBar() {
             </span>
             <Pencil className="dearday-logo-pencil" strokeWidth={2.4} />
           </span>
-          <span className="font-serif text-base font-semibold text-hydrangea-700 tracking-wide">DearDay</span>
+          <span className="text-xl font-bold text-hydrangea-700 tracking-tight" style={{ fontFamily: 'var(--font-brand), cursive', letterSpacing: '0.01em' }}>DearDay</span>
         </Link>
         <div className="flex items-center gap-2">
           {isAdmin && (
