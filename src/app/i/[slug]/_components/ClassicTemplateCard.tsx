@@ -278,11 +278,11 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
 
         {card.contact_name && (
           <div style={{ textAlign: 'center', padding: '10px 20px 20px' }}>
-            <p style={{ fontSize: 13, color: tpl?.colorSub || COLORS.textLight, letterSpacing: '0.15em' }}>
+            <p style={{ fontSize: 13, color: tpl?.colorMain || COLORS.textLight, letterSpacing: '0.15em' }}>
               — {applyName(card.contact_name, recipientName)} —
             </p>
             {card.contact_phone && (
-              <p style={{ fontSize: 11, color: tpl?.colorSub || COLORS.textLight, marginTop: 4, letterSpacing: '0.05em', opacity: 0.85 }}>
+              <p style={{ fontSize: 11, color: tpl?.colorMain || COLORS.textLight, marginTop: 4, letterSpacing: '0.05em', opacity: 0.85 }}>
                 <a href={`tel:${card.contact_phone}`} style={{ color: 'inherit', textDecoration: 'none' }}>
                   {card.contact_phone}
                 </a>
