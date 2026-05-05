@@ -48,7 +48,7 @@ body { -webkit-overflow-scrolling: touch; }
 }
 .dearday-logo-left svg { transform: scaleX(-1); }
 .dearday-logo-right {
-  background: #C9A0DC;
+  background: #7B5EA7;
   border-radius: 4px 14px 14px 4px;
   animation: dearday-slide-right 0.9s cubic-bezier(0.4, 0, 0.2, 1) 1 both;
 }
