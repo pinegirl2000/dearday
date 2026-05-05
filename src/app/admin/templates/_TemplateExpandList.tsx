@@ -61,9 +61,9 @@ const SAMPLE_BY_EVENT: Record<string, SampleData> = {
     extra_info: 'Light reception to follow'
   },
   baptism: {
-    title: "Sophie's Baptism Day",
+    title: "Avery's Baptism Day",
     greeting_oneliner: 'A blessed first step',
-    body: 'Please join us as we celebrate\nSophie\'s baptism in the Lord.',
+    body: 'Please join us as we celebrate\nAvery\'s baptism in the Lord.',
     event_date: '2026-05-03T10:30:00.000Z',
     event_place: 'Pyungkang Church, Main Sanctuary',
     contact_name: 'Love, David & Rachel',
