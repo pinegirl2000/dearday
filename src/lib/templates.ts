@@ -103,7 +103,7 @@ export const TEMPLATES: TemplateMeta[] = [
     bg_id: 'bg-3',
     layout_id: 'layout-classic',
     colorMain: '#476956',
-    colorSub: '#C8DAC8',
+    colorSub: '#E8F0E5',
     recommendEvents: ['birthday', 'meeting', 'opening', 'etc'],
     allowedLayouts: ['layout-classic']
   },
