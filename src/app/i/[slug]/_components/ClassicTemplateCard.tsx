@@ -130,7 +130,15 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
             </h1>
             {card.body && <Divider />}
             {card.body && (
-              <div style={{ lineHeight: 2.0, color: COLORS.textDark, fontSize: 15, padding: '0 10px' }}>
+              <div style={{
+                lineHeight: 2.0,
+                color: COLORS.textDark,
+                fontSize: 15,
+                padding: '0 10px',
+                textAlign: 'center',
+                wordBreak: 'keep-all',     // 한국어 단어 단위 줄바꿈 (어절 중간에서 잘리지 않게)
+                overflowWrap: 'break-word' // 너무 긴 단어만 예외적으로 분리
+              }}>
                 {applyName(card.body, recipientName).split(/\r?\n/).map((line, i, arr) => (
                   <span key={i}>
                     {line}
