@@ -184,7 +184,7 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
                 flexDirection: 'column',
                 gap: 12,
                 padding: '22px 24px',
-                margin: '0 auto 14px',
+                margin: '60px auto 14px',
                 maxWidth: 320,
                 background: 'linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.40) 100%)',
                 backdropFilter: 'blur(10px)',
