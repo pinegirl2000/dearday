@@ -533,10 +533,19 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
               value={draft.title || ''}
               onChange={(e) => setDraft({ title: e.target.value })}
             />
-            <Textarea label="Message" requiredMark
-              labelHint="Centered · Press Enter to break lines · Words won't split"
-              placeholder={meta.fields.bodyPlaceholder} value={draft.body || ''}
-              onChange={(e) => setDraft({ body: e.target.value })} rows={5} />
+            <div>
+              <Textarea label="Message" requiredMark
+                labelHint="Centered · Press Enter to break lines · Words won't split"
+                placeholder={meta.fields.bodyPlaceholder}
+                value={draft.body || ''}
+                onChange={(e) => setDraft({ body: e.target.value.slice(0, 200) })}
+                maxLength={200}
+                rows={5}
+              />
+              <p className="text-[11px] text-hydrangea-400 mt-1 text-right tabular-nums">
+                {String((draft.body || '').length).padStart(3, '0')}/200
+              </p>
+            </div>
             {(() => {
               const today = new Date();
               const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
@@ -626,13 +635,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                         </button>
                       </div>
                     )}
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-white border border-hydrangea-100/60">
-                      <div className="text-sm text-hydrangea-700">Allow one-line reply</div>
-                      <button type="button" onClick={() => setDraft({ rsvp_allow_oneliner: !(draft.rsvp_allow_oneliner ?? true) })}
-                        className={`relative w-11 h-6 rounded-full transition ${(draft.rsvp_allow_oneliner ?? true) ? 'bg-hydrangea-500' : 'bg-hydrangea-100'}`}>
-                        <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${(draft.rsvp_allow_oneliner ?? true) ? 'translate-x-5' : 'translate-x-0.5'}`} />
-                      </button>
-                    </div>
+                    {/* Allow one-line reply 옵션은 화면에서 숨김 (default off) */}
                     {(() => {
                       const toLocalInput = (iso?: string | null) => {
                         if (!iso) return '';

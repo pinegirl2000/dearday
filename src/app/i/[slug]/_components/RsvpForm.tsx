@@ -296,7 +296,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
         )}
       </AnimatePresence>
 
-      {attend !== null && (card.rsvp_allow_oneliner ?? true) && (
+      {attend !== null && (card.rsvp_allow_oneliner ?? false) && (
         <textarea
           placeholder="Leave a one-line reply to host (optional)"
           value={oneliner}

@@ -65,7 +65,7 @@ export async function publishCard(draft: CardDraft): Promise<PublishResult> {
         draft.rsvp_deadline || null,
         draft.rsvp_max_per_card || 4,
         draft.rsvp_collect_names ?? false,
-        draft.rsvp_allow_oneliner ?? true,
+        draft.rsvp_allow_oneliner ?? false,
         draft.expiry_date || null,
         draft.plan || 'free'
       ]
@@ -143,7 +143,7 @@ export async function updateCard(slug: string, draft: CardDraft): Promise<Update
         draft.rsvp_deadline || null,
         draft.rsvp_max_per_card || 4,
         draft.rsvp_collect_names ?? false,
-        draft.rsvp_allow_oneliner ?? true,
+        draft.rsvp_allow_oneliner ?? false,
         draft.expiry_date || null,
         draft.plan || 'free',
         slug
