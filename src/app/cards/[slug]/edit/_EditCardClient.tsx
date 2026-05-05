@@ -7,6 +7,7 @@ import type { BaseCard } from '@/types/card';
 
 interface Props {
   card: BaseCard;
+  templateConfigs?: Record<string, string[]>;
 }
 
 /**
@@ -19,7 +20,7 @@ interface Props {
  *   cleanup이 loadForEdit으로 채운 데이터를 지워버리는 문제 때문.
  *   reset은 handlePublish 성공 시 호출됨. 그 외 잔존은 다음 마법사 진입 시 정리.
  */
-export default function EditCardClient({ card }: Props) {
+export default function EditCardClient({ card, templateConfigs }: Props) {
   const loadForEdit = useWizardStore((s) => s.loadForEdit);
 
   useEffect(() => {
@@ -60,5 +61,5 @@ export default function EditCardClient({ card }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [card.slug]);
 
-  return <SinglePageWizard skipRehydrate initialOpen={4} />;
+  return <SinglePageWizard skipRehydrate initialOpen={4} templateConfigs={templateConfigs} />;
 }
