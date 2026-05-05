@@ -158,7 +158,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
             whileTap={{ scale: 0.96 }}
             onClick={() => { setAttend(true); if (max <= 1) handleSubmit(true); }}
             disabled={pending}
-            className="min-h-[34px] text-xs rounded-lg border-2 font-medium transition flex items-center justify-center gap-1 disabled:opacity-50"
+            className="min-h-[34px] text-xs rounded-lg border font-medium transition flex items-center justify-center gap-1 disabled:opacity-50"
             style={{
               background: attend === true ? ACCENT : ACCENT_SOFT,
               color: attend === true ? '#fff' : ACCENT_DEEP,
@@ -171,7 +171,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
             whileTap={{ scale: 0.96 }}
             onClick={() => { setAttend(false); if (max <= 1) handleSubmit(false); }}
             disabled={pending}
-            className="min-h-[34px] text-xs rounded-lg border-2 font-medium transition flex items-center justify-center gap-1 disabled:opacity-50"
+            className="min-h-[34px] text-xs rounded-lg border font-medium transition flex items-center justify-center gap-1 disabled:opacity-50"
             style={{
               background: attend === false ? ACCENT_DEEP : ACCENT_SOFT,
               color: attend === false ? '#fff' : ACCENT_DEEP,
@@ -181,7 +181,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
             <X className="w-3 h-3" /> Decline
           </motion.button>
           {attend === true && max > 1 && (
-            <div className="min-h-[34px] rounded-lg border-2 flex items-center justify-between px-1.5"
+            <div className="min-h-[34px] rounded-lg border flex items-center justify-between px-1.5"
               style={{ borderColor: ACCENT, background: ACCENT_SOFT }}>
               <button
                 type="button"
@@ -211,7 +211,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
             whileTap={{ scale: 0.96 }}
             onClick={() => { setAttend(true); if (max <= 1) handleSubmit(true); }}
             disabled={pending}
-            className="min-h-[52px] rounded-xl border-2 font-medium transition flex items-center justify-center gap-2 disabled:opacity-50"
+            className="min-h-[52px] rounded-xl border font-medium transition flex items-center justify-center gap-2 disabled:opacity-50"
             style={{
               background: attend === true ? ACCENT : ACCENT_SOFT,
               color: attend === true ? '#fff' : ACCENT_DEEP,
@@ -224,7 +224,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
             whileTap={{ scale: 0.96 }}
             onClick={() => { setAttend(false); if (max <= 1) handleSubmit(false); }}
             disabled={pending}
-            className="min-h-[52px] rounded-xl border-2 font-medium transition flex items-center justify-center gap-2 disabled:opacity-50"
+            className="min-h-[52px] rounded-xl border font-medium transition flex items-center justify-center gap-2 disabled:opacity-50"
             style={{
               background: attend === false ? ACCENT_DEEP : ACCENT_SOFT,
               color: attend === false ? '#fff' : ACCENT_DEEP,
