@@ -114,7 +114,8 @@ export default function InvitationView({ card, feed, recipientName, recipientId,
                 style={{
                   fontFamily: titleField.fontFamily || "'Noto Serif KR', serif",
                   fontWeight: titleField.fontWeight,
-                  color: titleField.color,
+                  // 봉투 색상 계열로 통일
+                  color: envelopeDeep,
                   fontSize: Math.min(titleField.fontSize, 26),
                   letterSpacing: titleField.letterSpacing,
                   lineHeight: titleField.lineHeight || 1.2,
@@ -127,7 +128,9 @@ export default function InvitationView({ card, feed, recipientName, recipientId,
                 <div
                   style={{
                     fontFamily: dateField?.fontFamily || "'Noto Sans KR', sans-serif",
-                    color: dateField?.color || '#666',
+                    // 봉투 색상 계열, 살짝 옅게
+                    color: envelopeDeep,
+                    opacity: 0.75,
                     fontSize: 12,
                     letterSpacing: dateField?.letterSpacing,
                     marginTop: 6
