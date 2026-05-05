@@ -524,7 +524,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
               );
             })()}
             <div>
-              <div className="grid grid-cols-3 gap-1">
+              <div className="grid grid-cols-2 gap-2">
                 {ENVELOPE_ANIMS.map((e) => {
                   const selected = draft.envelope_anim === e.id;
                   const recommended = e.id === meta.recommendEnvelope;
@@ -534,17 +534,17 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                       key={e.id}
                       onClick={() => setDraft({ envelope_anim: e.id as EnvelopeAnimId })}
                       whileTap={{ scale: 0.98 }}
-                      className={`relative flex flex-col items-center p-1 rounded-lg border-2 text-center transition min-w-0 ${
+                      className={`relative flex flex-col items-center p-2 rounded-xl border-2 text-center transition min-w-0 ${
                         selected ? 'border-hydrangea-500 bg-hydrangea-50' : 'border-hydrangea-100/60 bg-white'
                       }`}
                     >
-                      <div className="pointer-events-none mb-1 flex items-center justify-center overflow-hidden w-full" style={{ height: 64 }}>
+                      <div className="pointer-events-none mb-1.5 flex items-center justify-center overflow-hidden w-full" style={{ height: 90 }}>
                         {e.id === 'none' ? (
-                          <div className="w-[58px] h-[42px] rounded-md border-2 border-dashed border-hydrangea-200 bg-white flex items-center justify-center text-[9px] text-hydrangea-400">
+                          <div className="w-[80px] h-[58px] rounded-md border-2 border-dashed border-hydrangea-200 bg-white flex items-center justify-center text-[10px] text-hydrangea-400">
                             None
                           </div>
                         ) : (
-                          <Env isOpen={false} width={58}>{null}</Env>
+                          <Env isOpen={false} width={80}>{null}</Env>
                         )}
                       </div>
                       <div className="flex items-center gap-1.5">
