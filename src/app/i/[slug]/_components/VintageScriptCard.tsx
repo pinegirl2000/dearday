@@ -99,20 +99,10 @@ export default function VintageScriptCard({ card, recipientName, background, rsv
         />
       )}
       <div style={{ position: 'relative', padding: '32px 24px 32px', zIndex: 1, textAlign: 'center' }}>
-        {/* 1. subtitle (greeting_oneliner) — 작은 small caps */}
-        {card.greeting_oneliner && (
-          <FadeUp delay={0.05}>
-            <p style={{
-              fontSize: 12, fontWeight: 400, color: main,
-              letterSpacing: '0.22em', lineHeight: 1.7,
-              margin: 0, marginBottom: 32
-            }}>
-              {applyName(card.greeting_oneliner, recipientName)}
-            </p>
-          </FadeUp>
-        )}
+        {/* subtitle(greeting_oneliner)은 vintage 레이아웃에서도 노출 안 함 —
+            Wedding Party 스크립트가 충분한 컨텍스트 제공 */}
 
-        {/* 2. Wedding Party 스크립트 — 이벤트별 자동 */}
+        {/* 1. Wedding Party 스크립트 — 이벤트별 자동 */}
         <FadeUp delay={0.1}>
           <div style={{
             fontFamily: SCRIPT,

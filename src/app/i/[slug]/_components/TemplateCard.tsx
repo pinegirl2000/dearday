@@ -278,7 +278,9 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
             left: `${f.place.x}%`,
             top: layout.id === 'layout-4'
               ? `calc(${f.place.y + 8}%)`
-              : `calc(${f.place.y}% + 24px)`,
+              : layout.id === 'layout-3'
+                ? `calc(${f.place.y + 6}%)`
+                : `calc(${f.place.y}% + 24px)`,
             width: `${f.place.w}%`,
             textAlign: f.place.align,
             fontSize: 11,
