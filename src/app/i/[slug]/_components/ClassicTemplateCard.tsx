@@ -189,12 +189,12 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
                 padding: '22px 24px',
                 margin: '0 auto 14px',
                 maxWidth: 320,
-                background: 'rgba(255,255,255,0.7)',
-                backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)',
-                border: '1px solid rgba(255,255,255,0.85)',
+                background: 'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 100%)',
+                backdropFilter: 'blur(14px) saturate(140%)',
+                WebkitBackdropFilter: 'blur(14px) saturate(140%)',
+                border: '1px solid rgba(255,255,255,0.95)',
                 borderRadius: 18,
-                boxShadow: '0 14px 32px rgba(123,94,167,0.18), 0 4px 10px rgba(123,94,167,0.10), inset 0 1px 0 rgba(255,255,255,0.95)',
+                boxShadow: '0 18px 40px rgba(123,94,167,0.28), 0 6px 14px rgba(123,94,167,0.16), inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -1px 0 rgba(123,94,167,0.06)',
                 fontFamily: SANS,
                 alignItems: 'stretch',
                 textAlign: 'left'
@@ -224,17 +224,6 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
                 )}
               </div>
             )}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', fontFamily: SANS }}>
-
-              {card.extra_info && (
-                <div style={{
-                  marginTop: 8, padding: '8px 20px', background: COLORS.accentLight,
-                  borderRadius: 20, fontSize: 13, color: COLORS.primaryDark
-                }}>
-                  {applyName(card.extra_info, recipientName)}
-                </div>
-              )}
-            </div>
           </div>
         </FadeUp>
 
@@ -246,16 +235,23 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
           </FadeUp>
         )}
 
-        {card.contact_name && (
-          <div style={{ textAlign: 'center', padding: '10px 20px 20px' }}>
-            <p style={{ fontSize: 13, color: tpl?.colorSub || COLORS.textLight, letterSpacing: '0.15em' }}>
-              — {applyName(card.contact_name, recipientName)} —
-            </p>
+        {(card.contact_name || card.contact_phone || card.extra_info) && (
+          <div style={{ textAlign: 'center', padding: '10px 20px 20px', fontFamily: SANS }}>
+            {card.contact_name && (
+              <p style={{ fontSize: 13, color: tpl?.colorSub || COLORS.textLight, letterSpacing: '0.15em' }}>
+                — {applyName(card.contact_name, recipientName)} —
+              </p>
+            )}
             {card.contact_phone && (
               <p style={{ fontSize: 11, color: tpl?.colorSub || COLORS.textLight, marginTop: 4, letterSpacing: '0.05em', opacity: 0.85 }}>
                 <a href={`tel:${card.contact_phone}`} style={{ color: 'inherit', textDecoration: 'none' }}>
                   {card.contact_phone}
                 </a>
+              </p>
+            )}
+            {card.extra_info && (
+              <p style={{ fontSize: 12, color: tpl?.colorSub || COLORS.textLight, marginTop: 6, letterSpacing: '0.05em', opacity: 0.9, lineHeight: 1.5 }}>
+                {applyName(card.extra_info, recipientName)}
               </p>
             )}
           </div>
