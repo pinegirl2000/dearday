@@ -105,19 +105,9 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
   const isEditMode = !!editingSlug;
   const [open, setOpen] = useState<SectionId>((initialOpen as SectionId) || 1);
   const [pending, startTransition] = useTransition();
-  const [envelopeOpen, setEnvelopeOpen] = useState(false);
+  // Section 4 미리보기는 봉투 단계 건너뛰고 항상 카드 펼친 상태로 시작
+  const [envelopeOpen, setEnvelopeOpen] = useState(true);
   const [envelopeOpening, setEnvelopeOpening] = useState(false);
-
-  // 봉투 없음(none) 선택 시 미리보기 자동으로 카드 펼친 상태로
-  useEffect(() => {
-    if (draft.envelope_anim === 'none') {
-      setEnvelopeOpen(true);
-      setEnvelopeOpening(false);
-    } else {
-      // 봉투가 있는 상태로 다시 바뀌면 닫힌 상태로 리셋
-      setEnvelopeOpen(false);
-    }
-  }, [draft.envelope_anim]);
 
   const [hydrated, setHydrated] = useState(!!skipRehydrate);
   const [savedSnapshot, setSavedSnapshot] = useState<string | null>(null);
