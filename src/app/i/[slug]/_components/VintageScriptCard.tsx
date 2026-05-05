@@ -107,7 +107,7 @@ export default function VintageScriptCard({ card, recipientName, background, rsv
           <div style={{
             fontFamily: SCRIPT,
             fontSize: 44, fontWeight: 400, color: main,
-            lineHeight: 1, marginBottom: 18
+            lineHeight: 1, marginTop: 28, marginBottom: 18
           }}>
             {getEventLabelScript(card.event_type)}
           </div>
