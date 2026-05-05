@@ -523,7 +523,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                               onChange={() => setDraft({ recipient_template: opt1 })}
                               className="accent-hydrangea-500"
                             />
-                            To. {'$NAME'}
+                            To. [NAME]
                           </label>
                           <label className={`inline-flex items-center gap-1.5 px-3 min-h-[44px] rounded-xl border-2 text-sm cursor-pointer transition ${
                             current === opt2 ? 'border-hydrangea-500 bg-hydrangea-50 text-hydrangea-700 font-medium' : 'border-hydrangea-100 bg-white text-hydrangea-500'
@@ -535,7 +535,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                               onChange={() => setDraft({ recipient_template: opt2 })}
                               className="accent-hydrangea-500"
                             />
-                            {'$NAME'}님께
+                            [NAME]님께
                           </label>
                         </div>
                       );
