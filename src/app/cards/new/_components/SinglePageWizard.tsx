@@ -500,7 +500,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
                   </label>
                   <div className="flex gap-2 mb-2">
                     <button type="button"
-                      onClick={() => setDraft({ recipient_template: draft.recipient_template ?? lastRecipientTemplate.current ?? '' })}
+                      onClick={() => setDraft({ recipient_template: draft.recipient_template ?? lastRecipientTemplate.current ?? '$NAME' })}
                       className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-medium transition ${
                         showName ? 'border-hydrangea-500 bg-hydrangea-50 text-hydrangea-700' : 'border-hydrangea-100 bg-white text-hydrangea-400'
                       }`}>
