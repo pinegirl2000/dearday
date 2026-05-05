@@ -492,29 +492,33 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                   <label className="block text-sm font-medium text-hydrangea-700 mb-1.5">
                     Show recipient name on the envelope?
                   </label>
-                  <div className="flex gap-2 mb-2">
+                  <div className="flex gap-2 items-center">
                     <button type="button"
                       onClick={() => setDraft({ recipient_template: draft.recipient_template ?? lastRecipientTemplate.current ?? '$NAME' })}
-                      className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-medium transition ${
+                      className={`px-4 min-h-[44px] rounded-xl border-2 text-sm font-medium transition flex-shrink-0 ${
                         showName ? 'border-hydrangea-500 bg-hydrangea-50 text-hydrangea-700' : 'border-hydrangea-100 bg-white text-hydrangea-400'
                       }`}>
                       Yes
                     </button>
                     <button type="button"
                       onClick={() => setDraft({ recipient_template: null })}
-                      className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-medium transition ${
+                      className={`px-4 min-h-[44px] rounded-xl border-2 text-sm font-medium transition flex-shrink-0 ${
                         !showName ? 'border-hydrangea-500 bg-hydrangea-50 text-hydrangea-700' : 'border-hydrangea-100 bg-white text-hydrangea-400'
                       }`}>
                       No
                     </button>
+                    {showName && (
+                      <input
+                        type="text"
+                        placeholder="$NAME"
+                        value={draft.recipient_template ?? ''}
+                        onChange={(e) => setDraft({ recipient_template: e.target.value })}
+                        className="flex-1 min-h-[44px] px-3 rounded-xl border border-hydrangea-100 bg-white text-hydrangea-700 placeholder:text-hydrangea-300 text-sm focus:outline-none focus:ring-2 focus:ring-hydrangea-300"
+                      />
+                    )}
                   </div>
                   {showName && (
-                    <Input
-                      placeholder="e.g. Dear $NAME / $NAME님께"
-                      hint="Use $NAME to insert the recipient's name."
-                      value={draft.recipient_template ?? ''}
-                      onChange={(e) => setDraft({ recipient_template: e.target.value })}
-                    />
+                    <p className="text-[11px] text-hydrangea-400 mt-1">Use $NAME to insert the recipient's name.</p>
                   )}
                 </div>
               );
