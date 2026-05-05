@@ -6,7 +6,8 @@ export type LayoutId =
   | 'layout-classic'
   | 'layout-3'
   | 'layout-4'
-  | 'layout-5';
+  | 'layout-5'
+  | 'layout-6';
 
 export interface TextField {
   /** 0-100% (left/top) */

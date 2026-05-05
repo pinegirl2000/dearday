@@ -219,7 +219,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
       )}
       {f.eventLabel && (
         <FieldText field={f.eventLabel} delay={0.05}>
-          {(layout.id === 'layout-4' || layout.id === 'layout-3' || layout.id === 'layout-5')
+          {(layout.id === 'layout-4' || layout.id === 'layout-3' || layout.id === 'layout-5' || layout.id === 'layout-6')
             ? getEventLabelScript(card.event_type)
             : getEventLabelText(card.event_type)}
         </FieldText>
@@ -330,7 +330,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
       {card.event_date && f.date && (
         (layout.id === 'layout-4' || layout.id === 'layout-5')
           ? <SplitDate field={f.date} iso={card.event_date} delay={0.3} />
-          : layout.id === 'layout-3'
+          : (layout.id === 'layout-3' || layout.id === 'layout-6')
             ? <ModernSplitDate field={f.date} iso={card.event_date} delay={0.3} />
             : <FieldText field={f.date} delay={0.3}>{formatDate(card.event_date)}</FieldText>
       )}
