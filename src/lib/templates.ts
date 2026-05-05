@@ -179,7 +179,7 @@ export const TEMPLATES: TemplateMeta[] = [
     description: 'Eucalyptus leaves with gold geometric frame',
     bg_id: 'bg-img-10',
     layout_id: 'layout-classic',
-    colorMain: '#E5C674',
+    colorMain: '#A07C2C',
     colorSub: '#476956',
     recommendEvents: ['wedding', 'opening', 'meeting', 'etc'],
     allowedLayouts: ['layout-classic', 'layout-3']
