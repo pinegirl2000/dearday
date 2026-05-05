@@ -83,7 +83,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
     title: withColor(baseFields.title, tplMain) || baseFields.title,
     // greeting_oneliner(subtitle)도 메인 색상 사용
     subtitle: withColor(baseFields.subtitle, tplMain),
-    body: withColor(baseFields.body, tplSub),
+    body: withColor(baseFields.body, tplMain),
     date: withColor(baseFields.date, tplSub),
     place: withColor(baseFields.place, tplSub),
     extra: withColor(baseFields.extra, tplSub)

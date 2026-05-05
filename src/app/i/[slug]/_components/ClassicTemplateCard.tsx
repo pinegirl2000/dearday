@@ -160,7 +160,7 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
             {card.body && (
               <div style={{
                 lineHeight: 2.0,
-                color: tpl?.colorSub || COLORS.textDark,
+                color: tpl?.colorMain || COLORS.textDark,
                 fontSize: 15,
                 padding: '0 10px',
                 textAlign: 'center',
