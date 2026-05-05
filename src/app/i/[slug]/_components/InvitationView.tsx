@@ -9,6 +9,7 @@ import { formatGreeting, getLayout, applyName } from '@/lib/layouts';
 import type { BaseCard } from '@/types/card';
 import RsvpForm from './RsvpForm';
 import TemplateCard from './TemplateCard';
+import type { MyRsvp } from '@/lib/actions/submitRsvp';
 
 const ENVELOPE_MAP = {
   'envelope-1': ClassicEnvelope,
@@ -23,9 +24,10 @@ interface Props {
   feed?: React.ReactNode;
   recipientName?: string;
   recipientId?: string;
+  existingRsvp?: MyRsvp | null;
 }
 
-export default function InvitationView({ card, feed, recipientName, recipientId }: Props) {
+export default function InvitationView({ card, feed, recipientName, recipientId, existingRsvp }: Props) {
   const [open, setOpen] = useState(false);
   const [opening, setOpening] = useState(false);
   const theme = getTheme(card.theme);
@@ -175,7 +177,7 @@ export default function InvitationView({ card, feed, recipientName, recipientId 
           card={card}
           recipientName={recipientName}
           rsvpSlot={card.rsvp_enabled ? (
-            <RsvpForm card={card} theme={theme} recipientId={recipientId} recipientName={recipientName} compact />
+            <RsvpForm card={card} theme={theme} recipientId={recipientId} recipientName={recipientName} existingRsvp={existingRsvp} compact />
           ) : null}
         />
       </div>

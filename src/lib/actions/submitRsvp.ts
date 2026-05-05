@@ -41,11 +41,35 @@ export async function submitRsvp(input: RsvpInput): Promise<RsvpResult> {
     const safeCount = input.attend ? Math.max(1, Math.min(max, adult + child)) : 0;
     const oneliner = (input.oneliner || '').trim().slice(0, 200) || null;
 
-    await pool.query(
-      `INSERT INTO dearday_rsvp (card_id, recipient_id, attend, count, adult_count, child_count, attendee_names, oneliner)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-      [input.card_id, input.recipient_id || null, input.attend, safeCount, adult, child, input.attendee_names || [], oneliner]
-    );
+    // 토큰 링크로 들어온 응답(recipient_id 있음)은 같은 recipient의 기존 행을 UPDATE.
+    // 익명 응답(recipient_id null)은 항상 새 행으로 INSERT.
+    if (input.recipient_id) {
+      const { rows: existing } = await pool.query<{ id: string }>(
+        'SELECT id FROM dearday_rsvp WHERE recipient_id = $1 ORDER BY created_at DESC LIMIT 1',
+        [input.recipient_id]
+      );
+      if (existing[0]) {
+        await pool.query(
+          `UPDATE dearday_rsvp SET
+             attend = $1, count = $2, adult_count = $3, child_count = $4,
+             attendee_names = $5, oneliner = $6, updated_at = NOW()
+           WHERE id = $7`,
+          [input.attend, safeCount, adult, child, input.attendee_names || [], oneliner, existing[0].id]
+        );
+      } else {
+        await pool.query(
+          `INSERT INTO dearday_rsvp (card_id, recipient_id, attend, count, adult_count, child_count, attendee_names, oneliner)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+          [input.card_id, input.recipient_id, input.attend, safeCount, adult, child, input.attendee_names || [], oneliner]
+        );
+      }
+    } else {
+      await pool.query(
+        `INSERT INTO dearday_rsvp (card_id, recipient_id, attend, count, adult_count, child_count, attendee_names, oneliner)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [input.card_id, null, input.attend, safeCount, adult, child, input.attendee_names || [], oneliner]
+      );
+    }
 
     revalidatePath(`/i/${input.slug}`);
     return { ok: true };
@@ -67,6 +91,30 @@ export async function getRsvpStats(cardId: string) {
     [cardId]
   );
   return rows[0] as { attending_groups: number; attending_count: number; attending_adults: number; attending_children: number; declined: number };
+}
+
+export interface MyRsvp {
+  attend: boolean;
+  count: number;
+  adult_count: number;
+  child_count: number;
+  attendee_names: string[] | null;
+  oneliner: string | null;
+  updated_at: string | null;
+  created_at: string;
+}
+
+export async function getMyRsvpByRecipient(recipientId: string): Promise<MyRsvp | null> {
+  if (!recipientId) return null;
+  const { rows } = await pool.query<MyRsvp>(
+    `SELECT attend, count, adult_count, child_count, attendee_names, oneliner, updated_at, created_at
+     FROM dearday_rsvp
+     WHERE recipient_id = $1
+     ORDER BY created_at DESC
+     LIMIT 1`,
+    [recipientId]
+  );
+  return rows[0] || null;
 }
 
 export async function getOnelinerFeed(cardId: string, limit = 50) {

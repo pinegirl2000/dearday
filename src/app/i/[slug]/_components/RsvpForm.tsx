@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Check, X, Minus, Plus, Heart } from 'lucide-react';
 import { toast } from 'sonner';
 import { submitRsvp } from '@/lib/actions/submitRsvp';
+import type { MyRsvp } from '@/lib/actions/submitRsvp';
 import type { ThemeMeta } from '@/lib/theme';
 import type { BaseCard } from '@/types/card';
 
@@ -13,6 +14,8 @@ interface Props {
   theme: ThemeMeta;
   recipientId?: string;
   recipientName?: string;
+  /** 이미 응답한 적이 있으면 폼 초기값으로 채워서 수정 가능하게 함 */
+  existingRsvp?: MyRsvp | null;
   /** 카드 안 오버레이 등 좁은 공간용 — 버튼/폰트/패딩 축소 */
   compact?: boolean;
 }
@@ -26,12 +29,17 @@ const ENVELOPE_PALETTE: Record<string, { primary: string; soft: string; deep: st
   'none':       { primary: '#7B5EA7', soft: '#E8DFF3', deep: '#5A3D7A' }
 };
 
-export default function RsvpForm({ card, theme, recipientId, recipientName, compact = false }: Props) {
-  const [attend, setAttend] = useState<boolean | null>(null);
-  const [adultCount, setAdultCount] = useState(1);
-  const [childCount, setChildCount] = useState(0);
-  const [names, setNames] = useState<string[]>([recipientName || '']);
-  const [oneliner, setOneliner] = useState('');
+export default function RsvpForm({ card, theme, recipientId, recipientName, existingRsvp, compact = false }: Props) {
+  const hasExisting = !!existingRsvp;
+  const [attend, setAttend] = useState<boolean | null>(existingRsvp ? existingRsvp.attend : null);
+  const [adultCount, setAdultCount] = useState(existingRsvp?.adult_count ?? 1);
+  const [childCount, setChildCount] = useState(existingRsvp?.child_count ?? 0);
+  const [names, setNames] = useState<string[]>(
+    existingRsvp?.attendee_names && existingRsvp.attendee_names.length > 0
+      ? existingRsvp.attendee_names
+      : [recipientName || '']
+  );
+  const [oneliner, setOneliner] = useState(existingRsvp?.oneliner ?? '');
   const [done, setDone] = useState(false);
   const [pending, startTransition] = useTransition();
 
@@ -117,7 +125,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, comp
         <div className="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center" style={{ background: ACCENT }}>
           <Check className="w-6 h-6 text-white" strokeWidth={3} />
         </div>
-        <p className="font-semibold text-base" style={{ color: ACCENT_DEEP }}>Thank you for replying!</p>
+        <p className="font-semibold text-base" style={{ color: ACCENT_DEEP }}>{hasExisting ? 'Your reply has been updated!' : 'Thank you for replying!'}</p>
         {attend && oneliner && (
           <p className="text-sm mt-2" style={{ color: ACCENT_DEEP, opacity: 0.7 }}>Your one-line greeting has been added to the feed</p>
         )}
@@ -129,7 +137,12 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, comp
     <div className={compact ? 'space-y-2' : 'space-y-4'}>
       <div className="text-center">
         <h3 className={`font-semibold ${compact ? 'text-sm' : 'text-lg'}`} style={{ color: theme.colors.deep }}>Will you join us?</h3>
-        {card.rsvp_deadline && !compact && (
+        {hasExisting && (
+          <p className={`mt-1 ${compact ? 'text-[10px]' : 'text-xs'}`} style={{ color: ACCENT_DEEP, opacity: 0.75 }}>
+            ✓ You already replied — edit and resubmit to update
+          </p>
+        )}
+        {!hasExisting && card.rsvp_deadline && !compact && (
           <p className="text-xs mt-1" style={{ color: theme.colors.muted }}>
             {new Date(card.rsvp_deadline).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}까지
           </p>
@@ -303,7 +316,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, comp
           className={`w-full font-semibold text-white shadow disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1 ${compact ? 'min-h-[34px] text-xs rounded-lg' : 'min-h-[52px] text-base rounded-xl'}`}
           style={{ background: ACCENT }}
         >
-          {pending ? 'Sending...' : (<><Heart className={compact ? 'w-3 h-3' : 'w-4 h-4'} /> Reply</>)}
+          {pending ? 'Sending...' : (<><Heart className={compact ? 'w-3 h-3' : 'w-4 h-4'} /> {hasExisting ? 'Update' : 'Reply'}</>)}
         </motion.button>
       )}
     </div>
