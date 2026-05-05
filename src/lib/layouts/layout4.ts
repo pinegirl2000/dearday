@@ -9,7 +9,7 @@ export const LAYOUT_4: LayoutMeta = {
   id: 'layout-4',
   name: 'Vintage Script',
   description: '큰 스크립트 라벨 + 볼드 세리프 이름 + 분할 날짜 + RSVP 메모',
-  renderStyle: 'absolute',
+  renderStyle: 'flow',
   aspectRatio: '420/700',
   accent: '#1A2A3A',
   fields: {

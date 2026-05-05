@@ -11,6 +11,7 @@ import { getEventLabelText, getEventLabelScript } from '@/lib/eventType';
 import { findTemplateByPair } from '@/lib/templates';
 import type { BaseCard } from '@/types/card';
 import ClassicTemplateCard from './ClassicTemplateCard';
+import VintageScriptCard from './VintageScriptCard';
 
 interface Props {
   card: BaseCard;
@@ -113,6 +114,9 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
   const tpl = findTemplateByPair(card.bg_id, card.layout_id);
 
   if (layout.renderStyle === 'flow') {
+    if (layout.id === 'layout-4') {
+      return <VintageScriptCard card={card} recipientName={recipientName} background={bg} rsvpSlot={rsvpSlot} />;
+    }
     return <ClassicTemplateCard card={card} recipientName={recipientName} background={bg} rsvpSlot={rsvpSlot} />;
   }
 
