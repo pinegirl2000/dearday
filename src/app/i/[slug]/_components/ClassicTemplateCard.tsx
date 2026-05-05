@@ -64,8 +64,8 @@ function isUrl(s?: string | null): s is string {
 
 function Divider({ color }: { color?: string }) {
   return (
-    <div style={{ textAlign: 'center', padding: '10px 0' }}>
-      <span style={{ color: color || COLORS.accent, fontSize: 18 }}>✽</span>
+    <div style={{ textAlign: 'center', padding: '3px 0' }}>
+      <span style={{ color: color || COLORS.accent, fontSize: 12 }}>✽</span>
     </div>
   );
 }
