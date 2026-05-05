@@ -49,7 +49,7 @@ export const LAYOUT_6: LayoutMeta = {
     // Reception to follow — script
     extra: {
       x: 12, y: 90, w: 76, align: 'center',
-      fontSize: 22, fontWeight: 400, color: '#1A2A3A',
+      fontSize: 16, fontWeight: 400, color: '#1A2A3A',
       lineHeight: 1.2, letterSpacing: '0',
       fontFamily: "'Sacramento', 'Great Vibes', cursive"
     }
