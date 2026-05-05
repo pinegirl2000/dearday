@@ -50,14 +50,14 @@ function SplitDate({ iso, color }: { iso: string; color: string }) {
       color,
       fontFamily: SERIF
     }}>
-      <span style={{ fontSize: 13, fontWeight: 500, letterSpacing: '0.2em' }}>{weekday}</span>
-      <span style={{ width: 1, height: 36, background: color, opacity: 0.55 }} />
-      <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1.1 }}>
-        <span style={{ fontSize: 21, fontWeight: 600 }}>{day}</span>
-        <span style={{ fontSize: 11, letterSpacing: '0.18em' }}>{month}</span>
+      <span style={{ fontSize: 16, fontWeight: 500, letterSpacing: '0.18em' }}>{weekday}</span>
+      <span style={{ width: 1, height: 50, background: color, opacity: 0.55 }} />
+      <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1.05 }}>
+        <span style={{ fontSize: 32, fontWeight: 700 }}>{day}</span>
+        <span style={{ fontSize: 13, letterSpacing: '0.2em' }}>{month}</span>
       </span>
-      <span style={{ width: 1, height: 36, background: color, opacity: 0.55 }} />
-      <span style={{ fontSize: 13, fontWeight: 500, letterSpacing: '0.2em' }}>AT {time}</span>
+      <span style={{ width: 1, height: 50, background: color, opacity: 0.55 }} />
+      <span style={{ fontSize: 16, fontWeight: 500, letterSpacing: '0.18em' }}>AT {time}</span>
     </div>
   );
 }
