@@ -84,10 +84,18 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
     }
   };
 
+  // 미리보기 모드(card.id가 UUID가 아닌 'preview' 등)에서는 실제 제출 차단
+  const isPreview = !card.id || card.id === 'preview' || card.slug === 'preview';
+
   const handleSubmit = (overrideAttend?: boolean) => {
     const attendVal = overrideAttend !== undefined ? overrideAttend : attend;
     if (attendVal === null) {
       toast.error('Please select Attend or Decline');
+      return;
+    }
+    if (isPreview) {
+      // 미리보기 — DB 제출 X, 성공 화면도 띄우지 않음
+      toast.message('Preview mode — RSVP will work after publishing');
       return;
     }
     if (attendVal && card.rsvp_collect_names && count > 1) {
