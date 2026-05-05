@@ -189,7 +189,7 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
                 gap: 6,
                 padding: '12px 18px',
                 // Topdown Text는 box를 title 바로 아래에 (body가 box 다음으로 이동)
-                margin: card.layout_id === 'layout-7' ? '24px auto 14px' : '60px auto 14px',
+                margin: card.layout_id === 'layout-7' ? '24px auto 14px' : '20px auto 14px',
                 maxWidth: 320,
                 background: 'linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.40) 100%)',
                 backdropFilter: 'blur(10px)',
