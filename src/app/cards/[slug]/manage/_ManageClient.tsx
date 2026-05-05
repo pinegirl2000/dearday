@@ -475,19 +475,19 @@ export default function ManageClient({ slug, cardTitle }: Props) {
         </div>
       )}
 
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen} title="수신자 일괄 등록" description="한 줄에 한 명씩 입력하세요">
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen} title="Add recipients in bulk" description="One name per line">
         <Textarea
           rows={10}
-          placeholder={'홍길동\n김철수\n이영희\n박민수'}
+          placeholder={"Mr. James Kim\nMs. Sarah Lee\nMdm. Helen Tan\nDr. Daniel Park\nEmma"}
           value={bulkText}
           onChange={(e) => setBulkText(e.target.value)}
           className="text-base"
         />
         <p className="text-xs text-hydrangea-400 mt-2 mb-4">
-          {bulkText.split('\n').filter((n) => n.trim()).length}명 입력됨
+          {bulkText.split('\n').filter((n) => n.trim()).length} entered
         </p>
         <Button onClick={handleBulkAdd} disabled={pending} full size="lg">
-          {pending ? '등록 중...' : '등록하기'}
+          {pending ? 'Adding...' : 'Add recipients'}
         </Button>
       </Sheet>
     </PageContainer>
