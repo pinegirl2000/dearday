@@ -436,7 +436,6 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
         >
           <div className="space-y-5 mt-2">
             <div>
-              <h4 className="text-xs font-semibold text-hydrangea-700 mb-2">💌 Envelope</h4>
               <div className="grid grid-cols-2 gap-2">
                 {ENVELOPE_ANIMS.map((e) => {
                   const selected = draft.envelope_anim === e.id;
