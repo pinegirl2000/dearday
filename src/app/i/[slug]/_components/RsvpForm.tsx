@@ -299,16 +299,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
         )}
       </AnimatePresence>
 
-      {attend !== null && (card.rsvp_allow_oneliner ?? false) && (
-        <textarea
-          placeholder="Leave a one-line reply to host (optional)"
-          value={oneliner}
-          onChange={(e) => setOneliner(e.target.value.slice(0, 200))}
-          rows={compact ? 1 : 2}
-          className={`w-full px-3 rounded-xl border bg-white resize-none focus:outline-none focus:ring-2 ${compact ? 'py-1.5 text-xs' : 'py-3 text-sm'}`}
-          style={{ borderColor: theme.colors.accent + '66', color: theme.colors.ink }}
-        />
-      )}
+      {/* one-line reply 입력 영구 제거 — DB 필드(rsvp_allow_oneliner)는 보존되나 UI 노출 X */}
 
       {/* Reply 버튼: max>1 케이스에서만 노출 (max=1은 Attend/Decline 클릭이 곧 제출) */}
       {attend !== null && max > 1 && (
