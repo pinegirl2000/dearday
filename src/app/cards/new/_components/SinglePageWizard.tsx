@@ -320,41 +320,44 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
     <PageContainer noPadding>
       <MobileHeader title={isEditMode ? 'Edit Invitation' : t('headerTitle')} back />
 
-      {/* 상단 단계 탭바 (sticky) — 활성 탭만 라벨 표시, 나머지는 번호만 */}
+      {/* 상단 단계 탭바 (sticky) — 1,2,3,4 모두 항상 가로로 표시, 순차 진입 강제 */}
       <div className="sticky top-0 z-20 bg-white/95 backdrop-blur border-b border-hydrangea-100 px-3 py-2">
-        <div className="flex items-center gap-1.5">
-          {([1, 2, 3, 4] as SectionId[]).map((id) => {
+        <div className="flex items-center gap-2">
+          {([1, 2, 3, 4] as SectionId[]).map((id, idx) => {
             const active = open === id;
             const enabled = isEnabled(id);
             const done = isDone(id);
             return (
-              <button
-                key={id}
-                type="button"
-                onClick={() => enabled && setOpen(id)}
-                disabled={!enabled}
-                className={`relative flex items-center gap-1.5 transition ${
-                  active ? 'flex-1 px-3 py-1.5 rounded-full bg-hydrangea-500 text-white font-semibold' :
-                  'flex-shrink-0 w-8 h-8 rounded-full ' + (
-                    done ? 'bg-hydrangea-100 text-hydrangea-700' :
-                    enabled ? 'bg-white border border-hydrangea-200 text-hydrangea-500' :
-                    'bg-white border border-hydrangea-100 text-hydrangea-300 cursor-not-allowed'
-                  )
-                } ${active ? '' : 'justify-center'}`}
-              >
-                {active ? (
-                  <>
-                    <span className="w-5 h-5 rounded-full bg-white/25 flex items-center justify-center text-xs font-bold">
-                      {done ? <Check className="w-3 h-3" strokeWidth={3} /> : id}
-                    </span>
-                    <span className="text-xs truncate">{SECTION_LABELS[id]}</span>
-                  </>
-                ) : (
-                  <span className="text-sm font-bold">
-                    {done ? <Check className="w-3.5 h-3.5" strokeWidth={3} /> : id}
+              <div key={id} className="flex-1 flex items-center min-w-0">
+                <button
+                  type="button"
+                  onClick={() => enabled && setOpen(id)}
+                  disabled={!enabled}
+                  title={!enabled ? '이전 단계를 먼저 완료하세요' : SECTION_LABELS[id]}
+                  className={`relative w-full flex flex-col items-center gap-0.5 py-1.5 px-1 rounded-lg transition ${
+                    active
+                      ? 'bg-hydrangea-500 text-white shadow'
+                      : done
+                        ? 'bg-hydrangea-100 text-hydrangea-700'
+                        : enabled
+                          ? 'bg-white text-hydrangea-500 border border-hydrangea-200'
+                          : 'bg-white text-hydrangea-300 border border-hydrangea-100 cursor-not-allowed opacity-60'
+                  }`}
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    <span className="text-sm font-bold leading-none">{id}</span>
+                    {done && (
+                      <Check
+                        className={`w-3 h-3 ${active ? 'text-white' : 'text-hydrangea-600'}`}
+                        strokeWidth={3}
+                      />
+                    )}
+                  </div>
+                  <span className={`text-[9px] leading-none truncate max-w-full ${active ? 'font-medium' : 'font-normal'}`}>
+                    {SECTION_LABELS[id]}
                   </span>
-                )}
-              </button>
+                </button>
+              </div>
             );
           })}
         </div>
