@@ -20,10 +20,10 @@ const SETS: PairSet[] = [
   {
     key: 'purple-set',
     label: 'Wedding · Romantic',
-    description: 'Classic lavender — timeless and elegant',
+    description: 'Watercolor lavender florals — timeless and elegant',
     envelopeId: 'envelope-1',
     EnvelopeComponent: ClassicEnvelope,
-    bg_id: 'bg-1',
+    bg_id: 'bg-img-2',
     highlight: true,
     card: {
       title: '민준 ♥ 서연',
