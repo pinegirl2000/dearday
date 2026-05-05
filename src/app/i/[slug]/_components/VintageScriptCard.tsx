@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-// 전화 아이콘은 사용 안 함 — 텍스트 라인으로만 표시
+import { MapPin } from 'lucide-react';
 import { applyName } from '@/lib/layouts';
 import { getEventLabelScript } from '@/lib/eventType';
 import { findTemplateByPair } from '@/lib/templates';
@@ -190,12 +190,17 @@ export default function VintageScriptCard({ card, recipientName, background, rsv
                   fontFamily: SERIF
                 }}>
                   {card.event_place && <span>{card.event_place}</span>}
-                  {card.map_url && (
-                    isUrl(card.map_url) ? (
-                      <a href={card.map_url} target="_blank" rel="noreferrer"
-                        style={{ color: main, textDecoration: 'underline', fontSize: 9, opacity: 0.7 }}
-                      >view map ↗</a>
-                    ) : null
+                  {card.map_url && isUrl(card.map_url) && (
+                    <a
+                      href={card.map_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      title="View map"
+                      aria-label="View map"
+                      style={{ color: main, display: 'inline-flex', alignItems: 'center', opacity: 0.75 }}
+                    >
+                      <MapPin size={13} strokeWidth={1.6} />
+                    </a>
                   )}
                 </div>
               )}
