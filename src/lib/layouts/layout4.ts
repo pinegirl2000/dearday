@@ -43,20 +43,20 @@ export const LAYOUT_4: LayoutMeta = {
     },
     // 날짜 — TemplateCard에서 SUNDAY | 15 NOV | AT 5 PM 분할 렌더
     date: {
-      x: 12, y: 65, w: 76, align: 'center',
+      x: 12, y: 55, w: 76, align: 'center',
       fontSize: 13, fontWeight: 500, color: '#1A2A3A',
       letterSpacing: '0.2em',
       fontFamily: "'Cormorant Garamond', 'Noto Serif KR', serif"
     },
     place: {
-      x: 12, y: 76, w: 76, align: 'center',
+      x: 12, y: 66, w: 76, align: 'center',
       fontSize: 12, color: '#1A2A3A',
       letterSpacing: '0.18em',
       fontFamily: "'Cormorant Garamond', 'Noto Serif KR', serif"
     },
-    // place 아래 자동 렌더되는 contact 영역과 겹치지 않도록 더 아래
+    // place 아래 contact 영역(place.y+8% = 74%)과 겹치지 않도록
     extra: {
-      x: 12, y: 92, w: 76, align: 'center',
+      x: 12, y: 84, w: 76, align: 'center',
       fontSize: 10, color: '#1A2A3A',
       lineHeight: 1.7, letterSpacing: '0.04em',
       fontFamily: "'Cormorant Garamond', 'Noto Serif KR', serif"
