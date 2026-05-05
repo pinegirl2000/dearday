@@ -267,13 +267,13 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
               background: hasSub
                 ? `linear-gradient(180deg, rgba(255,255,255,0.82) 0%, rgba(255,255,255,0.68) 100%), ${subTint}`
                 : 'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.82) 100%)',
-              backdropFilter: 'blur(16px) saturate(150%)',
-              WebkitBackdropFilter: 'blur(16px) saturate(150%)',
-              border: '1px solid rgba(255,255,255,0.85)',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
+              border: hasSub ? `1px solid ${subTint}55` : '1px solid rgba(255,255,255,0.85)',
               borderRadius: 14,
               boxShadow: hasSub
-                ? `0 18px 40px ${subTint}40, 0 6px 14px ${subTint}26, inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -1px 0 ${subTint}1A`
-                : '0 14px 32px rgba(0,0,0,0.14), 0 4px 10px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.95)',
+                ? `0 6px 14px ${subTint}26, inset 0 1px 0 rgba(255,255,255,0.85)`
+                : '0 8px 18px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.95)',
               zIndex: 0
             }}
           />
