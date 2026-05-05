@@ -494,7 +494,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                   </label>
                   <div className="flex gap-2 items-center">
                     <button type="button"
-                      onClick={() => setDraft({ recipient_template: draft.recipient_template ?? lastRecipientTemplate.current ?? '$NAME' })}
+                      onClick={() => setDraft({ recipient_template: draft.recipient_template ?? lastRecipientTemplate.current ?? 'To. $NAME' })}
                       className={`px-4 min-h-[44px] rounded-xl border-2 text-sm font-medium transition flex-shrink-0 ${
                         showName ? 'border-hydrangea-500 bg-hydrangea-50 text-hydrangea-700' : 'border-hydrangea-100 bg-white text-hydrangea-400'
                       }`}>
@@ -510,7 +510,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                     {showName && (
                       <input
                         type="text"
-                        placeholder="$NAME"
+                        placeholder="To. $NAME"
                         value={draft.recipient_template ?? ''}
                         onChange={(e) => setDraft({ recipient_template: e.target.value })}
                         className="flex-1 min-h-[44px] px-3 rounded-xl border border-hydrangea-100 bg-white text-hydrangea-700 placeholder:text-hydrangea-300 text-sm focus:outline-none focus:ring-2 focus:ring-hydrangea-300"
@@ -544,7 +544,42 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                             None
                           </div>
                         ) : (
-                          <Env isOpen={false} width={120}>{null}</Env>
+                          <div className="relative" style={{ width: 120 }}>
+                            <Env isOpen={false} width={120}>{null}</Env>
+                            {/* 봉투에 표시될 이름 오버레이 — 실제 초청장과 동일 비율로 작게 */}
+                            {(() => {
+                              const tpl = draft.recipient_template?.trim();
+                              if (!tpl) return null;
+                              const greetingPreview = tpl.replace(/\$NAME/g, 'John');
+                              const ENVELOPE_DEEP_MAP: Record<string, string> = {
+                                'envelope-1': '#5A3D7A',
+                                'envelope-2': '#6E5A3D',
+                                'envelope-3': '#476956',
+                                'envelope-4': '#8E5A4D',
+                                'envelope-5': '#5A7B96'
+                              };
+                              const deep = ENVELOPE_DEEP_MAP[e.id] || '#5A3D7A';
+                              const envH = Math.round(120 * 0.7); // = 84px
+                              return (
+                                <div style={{
+                                  position: 'absolute',
+                                  left: '50%',
+                                  top: `${Math.round(envH * 0.78)}px`,
+                                  transform: 'translateX(-50%)',
+                                  width: '85%',
+                                  textAlign: 'center',
+                                  color: deep,
+                                  fontSize: 6,
+                                  fontWeight: 500,
+                                  letterSpacing: '0.04em',
+                                  textShadow: '0 1px 1px rgba(255,255,255,0.5)',
+                                  pointerEvents: 'none'
+                                }}>
+                                  {greetingPreview}
+                                </div>
+                              );
+                            })()}
+                          </div>
                         )}
                       </div>
                       <div className="flex items-center gap-1.5">
