@@ -411,7 +411,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                         }}
                         className={`flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 rounded-lg transition min-w-0 ${
                           selected
-                            ? 'bg-hydrangea-500 text-white shadow'
+                            ? 'bg-white text-hydrangea-700 border-2 border-hydrangea-500 font-semibold'
                             : 'bg-white text-hydrangea-700 border border-hydrangea-100 active:bg-hydrangea-50'
                         }`}
                       >
