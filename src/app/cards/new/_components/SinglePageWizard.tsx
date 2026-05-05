@@ -49,16 +49,15 @@ function SectionShell({ id, title, summary, open, done, enabled, onToggle, child
   if (!open) return null;
   return (
     <section className="rounded-2xl border border-hydrangea-100 bg-white overflow-hidden">
-      <div className="w-full flex items-center gap-3 p-4 text-left">
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${
-          done ? 'bg-hydrangea-500 text-white' : 'bg-hydrangea-100 text-hydrangea-700'
-        }`}>
+      {/* 활성 섹션 헤더 — 상단 탭바와 동일한 보라색으로 일관성 강조 */}
+      <div className="w-full flex items-center gap-3 p-4 text-left bg-hydrangea-500 text-white">
+        <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 bg-white/25">
           {done ? <Check className="w-4 h-4" strokeWidth={3} /> : id}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="font-semibold text-sm text-hydrangea-700">{title}</div>
+          <div className="font-semibold text-sm">{title}</div>
           {summary && (
-            <div className="text-xs text-hydrangea-400 mt-0.5 truncate">{summary}</div>
+            <div className="text-xs text-white/75 mt-0.5 truncate">{summary}</div>
           )}
         </div>
       </div>
@@ -68,7 +67,7 @@ function SectionShell({ id, title, summary, open, done, enabled, onToggle, child
         transition={{ duration: 0.2 }}
         className="overflow-hidden"
       >
-        <div className="p-4 pt-0">{children}</div>
+        <div className="p-4">{children}</div>
       </motion.div>
     </section>
   );
