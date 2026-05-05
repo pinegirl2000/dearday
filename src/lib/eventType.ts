@@ -81,7 +81,7 @@ export const EVENT_TYPES: EventTypeMeta[] = [
     fields: {
       titleLabel: 'Main title',
       titlePlaceholder: 'e.g. You\'re invited to a backyard BBQ to kick off the summer season!',
-      subtitlePlaceholder: 'e.g. Eat, Drink, and Be Merry',
+      subtitlePlaceholder: 'e.g. Come Together, Be Merry',
       placePlaceholder: 'e.g. The Miller Residence, 321 Oak Drive, Miami, FL',
       bodyPlaceholder: 'e.g. You\'re invited to a backyard BBQ to kick off the summer season!',
       memoPlaceholder: 'e.g. Please let us know if you have any dietary restrictions (Vegan/GF).'
