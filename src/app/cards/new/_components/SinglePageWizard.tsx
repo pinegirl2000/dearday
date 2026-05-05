@@ -193,12 +193,21 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);
 
+  // 신규 모드에서 event_type이 비어있으면 Gathering(meeting)을 기본값으로
+  useEffect(() => {
+    if (!hydrated || editingSlug) return;
+    if (!useWizardStore.getState().draft.event_type) {
+      setEventType('meeting');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated]);
+
   const meta = getEventTypeMeta((draft.event_type as EventType) || 'etc');
 
   // 섹션 완료 여부
   const isDone = (id: SectionId): boolean => {
-    if (id === 1) return !!draft.event_type;
-    if (id === 2) return !!draft.envelope_anim && !!draft.bg_id && !!draft.layout_id;
+    if (id === 1) return !!draft.event_type && !!draft.bg_id && !!draft.layout_id;
+    if (id === 2) return !!draft.envelope_anim;
     if (id === 3) {
       const recipientOk = draft.recipient_template === null
         || (typeof draft.recipient_template === 'string' && draft.recipient_template.trim().length > 0);
@@ -292,8 +301,8 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
   const tplMeta = findTemplateByPair(draft.bg_id, draft.layout_id);
   const tplName = tplMeta?.name || bgMeta.name;
   const summaries = {
-    1: meta.label,
-    2: `${envName} · ${tplName}`,
+    1: `${meta.label} · ${tplName}`,
+    2: envName,
     3: draft.title || '',
     4: ''
   };
@@ -318,40 +327,97 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
         {/* 1. 이벤트 선택 */}
         <SectionShell
           id={1}
-          title="Event"
+          title="Event & Template"
           summary={summaries[1]}
           open={open === 1}
           done={isDone(1) && open !== 1}
           enabled
           onToggle={() => setOpen(1)}
         >
-          <div className="grid grid-cols-3 gap-2 mt-2">
-            {EVENT_TYPES.map((e) => {
-              const selected = draft.event_type === e.id;
-              return (
-                <motion.button
-                  key={e.id}
-                  onClick={() => {
-                    setEventType(e.id);
-                    setTimeout(() => advance(2), 200);
-                  }}
-                  whileTap={{ scale: 0.95 }}
-                  className={`aspect-square rounded-xl border-2 flex flex-col items-center justify-center gap-1 transition-colors ${
-                    selected ? 'border-hydrangea-500 bg-hydrangea-50' : 'border-hydrangea-100/60 bg-white'
-                  }`}
-                >
-                  <span className="text-2xl">{e.emoji}</span>
-                  <span className="text-xs font-semibold text-hydrangea-700">{tEvent(e.id)}</span>
-                </motion.button>
-              );
-            })}
-          </div>
+          {(() => {
+            const activeEvent = (draft.event_type as EventType) || 'meeting';
+            const tpls = getTemplatesFor(activeEvent);
+            return (
+              <div className="space-y-3 mt-2">
+                {/* 이벤트 탭 — 가로 스크롤 가능 */}
+                <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
+                  {EVENT_TYPES.map((e) => {
+                    const selected = activeEvent === e.id;
+                    return (
+                      <button
+                        key={e.id}
+                        type="button"
+                        onClick={() => {
+                          // 탭 클릭 → 해당 이벤트로 변경. 기존 템플릿 선택은 초기화
+                          setEventType(e.id);
+                          setDraft({ bg_id: undefined, layout_id: undefined } as any);
+                        }}
+                        className={`flex-shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition ${
+                          selected
+                            ? 'bg-hydrangea-500 text-white shadow'
+                            : 'bg-white text-hydrangea-700 border border-hydrangea-100 active:bg-hydrangea-50'
+                        }`}
+                      >
+                        <span>{e.emoji}</span>
+                        <span>{tEvent(e.id)}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* 활성 이벤트의 템플릿 그리드 */}
+                <div>
+                  <h4 className="text-xs font-semibold text-hydrangea-700 mb-2">🎨 Template</h4>
+                  {tpls.length === 0 ? (
+                    <div className="text-center py-8 text-sm text-hydrangea-400">
+                      이 이벤트에 등록된 템플릿이 없습니다.
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-2">
+                      {tpls.map((t) => {
+                        const bg = getBackground(t.bg_id);
+                        const selected = draft.bg_id === t.bg_id && draft.layout_id === t.layout_id;
+                        return (
+                          <motion.button
+                            key={t.id}
+                            onClick={() => setDraft({ bg_id: t.bg_id as BackgroundId, layout_id: t.layout_id as LayoutId })}
+                            whileTap={{ scale: 0.96 }}
+                            className={`relative aspect-[3/4] rounded-xl border-2 overflow-hidden transition ${
+                              selected ? 'border-hydrangea-500 ring-2 ring-hydrangea-300' : 'border-hydrangea-100/60'
+                            }`}
+                          >
+                            {bg.imageUrl ? (
+                              <img src={bg.imageUrl} alt={t.name} className="absolute inset-0 w-full h-full object-cover" />
+                            ) : (
+                              <div className="absolute inset-0" style={{ background: bg.gradient }} />
+                            )}
+                            <div className="absolute bottom-0 left-0 right-0 bg-black/45 text-white text-[10px] py-0.5 text-center truncate px-1">
+                              {t.name}
+                            </div>
+                            {selected && (
+                              <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-hydrangea-500 flex items-center justify-center">
+                                <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
+                              </div>
+                            )}
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                <Button onClick={() => advance(2)} disabled={!isDone(1)} full size="md">
+                  Next
+                </Button>
+              </div>
+            );
+          })()}
         </SectionShell>
 
-        {/* 2. 템플릿 (배경 + 봉투) */}
+        {/* 2. 봉투 */}
         <SectionShell
           id={2}
-          title="Template"
+          title="Envelope"
           summary={summaries[2]}
           open={open === 2}
           done={isDone(2) && open !== 2}
@@ -397,53 +463,6 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
                   );
                 })}
               </div>
-            </div>
-
-            <div>
-              <h4 className="text-xs font-semibold text-hydrangea-700 mb-2">🎨 Template</h4>
-              {(() => {
-                const event = (draft.event_type as EventType) || 'etc';
-                const tpls = getTemplatesFor(event);
-                if (tpls.length === 0) {
-                  return (
-                    <div className="text-center py-8 text-sm text-hydrangea-400">
-                      이 이벤트에 등록된 템플릿이 없습니다.
-                    </div>
-                  );
-                }
-                return (
-                  <div className="grid grid-cols-3 gap-2">
-                    {tpls.map((t) => {
-                      const bg = getBackground(t.bg_id);
-                      const selected = draft.bg_id === t.bg_id && draft.layout_id === t.layout_id;
-                      return (
-                        <motion.button
-                          key={t.id}
-                          onClick={() => setDraft({ bg_id: t.bg_id as BackgroundId, layout_id: t.layout_id as LayoutId })}
-                          whileTap={{ scale: 0.96 }}
-                          className={`relative aspect-[3/4] rounded-xl border-2 overflow-hidden transition ${
-                            selected ? 'border-hydrangea-500 ring-2 ring-hydrangea-300' : 'border-hydrangea-100/60'
-                          }`}
-                        >
-                          {bg.imageUrl ? (
-                            <img src={bg.imageUrl} alt={t.name} className="absolute inset-0 w-full h-full object-cover" />
-                          ) : (
-                            <div className="absolute inset-0" style={{ background: bg.gradient }} />
-                          )}
-                          <div className="absolute bottom-0 left-0 right-0 bg-black/45 text-white text-[10px] py-0.5 text-center truncate px-1">
-                            {t.name}
-                          </div>
-                          {selected && (
-                            <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-hydrangea-500 flex items-center justify-center">
-                              <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
-                            </div>
-                          )}
-                        </motion.button>
-                      );
-                    })}
-                  </div>
-                );
-              })()}
             </div>
 
             <Button onClick={() => advance(3)} disabled={!isDone(2)} full size="md">
