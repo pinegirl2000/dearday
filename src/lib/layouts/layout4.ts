@@ -7,8 +7,8 @@ import type { LayoutMeta } from './types';
 // 모든 카드 입력 필드가 포함되도록 위치를 분산.
 export const LAYOUT_4: LayoutMeta = {
   id: 'layout-4',
-  name: 'Vintage Script',
-  description: '큰 스크립트 라벨 + 볼드 세리프 이름 + 분할 날짜 + RSVP 메모',
+  name: 'Compact',
+  description: '미니멀 + 흰 박스 일체형 — 짧은 라벨, 분할 날짜, 호스트 시그니처',
   renderStyle: 'flow',
   aspectRatio: '420/700',
   accent: '#1A2A3A',

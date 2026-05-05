@@ -11,8 +11,8 @@ import type { LayoutMeta } from './types';
 //   7. extra — Reception to follow (script)
 export const LAYOUT_3: LayoutMeta = {
   id: 'layout-3',
-  name: 'Modern Bold',
-  description: 'subtitle + 큰 스크립트 + 이름 + 메시지 + 정보 + script extra',
+  name: 'Editorial',
+  description: '큰 스크립트 라벨 + 깔끔한 캡션 — 매거진 에디토리얼 스타일',
   renderStyle: 'absolute',
   aspectRatio: '420/700',
   accent: '#A07C2C',

@@ -148,11 +148,8 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
                 </div>
               );
             })()}
-            {card.greeting_oneliner && (
-              <p style={{ fontSize: 13, color: palette.subtitle, letterSpacing: '0.4em', marginBottom: 12, fontWeight: 300 }}>
-                {applyName(card.greeting_oneliner, recipientName)}
-              </p>
-            )}
+            {/* greeting_oneliner('Together with our families')은 Classic에서도 노출하지 않음 —
+                상단 WEDDING INVITATION 라벨이 이미 컨텍스트 제공 */}
             <h1 style={{ fontSize: 24, fontWeight: 500, color: palette.title, letterSpacing: '0.4em', margin: '0 0 8px', lineHeight: 1.3 }}>
               {applyName(card.title, recipientName)}
             </h1>
