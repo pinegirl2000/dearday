@@ -61,7 +61,7 @@ const SAMPLE_BY_EVENT: Record<string, SampleData> = {
     extra_info: 'Light reception to follow'
   },
   baptism: {
-    title: "Noah's Baptism",
+    title: "Noah's Baptism Day",
     greeting_oneliner: 'A blessed first step',
     body: 'Please join us as Noah\nreceives his name in faith.',
     event_date: '2026-05-03T10:30:00.000Z',

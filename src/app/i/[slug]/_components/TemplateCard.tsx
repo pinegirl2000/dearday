@@ -224,19 +224,20 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
             : getEventLabelText(card.event_type)}
         </FieldText>
       )}
-      {/* Side Text + Baptism: 우측 상단에 십자가 */}
+      {/* Side Text + Baptism: 우측 가운데 큰 십자가 */}
       {layout.id === 'layout-5' && card.event_type === 'baptism' && (
         <div
           aria-hidden="true"
           style={{
             position: 'absolute',
             right: '8%',
-            top: '6%',
+            top: '50%',
+            transform: 'translateY(-50%)',
             color: tplMain || '#5E6B7C',
-            fontSize: 28,
+            fontSize: 56,
             lineHeight: 1,
             fontFamily: 'serif',
-            opacity: 0.85
+            opacity: 0.6
           }}
         >
           ✝
@@ -244,6 +245,52 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
       )}
       {card.greeting_oneliner && f.subtitle && <FieldText field={f.subtitle} delay={0.1}>{applyName(card.greeting_oneliner, recipientName)}</FieldText>}
       <FieldText field={f.title} delay={0.2}>{applyName(card.title, recipientName)}</FieldText>
+      {/* Side Text 전용: 하단 date+place 영역 반투명 흰색 박스 */}
+      {layout.id === 'layout-5' && (card.event_date || card.event_place) && f.date && f.place && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true, amount: 0.1 }}
+          transition={{ duration: 0.5, delay: 0.25 }}
+          style={{
+            position: 'absolute',
+            left: '6%', right: '6%',
+            top: `calc(${f.date.y - 2}%)`,
+            bottom: `calc(${100 - (f.place.y + 5)}%)`,
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.40) 100%)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            border: '1px solid rgba(255,255,255,0.65)',
+            borderRadius: 12,
+            zIndex: 0
+          }}
+        />
+      )}
+      {/* Side Text 전용: 박스 아래 호스트 이름 + 전화 (extra 위) */}
+      {layout.id === 'layout-5' && (card.contact_name || card.contact_phone) && (
+        <div
+          style={{
+            position: 'absolute',
+            left: '6%', right: '6%',
+            top: '88%',
+            textAlign: 'center',
+            color: tplMain || '#5E6B7C',
+            fontFamily: "'Cormorant Garamond', 'Noto Serif KR', serif",
+            display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'center'
+          }}
+        >
+          {card.contact_name && (
+            <p style={{ fontSize: 12, letterSpacing: '0.1em', margin: 0 }}>
+              — {applyName(card.contact_name, recipientName)} —
+            </p>
+          )}
+          {card.contact_phone && (
+            <a href={`tel:${card.contact_phone}`} style={{ color: 'inherit', textDecoration: 'none', fontSize: 11 }}>
+              {card.contact_phone}
+            </a>
+          )}
+        </div>
+      )}
       {/* Vintage Script 전용: 날짜/장소 영역을 감싸는 반투명 흰색 정보 박스 */}
       {layout.id === 'layout-4' && (card.event_date || card.event_place) && f.date && f.place && (
         <motion.div
@@ -288,8 +335,8 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
           </span>
         </FieldText>
       )}
-      {/* 전화/호스트는 place 아래 인라인 배치. layout-4는 정보박스 밖으로 더 내려서 배치. */}
-      {(card.contact_phone || card.contact_name) && f.place && (
+      {/* 전화/호스트는 place 아래 인라인 배치. layout-5는 별도 처리(위에서 처리)되므로 제외 */}
+      {layout.id !== 'layout-5' && (card.contact_phone || card.contact_name) && f.place && (
         <div
           style={{
             position: 'absolute',
