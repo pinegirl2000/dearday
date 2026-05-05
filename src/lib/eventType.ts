@@ -128,8 +128,8 @@ export function getEventTypeMeta(id: EventType): EventTypeMeta {
 }
 
 /**
- * 카드 위에 장식 라벨로 자동 표시되는 단어. layout.fields.eventLabel이
- * 정의되어 있을 때만 사용됨. (i18n은 후속에서 messages로 이동 가능)
+ * 카드 위에 장식 라벨로 자동 표시되는 단어 — 캡스 버전.
+ * layout.fields.eventLabel 위치에 caps 스타일로 표시 (layout-classic 등).
  */
 const EVENT_LABEL_TEXT: Record<EventType, string> = {
   wedding: 'WEDDING',
@@ -140,7 +140,25 @@ const EVENT_LABEL_TEXT: Record<EventType, string> = {
   etc: 'INVITATION'
 };
 
+/**
+ * 장식 스크립트(필기체) 버전 — 큰 손글씨 폰트로 표시할 때 사용.
+ * layout-4(Vintage Script)처럼 우아한 스크립트가 어울리는 레이아웃에서 사용.
+ */
+const EVENT_LABEL_SCRIPT: Record<EventType, string> = {
+  wedding: 'Wedding Party',
+  birthday: 'Birthday Party',
+  opening: 'Grand Opening',
+  baptism: 'Baptism Day',
+  meeting: 'Gathering',
+  etc: 'Invitation'
+};
+
 export function getEventLabelText(id?: EventType | null): string {
   if (!id) return EVENT_LABEL_TEXT.etc;
   return EVENT_LABEL_TEXT[id] || EVENT_LABEL_TEXT.etc;
+}
+
+export function getEventLabelScript(id?: EventType | null): string {
+  if (!id) return EVENT_LABEL_SCRIPT.etc;
+  return EVENT_LABEL_SCRIPT[id] || EVENT_LABEL_SCRIPT.etc;
 }

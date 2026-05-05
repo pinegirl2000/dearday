@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
-import { Noto_Serif_KR, Noto_Sans_KR } from 'next/font/google';
+import { Noto_Serif_KR, Noto_Sans_KR, Playfair_Display, Great_Vibes, Cormorant_Garamond } from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 import { getServerSession } from 'next-auth';
@@ -23,6 +23,24 @@ const notoSans = Noto_Sans_KR({
   subsets: ['latin'],
   weight: ['300', '400', '500', '700'],
   variable: '--font-noto-sans',
+  display: 'swap'
+});
+
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  display: 'swap'
+});
+
+const greatVibes = Great_Vibes({
+  subsets: ['latin'],
+  weight: ['400'],
+  display: 'swap'
+});
+
+const cormorant = Cormorant_Garamond({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
   display: 'swap'
 });
 
