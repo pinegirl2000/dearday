@@ -409,8 +409,9 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
       )}
       {card.body && f.body && <FieldText field={f.body} delay={0.65}>{applyName(card.body, recipientName)}</FieldText>}
       {card.extra_info && f.extra && <FieldText field={f.extra} delay={0.75}>{applyName(card.extra_info, recipientName)}</FieldText>}
-      {/* RSVP — 카드 디자인 위에 오버레이 (Editorial은 더 위로) */}
-      {rsvpSlot && (
+      {/* RSVP — Side Text(layout-5)를 제외하고는 카드 디자인 위에 오버레이로 배치
+          (layout-5는 우측 텍스트/박스/호스트 영역과 겹치므로 카드 밖으로 분리) */}
+      {rsvpSlot && layout.id !== 'layout-5' && (
         <div
           style={{
             position: 'absolute',
@@ -425,6 +426,12 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
         </div>
       )}
     </div>
+    {/* Side Text(layout-5)는 RSVP를 카드 아래로 분리해서 표시 (호스트/연락처와 겹치지 않게) */}
+    {rsvpSlot && layout.id === 'layout-5' && (
+      <div className="mt-3 px-4">
+        {rsvpSlot}
+      </div>
+    )}
     </div>
   );
 }
