@@ -63,7 +63,7 @@ const SAMPLE_BY_EVENT: Record<string, SampleData> = {
   baptism: {
     title: "Sophie's Baptism Day",
     greeting_oneliner: 'A blessed first step',
-    body: 'Please join us as Sophie\nreceives her name in faith.',
+    body: 'Please join us as we celebrate\nSophie\'s baptism in the Lord.',
     event_date: '2026-05-03T10:30:00.000Z',
     event_place: 'Pyungkang Church, Main Sanctuary',
     contact_name: 'Love, David & Rachel',

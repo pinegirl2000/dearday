@@ -246,7 +246,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
       )}
       {card.greeting_oneliner && f.subtitle && <FieldText field={f.subtitle} delay={0.1}>{applyName(card.greeting_oneliner, recipientName)}</FieldText>}
       <FieldText field={f.title} delay={0.2}>{applyName(card.title, recipientName)}</FieldText>
-      {/* Side Text 전용: 하단 date+place 영역 반투명 흰색 박스 */}
+      {/* Side Text 전용: 하단 date+place 영역 연핑크 정보 박스 */}
       {layout.id === 'layout-5' && (card.event_date || card.event_place) && f.date && f.place && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -258,12 +258,13 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
             left: '6%', right: '6%',
             top: `calc(${f.date.y - 2}%)`,
             bottom: `calc(${100 - (f.place.y + 5)}%)`,
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.82) 100%)',
+            // 연핑크 박스 — 흰 위에 분홍 톤 살짝
+            background: 'linear-gradient(180deg, rgba(252,222,228,0.95) 0%, rgba(248,210,217,0.85) 100%)',
             backdropFilter: 'blur(14px) saturate(140%)',
             WebkitBackdropFilter: 'blur(14px) saturate(140%)',
-            border: '1px solid rgba(255,255,255,0.95)',
+            border: '1px solid rgba(255,224,228,0.95)',
             borderRadius: 12,
-            boxShadow: '0 12px 28px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.95)',
+            boxShadow: '0 10px 24px rgba(232,154,160,0.20), inset 0 1px 0 rgba(255,255,255,0.85)',
             zIndex: 0
           }}
         />
