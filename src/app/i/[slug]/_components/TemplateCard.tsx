@@ -224,7 +224,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
             : getEventLabelText(card.event_type)}
         </FieldText>
       )}
-      {/* Side Text + Baptism: 우측 컬럼의 가로 중앙에 큰 십자가 */}
+      {/* Side Text + Baptism: 우측 컬럼의 가로 중앙에 큰 십자가 — 템플릿 sub 색상 */}
       {layout.id === 'layout-5' && card.event_type === 'baptism' && (
         <div
           aria-hidden="true"
@@ -234,11 +234,11 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
             right: 0,
             top: '6%',
             textAlign: 'center',
-            color: tplMain || '#5E6B7C',
+            color: tplSub || tplMain || '#5E6B7C',
             fontSize: 56,
             lineHeight: 1,
             fontFamily: 'serif',
-            opacity: 0.6
+            opacity: 0.85
           }}
         >
           ✝

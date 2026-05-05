@@ -106,8 +106,8 @@ export const TEMPLATES: TemplateMeta[] = [
     description: 'Watercolor teddy bear with pink balloons',
     bg_id: 'bg-img-6',
     layout_id: 'layout-classic',
-    colorMain: '#C68676',
-    colorSub: '#B0857A',
+    colorMain: '#8E5A4D',
+    colorSub: '#E89AA0', // 풍선/리본의 로즈핑크 — 십자가 색상에도 사용
     recommendEvents: ['birthday', 'baptism', 'etc']
   },
   {
