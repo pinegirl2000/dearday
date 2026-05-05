@@ -125,7 +125,14 @@ export default function VintageScriptCard({ card, recipientName, background, rsv
             whiteSpace: 'pre-wrap',
             wordBreak: 'keep-all'
           }}>
-            {applyName(card.title, recipientName)}
+            {applyName(card.title, recipientName).split('♥').map((part, i, arr) => (
+              <span key={i}>
+                {part}
+                {i < arr.length - 1 && (
+                  <span style={{ fontSize: '0.55em', verticalAlign: '0.15em', margin: '0 0.05em' }}>♥</span>
+                )}
+              </span>
+            ))}
           </h1>
         </FadeUp>
 
