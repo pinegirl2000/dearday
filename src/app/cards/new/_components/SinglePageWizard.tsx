@@ -757,10 +757,19 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                 ? dbOverride as LayoutId[]
                 : getTemplateLayouts(tpl));
               if (allowed.length <= 1) return null;
+              // 짧은 라벨용 매핑 (description은 너무 김)
+              const SHORT_DESC: Record<string, string> = {
+                'layout-classic': 'Top-down flow',
+                'layout-7': 'Top-down + center',
+                'layout-3': 'Editorial script',
+                'layout-4': 'Compact boxed',
+                'layout-5': 'Side text',
+                'layout-6': 'Centered'
+              };
               return (
                 <div>
                   <h4 className="text-xs font-semibold text-hydrangea-700 mb-2">📐 Layout — pick one to preview</h4>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="flex gap-1.5 overflow-x-auto pb-1">
                     {allowed.map((lid) => {
                       const lay = getLayout(lid);
                       const selected = draft.layout_id === lid;
@@ -769,15 +778,17 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                           key={lid}
                           onClick={() => setDraft({ layout_id: lid as LayoutId })}
                           whileTap={{ scale: 0.96 }}
-                          className={`relative p-3 rounded-xl border-2 text-left transition ${
+                          className={`relative flex-1 min-w-0 px-2 py-2 rounded-xl border text-center transition ${
                             selected ? 'border-hydrangea-500 bg-hydrangea-50' : 'border-hydrangea-100/60 bg-white'
                           }`}
                         >
-                          <div className="text-xs font-semibold text-hydrangea-700">{lay.name}</div>
-                          <div className="text-[10px] text-hydrangea-400 mt-0.5 leading-tight">{lay.description}</div>
+                          <div className="text-xs font-semibold text-hydrangea-700 truncate">{lay.name}</div>
+                          <div className="text-[10px] text-hydrangea-400 mt-0.5 truncate">
+                            {SHORT_DESC[lid] || lay.renderStyle}
+                          </div>
                           {selected && (
-                            <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-hydrangea-500 flex items-center justify-center">
-                              <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
+                            <div className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-hydrangea-500 flex items-center justify-center">
+                              <Check className="w-2 h-2 text-white" strokeWidth={3} />
                             </div>
                           )}
                         </motion.button>
