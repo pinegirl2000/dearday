@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
-import { Noto_Serif_KR, Noto_Sans_KR, Playfair_Display } from 'next/font/google';
+import { Noto_Serif_KR, Noto_Sans_KR, Italiana } from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 import { getServerSession } from 'next-auth';
@@ -26,10 +26,9 @@ const notoSans = Noto_Sans_KR({
   display: 'swap'
 });
 
-const playfair = Playfair_Display({
+const italiana = Italiana({
   subsets: ['latin'],
-  weight: ['500', '600', '700'],
-  style: ['italic'],
+  weight: ['400'],
   variable: '--font-brand',
   display: 'swap'
 });
@@ -53,7 +52,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const session = await getServerSession(authOptions);
 
   return (
-    <html lang={locale} className={`${notoSerif.variable} ${notoSans.variable} ${playfair.variable}`}>
+    <html lang={locale} className={`${notoSerif.variable} ${notoSans.variable} ${italiana.variable}`}>
       <head>
         <Script
           id="adsense-script"
