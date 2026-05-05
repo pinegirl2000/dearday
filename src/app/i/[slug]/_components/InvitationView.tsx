@@ -95,6 +95,7 @@ export default function InvitationView({ card, feed, recipientName, recipientId,
     'envelope-2': 'linear-gradient(135deg, #FBF5E8 0%, #F0E5CD 60%, #E8DCC4 100%)',  // Beige
     'envelope-3': 'linear-gradient(135deg, #F1FAF4 0%, #DBEEDF 60%, #C8E5D2 100%)',  // Mint
     'envelope-4': 'linear-gradient(135deg, #FFF1EB 0%, #F8D3C9 60%, #F2C0B3 100%)',  // Coral
+    'envelope-5': 'linear-gradient(135deg, #EFF6FB 0%, #DCE9F4 60%, #BFD7EA 100%)',  // Light Blue
     'none':       'linear-gradient(135deg, #F4ECFA 0%, #E8DFF3 60%, #D5C5E8 100%)'
   };
   const envelopeBg = ENVELOPE_BG[card.envelope_anim] || ENVELOPE_BG['envelope-1'];
