@@ -99,6 +99,26 @@ export const TEMPLATES: TemplateMeta[] = [
     colorMain: '#A07C2C',
     colorSub: '#8A6A2C',
     recommendEvents: ['wedding', 'opening', 'etc']
+  },
+  {
+    id: 'tpl-teddy-pink',
+    name: 'Pink Teddy Balloons',
+    description: 'Watercolor teddy bear with pink balloons',
+    bg_id: 'bg-img-6',
+    layout_id: 'layout-classic',
+    colorMain: '#C68676',
+    colorSub: '#B0857A',
+    recommendEvents: ['birthday', 'baptism', 'etc']
+  },
+  {
+    id: 'tpl-teddy-blue',
+    name: 'Blue Teddy Cloud',
+    description: 'Watercolor teddy bear on a soft pastel cloud',
+    bg_id: 'bg-img-7',
+    layout_id: 'layout-classic',
+    colorMain: '#5A8AB8',
+    colorSub: '#85A8C9',
+    recommendEvents: ['birthday', 'baptism', 'etc']
   }
 ];
 

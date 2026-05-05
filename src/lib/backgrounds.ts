@@ -5,7 +5,8 @@ import type { EventType } from '@/types/card';
 export type BackgroundId =
   | 'bg-none'
   | 'bg-1' | 'bg-2' | 'bg-3' | 'bg-4'
-  | 'bg-img-1' | 'bg-img-2' | 'bg-img-3' | 'bg-img-4';
+  | 'bg-img-1' | 'bg-img-2' | 'bg-img-3' | 'bg-img-4'
+  | 'bg-img-6' | 'bg-img-7';
 
 export interface BackgroundMeta {
   id: BackgroundId;
@@ -62,6 +63,9 @@ export const BACKGROUNDS: BackgroundMeta[] = [
   { id: 'bg-img-2', name: 'Watercolor 2', imageUrl: '/templates/template-2-bg.png', tone: 'light', availableEvents: ALL_EVENTS },
   { id: 'bg-img-3', name: 'Watercolor 3', imageUrl: '/templates/template-3-bg.png', tone: 'light', availableEvents: ALL_EVENTS },
   { id: 'bg-img-4', name: 'Vintage Gold', imageUrl: '/templates/template-4-bg.png', tone: 'light', availableEvents: ALL_EVENTS },
+  // Baby/Birthday/Baptism — 곰돌이 + 풍선
+  { id: 'bg-img-6', name: 'Pink Teddy Balloons', imageUrl: '/templates/template-6-bg.png', tone: 'light', availableEvents: ['birthday', 'baptism', 'etc'] },
+  { id: 'bg-img-7', name: 'Blue Teddy Cloud', imageUrl: '/templates/template-7-bg.png', tone: 'light', availableEvents: ['birthday', 'baptism', 'etc'] },
   // legacy fallback
   {
     id: 'bg-none',
