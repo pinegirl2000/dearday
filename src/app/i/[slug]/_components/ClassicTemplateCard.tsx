@@ -230,8 +230,8 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
 
               {card.extra_info && (
                 <div style={{
-                  marginTop: 8, padding: '8px 20px', background: COLORS.accentLight,
-                  borderRadius: 20, fontSize: 13, color: COLORS.primaryDark
+                  marginTop: 6, fontSize: 13, color: tpl?.colorSub || COLORS.primaryDark,
+                  letterSpacing: '0.04em', lineHeight: 1.6
                 }}>
                   {applyName(card.extra_info, recipientName)}
                 </div>
