@@ -127,7 +127,7 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
           </div>
         </FadeUp>
 
-        {/* 앞면: 부제 / 타이틀 / 인비테이션 / 본문 메시지 */}
+        {/* 앞면: eventLabel + 타이틀 (+ Topdown이 아닐 때 body 포함) */}
         <FadeUp delay={0.1}>
           <div style={{ textAlign: 'center', padding: '8px 10px 12px' }}>
             {(() => {
@@ -148,29 +148,29 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
                 </div>
               );
             })()}
-            {/* greeting_oneliner('Together with our families')은 Classic에서도 노출하지 않음 —
-                상단 WEDDING INVITATION 라벨이 이미 컨텍스트 제공 */}
             <h1 style={{ fontSize: 24, fontWeight: 500, color: palette.title, letterSpacing: '0.4em', margin: '0 0 8px', lineHeight: 1.3 }}>
               {applyName(card.title, recipientName)}
             </h1>
-            {card.body && <Divider color={palette.title} />}
-            {card.body && (
-              <div style={{
-                lineHeight: 2.0,
-                color: tpl?.colorMain || COLORS.textDark,
-                fontSize: 15,
-                padding: '0 10px',
-                textAlign: 'center',
-                wordBreak: 'keep-all',     // 한국어 단어 단위 줄바꿈 (어절 중간에서 잘리지 않게)
-                overflowWrap: 'break-word' // 너무 긴 단어만 예외적으로 분리
-              }}>
-                {applyName(card.body, recipientName).split(/\r?\n/).map((line, i, arr) => (
-                  <span key={i}>
-                    {line}
-                    {i < arr.length - 1 && <br />}
-                  </span>
-                ))}
-              </div>
+            {card.body && card.layout_id !== 'layout-7' && (
+              <>
+                <Divider color={palette.title} />
+                <div style={{
+                  lineHeight: 2.0,
+                  color: tpl?.colorMain || COLORS.textDark,
+                  fontSize: 15,
+                  padding: '0 10px',
+                  textAlign: 'center',
+                  wordBreak: 'keep-all',
+                  overflowWrap: 'break-word'
+                }}>
+                  {applyName(card.body, recipientName).split(/\r?\n/).map((line, i, arr) => (
+                    <span key={i}>
+                      {line}
+                      {i < arr.length - 1 && <br />}
+                    </span>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         </FadeUp>
@@ -184,8 +184,8 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
                 flexDirection: 'column',
                 gap: 12,
                 padding: '22px 24px',
-                // Topdown Text: 박스를 카드 하단부로 더 밀어내기
-                margin: card.layout_id === 'layout-7' ? '280px auto 14px' : '60px auto 14px',
+                // Topdown Text는 box를 title 바로 아래에 (body가 box 다음으로 이동)
+                margin: card.layout_id === 'layout-7' ? '14px auto 14px' : '60px auto 14px',
                 maxWidth: 320,
                 background: 'linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.40) 100%)',
                 backdropFilter: 'blur(10px)',
@@ -239,6 +239,31 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
             </div>
           </div>
         </FadeUp>
+
+        {/* Topdown Text 전용: 박스 다음에 body 렌더 */}
+        {card.layout_id === 'layout-7' && card.body && (
+          <FadeUp delay={0.45}>
+            <div style={{ textAlign: 'center', padding: '20px 10px 12px' }}>
+              <Divider color={palette.title} />
+              <div style={{
+                lineHeight: 2.0,
+                color: tpl?.colorMain || COLORS.textDark,
+                fontSize: 15,
+                padding: '0 10px',
+                textAlign: 'center',
+                wordBreak: 'keep-all',
+                overflowWrap: 'break-word'
+              }}>
+                {applyName(card.body, recipientName).split(/\r?\n/).map((line, i, arr) => (
+                  <span key={i}>
+                    {line}
+                    {i < arr.length - 1 && <br />}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </FadeUp>
+        )}
 
         {rsvpSlot && (
           <FadeUp delay={0.35}>
