@@ -2,7 +2,8 @@
 
 import { motion } from 'framer-motion';
 import { CalendarDays, MapPin, Phone, ExternalLink } from 'lucide-react';
-import { formatGreeting, applyName } from '@/lib/layouts';
+import { formatGreeting, applyName, getLayout } from '@/lib/layouts';
+import { getEventLabelText } from '@/lib/eventType';
 import type { BackgroundMeta } from '@/lib/backgrounds';
 import type { BaseCard } from '@/types/card';
 
@@ -120,6 +121,24 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
         {/* 앞면: 부제 / 타이틀 / 인비테이션 / 본문 메시지 */}
         <FadeUp delay={0.1}>
           <div style={{ textAlign: 'center', padding: '8px 10px 12px' }}>
+            {(() => {
+              const lay = getLayout(card.layout_id);
+              if (!lay.fields.eventLabel) return null;
+              const labelField = lay.fields.eventLabel;
+              return (
+                <div style={{
+                  fontSize: labelField.fontSize,
+                  color: labelField.color,
+                  fontWeight: labelField.fontWeight,
+                  letterSpacing: labelField.letterSpacing,
+                  fontFamily: labelField.fontFamily,
+                  textAlign: labelField.align,
+                  marginBottom: 14
+                }}>
+                  {getEventLabelText(card.event_type)}
+                </div>
+              );
+            })()}
             {card.greeting_oneliner && (
               <p style={{ fontSize: 13, color: palette.subtitle, letterSpacing: '0.4em', marginBottom: 12, fontWeight: 300 }}>
                 {applyName(card.greeting_oneliner, recipientName)}

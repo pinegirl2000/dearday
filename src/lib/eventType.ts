@@ -126,3 +126,21 @@ export const EVENT_TYPES: EventTypeMeta[] = [
 export function getEventTypeMeta(id: EventType): EventTypeMeta {
   return EVENT_TYPES.find((e) => e.id === id) || EVENT_TYPES[5];
 }
+
+/**
+ * 카드 위에 장식 라벨로 자동 표시되는 단어. layout.fields.eventLabel이
+ * 정의되어 있을 때만 사용됨. (i18n은 후속에서 messages로 이동 가능)
+ */
+const EVENT_LABEL_TEXT: Record<EventType, string> = {
+  wedding: 'WEDDING',
+  birthday: 'BIRTHDAY',
+  opening: 'OPENING',
+  baptism: 'BAPTISM',
+  meeting: 'GATHERING',
+  etc: 'INVITATION'
+};
+
+export function getEventLabelText(id?: EventType | null): string {
+  if (!id) return EVENT_LABEL_TEXT.etc;
+  return EVENT_LABEL_TEXT[id] || EVENT_LABEL_TEXT.etc;
+}

@@ -8,6 +8,7 @@ export const LAYOUT_CLASSIC: LayoutMeta = {
   aspectRatio: '440/700',
   accent: '#7B5EA7',
   fields: {
+    eventLabel: { x: 0, y: 0, w: 100, align: 'center', fontSize: 11, color: '#9B7FCB', letterSpacing: '0.5em', fontWeight: 600, fontFamily: "'Playfair Display', 'Noto Serif KR', serif" },
     greeting: { x: 0, y: 0, w: 100, align: 'center', fontSize: 16, color: '#7B5EA7', letterSpacing: '0.06em', fontFamily: "'Noto Serif KR', serif" },
     subtitle: { x: 0, y: 0, w: 100, align: 'center', fontSize: 13, color: '#8B7A9E', letterSpacing: '0.3em', fontWeight: 300, fontFamily: "'Noto Serif KR', serif" },
     title:    { x: 0, y: 0, w: 100, align: 'center', fontSize: 24, color: '#7B5EA7', letterSpacing: '0.4em', fontWeight: 500, lineHeight: 1.3, fontFamily: "'Noto Serif KR', serif" },

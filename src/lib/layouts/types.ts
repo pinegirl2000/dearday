@@ -48,6 +48,12 @@ export interface LayoutMeta {
     contact?: TextField;
     body?: TextField;
     extra?: TextField;
+    /**
+     * 이벤트별 자동 라벨 ("WEDDING" / "BAPTISM" 등). 정의되어 있으면
+     * card.event_type에 매칭되는 단어를 자동 표시. 사용자 입력 X.
+     * 'flow' 렌더링에서는 title 위에 작은 장식 라인으로 표시.
+     */
+    eventLabel?: TextField;
   };
 }
 

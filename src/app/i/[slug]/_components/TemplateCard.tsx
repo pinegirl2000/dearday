@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 // 첫 측정 누락 시 opacity:0에 갇혀 영구히 안 보이는 사고가 났음.
 import { getLayout, formatGreeting, applyName, type TextField } from '@/lib/layouts';
 import { getBackground } from '@/lib/backgrounds';
+import { getEventLabelText } from '@/lib/eventType';
 import type { BaseCard } from '@/types/card';
 import ClassicTemplateCard from './ClassicTemplateCard';
 
@@ -85,6 +86,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
           draggable={false}
         />
       )}
+      {f.eventLabel && <FieldText field={f.eventLabel} delay={0.05}>{getEventLabelText(card.event_type)}</FieldText>}
       {card.greeting_oneliner && f.subtitle && <FieldText field={f.subtitle} delay={0.1}>{applyName(card.greeting_oneliner, recipientName)}</FieldText>}
       <FieldText field={f.title} delay={0.2}>{applyName(card.title, recipientName)}</FieldText>
       {card.event_date && f.date && <FieldText field={f.date} delay={0.3}>{formatDate(card.event_date)}</FieldText>}
