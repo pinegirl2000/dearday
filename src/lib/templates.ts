@@ -45,6 +45,8 @@ export const TEMPLATES: TemplateMeta[] = [
     description: 'Hand-painted purple florals on cream paper',
     bg_id: 'bg-img-2',
     layout_id: 'layout-classic',
+    colorMain: '#7B5EA7',
+    colorSub: '#5A3D7A',
     recommendEvents: ['wedding', 'meeting', 'etc'],
     badge: 'Romantic'
   },
@@ -54,6 +56,8 @@ export const TEMPLATES: TemplateMeta[] = [
     description: 'Fresh green watercolor leaves',
     bg_id: 'bg-img-1',
     layout_id: 'layout-classic',
+    colorMain: '#476956',
+    colorSub: '#7AA088',
     recommendEvents: ['baptism', 'meeting', 'etc']
   },
   {
@@ -62,6 +66,8 @@ export const TEMPLATES: TemplateMeta[] = [
     description: 'Cream beige — gentle and reverent',
     bg_id: 'bg-2',
     layout_id: 'layout-classic',
+    colorMain: '#6E5A3D',
+    colorSub: '#9C8B6E',
     recommendEvents: ['baptism', 'meeting', 'opening', 'etc']
   },
   {
@@ -70,6 +76,8 @@ export const TEMPLATES: TemplateMeta[] = [
     description: 'Soft mint — fresh and breezy',
     bg_id: 'bg-3',
     layout_id: 'layout-classic',
+    colorMain: '#476956',
+    colorSub: '#7AA088',
     recommendEvents: ['birthday', 'meeting', 'opening', 'etc']
   },
   {
@@ -78,6 +86,8 @@ export const TEMPLATES: TemplateMeta[] = [
     description: 'Light coral — joyful and bright',
     bg_id: 'bg-4',
     layout_id: 'layout-classic',
+    colorMain: '#8E5A4D',
+    colorSub: '#B0857A',
     recommendEvents: ['birthday', 'opening', 'etc']
   },
   {
@@ -86,6 +96,8 @@ export const TEMPLATES: TemplateMeta[] = [
     description: 'Eucalyptus with gold geometric frame',
     bg_id: 'bg-img-4',
     layout_id: 'layout-classic',
+    colorMain: '#A07C2C',
+    colorSub: '#8A6A2C',
     recommendEvents: ['wedding', 'opening', 'etc']
   }
 ];
@@ -94,10 +106,18 @@ export function getTemplate(id: string | null | undefined): TemplateMeta {
   return TEMPLATES.find((t) => t.id === id) || TEMPLATES[0];
 }
 
-/** bg_id + layout_id 조합으로 역검색 (기존 카드 → 템플릿 추정용) */
+/**
+ * bg_id + layout_id 조합으로 역검색 (기존 카드 → 템플릿 추정용).
+ * 정확한 페어가 없으면 bg_id만 매칭하는 첫 템플릿을 fallback으로 반환 —
+ * admin에서 layout을 임시 override하거나 layout이 바뀌어도 색상 페어링은 유지되도록.
+ */
 export function findTemplateByPair(bg_id?: string | null, layout_id?: string | null): TemplateMeta | undefined {
-  if (!bg_id || !layout_id) return undefined;
-  return TEMPLATES.find((t) => t.bg_id === bg_id && t.layout_id === layout_id);
+  if (!bg_id) return undefined;
+  if (layout_id) {
+    const exact = TEMPLATES.find((t) => t.bg_id === bg_id && t.layout_id === layout_id);
+    if (exact) return exact;
+  }
+  return TEMPLATES.find((t) => t.bg_id === bg_id);
 }
 
 /** 이벤트 타입에 추천되는 템플릿만 정렬 */
