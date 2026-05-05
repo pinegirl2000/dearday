@@ -91,9 +91,11 @@ interface SinglePageWizardProps {
   skipRehydrate?: boolean;
   /** edit 모드 진입 시 펼칠 섹션 (기본 1) */
   initialOpen?: 1 | 2 | 3 | 4;
+  /** admin이 DB에 저장한 템플릿별 allowedLayouts override */
+  templateConfigs?: Record<string, string[]>;
 }
 
-export default function SinglePageWizard({ skipRehydrate, initialOpen }: SinglePageWizardProps = {}) {
+export default function SinglePageWizard({ skipRehydrate, initialOpen, templateConfigs }: SinglePageWizardProps = {}) {
   const router = useRouter();
   const params = useSearchParams();
   const { status: sessionStatus } = useSession();
@@ -698,7 +700,11 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
             {(() => {
               const tpl = findTemplateByPair(draft.bg_id, draft.layout_id) || TEMPLATES.find((t) => t.bg_id === draft.bg_id);
               if (!tpl) return null;
-              const allowed = getTemplateLayouts(tpl);
+              // DB override가 있으면 우선, 없으면 코드 default
+              const dbOverride = templateConfigs?.[tpl.id];
+              const allowed = (dbOverride && dbOverride.length > 0
+                ? dbOverride as LayoutId[]
+                : getTemplateLayouts(tpl));
               if (allowed.length <= 1) return null;
               return (
                 <div>

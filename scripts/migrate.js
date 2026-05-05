@@ -96,6 +96,14 @@ CREATE TABLE IF NOT EXISTS dearday_rsvp (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 템플릿 설정 override (admin이 코드 default를 덮어쓰기)
+CREATE TABLE IF NOT EXISTS dearday_template_config (
+  template_id TEXT PRIMARY KEY,
+  allowed_layouts TEXT[] NOT NULL DEFAULT '{}',
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_by TEXT
+);
+
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_dearday_card_slug ON dearday_card(slug);
 CREATE INDEX IF NOT EXISTS idx_dearday_card_user ON dearday_card(user_id);

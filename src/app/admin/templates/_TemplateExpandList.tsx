@@ -7,6 +7,8 @@ import { TEMPLATES, getTemplateLayouts } from '@/lib/templates';
 import { getBackground } from '@/lib/backgrounds';
 import { getLayout, LAYOUTS } from '@/lib/layouts';
 import { EVENT_TYPES } from '@/lib/eventType';
+import { saveTemplateAllowedLayouts, resetTemplateConfig } from '@/lib/actions/templateConfig';
+import { toast } from 'sonner';
 import TemplateCard from '@/app/i/[slug]/_components/TemplateCard';
 import type { BaseCard, LayoutId } from '@/types/card';
 
@@ -16,6 +18,8 @@ interface Props {
   templates: Tpl[];
   /** 현재 필터 중인 이벤트 — 미리보기 카드의 event_type으로 전달 */
   eventType?: string;
+  /** DB에 저장된 template_id별 allowed_layouts override (object 형태) */
+  configs?: Record<string, string[]>;
 }
 
 interface SampleData {
@@ -118,17 +122,32 @@ function buildPreview(t: Tpl, layoutOverride?: LayoutId, eventType?: string): Ba
   } as BaseCard;
 }
 
-export default function TemplateExpandList({ templates, eventType }: Props) {
+export default function TemplateExpandList({ templates, eventType, configs }: Props) {
   const [openId, setOpenId] = useState<string | null>(null);
-  // 펼친 항목별로 — 미리보기 렌더에 쓸 단일 active layout (사용자가 카드 위로 다시 탭한 layout)
+  // 펼친 항목별로 — 미리보기 렌더에 쓸 단일 active layout
   const [previewLayout, setPreviewLayout] = useState<Record<string, LayoutId>>({});
-  // 펼친 항목별로 — allowed layouts 멀티선택 상태 (preview only, 코드에 저장 X)
-  const [allowedOverride, setAllowedOverride] = useState<Record<string, LayoutId[]>>({});
+  // 멀티선택 상태 — 초기값은 DB config(있으면) > 코드 default. 변경 후 Save로 영속.
+  const [allowedOverride, setAllowedOverride] = useState<Record<string, LayoutId[]>>(() => {
+    const init: Record<string, LayoutId[]> = {};
+    if (configs) {
+      for (const [tid, layouts] of Object.entries(configs)) {
+        init[tid] = layouts as LayoutId[];
+      }
+    }
+    return init;
+  });
+  // 어떤 템플릿이 dirty(저장 필요) 상태인지
+  const [dirtyIds, setDirtyIds] = useState<Set<string>>(new Set());
+  const [savingId, setSavingId] = useState<string | null>(null);
 
   const getAllowed = (t: typeof TEMPLATES[number]): LayoutId[] => {
-    return (allowedOverride[t.id] && allowedOverride[t.id].length > 0)
-      ? allowedOverride[t.id]
-      : getTemplateLayouts(t);
+    if (allowedOverride[t.id] && allowedOverride[t.id].length > 0) {
+      return allowedOverride[t.id];
+    }
+    if (configs && configs[t.id] && configs[t.id].length > 0) {
+      return configs[t.id] as LayoutId[];
+    }
+    return getTemplateLayouts(t);
   };
 
   const toggleAllowed = (templateId: string, layoutId: LayoutId, currentList: LayoutId[]) => {
@@ -140,6 +159,42 @@ export default function TemplateExpandList({ templates, eventType }: Props) {
       if (next.length === 0) return s;
       return { ...s, [templateId]: next };
     });
+    setDirtyIds((s) => new Set(s).add(templateId));
+  };
+
+  const handleSave = async (templateId: string) => {
+    const allowed = allowedOverride[templateId];
+    if (!allowed || allowed.length === 0) {
+      toast.error('최소 1개 layout 선택 필요');
+      return;
+    }
+    setSavingId(templateId);
+    const res = await saveTemplateAllowedLayouts(templateId, allowed);
+    setSavingId(null);
+    if (!res.ok) {
+      toast.error(res.error || '저장 실패');
+      return;
+    }
+    setDirtyIds((s) => {
+      const n = new Set(s); n.delete(templateId); return n;
+    });
+    toast.success('저장됨');
+  };
+
+  const handleReset = async (t: typeof TEMPLATES[number]) => {
+    setSavingId(t.id);
+    const res = await resetTemplateConfig(t.id);
+    setSavingId(null);
+    if (!res.ok) { toast.error(res.error || '실패'); return; }
+    setAllowedOverride((s) => {
+      const n = { ...s };
+      delete n[t.id];
+      return n;
+    });
+    setDirtyIds((s) => {
+      const n = new Set(s); n.delete(t.id); return n;
+    });
+    toast.success('코드 default로 복귀');
   };
 
   return (
@@ -229,16 +284,37 @@ export default function TemplateExpandList({ templates, eventType }: Props) {
                       </div>
                     )}
 
-                    {/* Allowed Layouts — 멀티선택 (preview only) */}
+                    {/* Allowed Layouts — 멀티선택 + DB 저장 */}
                     <div>
-                      <div className="text-[10px] text-hydrangea-400 mb-1 flex items-center justify-between">
+                      <div className="text-[10px] text-hydrangea-400 mb-1 flex items-center justify-between gap-2">
                         <span>
                           Allowed layouts (multi-select)
                           {' · '}
                           <span className="text-hydrangea-500">{allowed.length} selected</span>
+                          {dirtyIds.has(t.id) && (
+                            <span className="ml-1 text-orange-500 font-semibold">· unsaved</span>
+                          )}
                         </span>
-                        <span className="text-[9px] text-hydrangea-400 italic">
-                          preview · edit src/lib/templates.ts to persist
+                        <span className="flex items-center gap-1.5">
+                          {(configs?.[t.id] || dirtyIds.has(t.id)) && (
+                            <button
+                              type="button"
+                              onClick={() => handleReset(t)}
+                              disabled={savingId === t.id}
+                              className="text-[9px] px-2 py-0.5 rounded bg-white border border-hydrangea-200 text-hydrangea-500 disabled:opacity-50"
+                              title="DB 설정 삭제 → 코드 default로 복귀"
+                            >
+                              Reset
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleSave(t.id)}
+                            disabled={savingId === t.id || !dirtyIds.has(t.id)}
+                            className="text-[10px] px-2 py-0.5 rounded bg-hydrangea-500 text-white font-semibold disabled:opacity-40"
+                          >
+                            {savingId === t.id ? 'Saving…' : 'Save'}
+                          </button>
                         </span>
                       </div>
                       <div className="grid grid-cols-2 gap-1.5">

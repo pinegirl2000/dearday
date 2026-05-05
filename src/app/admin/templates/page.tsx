@@ -6,6 +6,7 @@ import { isAdminEmail } from '@/lib/admin';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { MobileHeader } from '@/components/layout/MobileHeader';
 import { TEMPLATES } from '@/lib/templates';
+import { getAllTemplateConfigs } from '@/lib/actions/templateConfig';
 import { EVENT_TYPES } from '@/lib/eventType';
 import type { EventType } from '@/types/card';
 import { ChevronLeft } from 'lucide-react';
@@ -87,7 +88,11 @@ export default async function TemplatesAdminPage({ searchParams }: PageProps) {
             이 이벤트에 추천되는 템플릿이 없습니다.
           </div>
         ) : (
-          <TemplateExpandList templates={filtered} eventType={selectedEvent} />
+          <TemplateExpandList
+            templates={filtered}
+            eventType={selectedEvent}
+            configs={Object.fromEntries(await getAllTemplateConfigs())}
+          />
         )}
       </div>
     </PageContainer>
