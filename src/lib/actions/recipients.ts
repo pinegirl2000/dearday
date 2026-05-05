@@ -5,6 +5,7 @@ import { getServerSession } from 'next-auth';
 import { pool } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { isAdminEmail } from '@/lib/admin';
+import { generateRecipientToken } from '@/lib/slug';
 
 interface AuthCheck {
   slug: string;
@@ -93,26 +94,22 @@ export async function bulkAddRecipients(slug: string, ownerToken: string | null,
   const cleaned = names.map((n) => n.trim()).filter((n) => n.length > 0);
   if (cleaned.length === 0) return { ok: false as const, error: '이름이 비어있습니다.' };
 
-  // 다음 num 시작점
-  const { rows: maxRows } = await pool.query(
-    'SELECT COALESCE(MAX(CAST(num AS INTEGER)), 0) as max FROM dearday_recipient WHERE card_id=$1',
-    [card.id]
-  );
-  let next = (maxRows[0]?.max || 0) + 1;
-
   const inserted: string[] = [];
   for (const name of cleaned) {
-    const num = String(next).padStart(3, '0');
-    try {
-      await pool.query(
-        'INSERT INTO dearday_recipient (card_id, num, name, group_name) VALUES ($1, $2, $3, $4)',
-        [card.id, num, name, '']
-      );
-      inserted.push(num);
-      next++;
-    } catch (e: any) {
-      // duplicate num skip
-      next++;
+    // 충돌 시 재시도 — 6자 31진수 nanoid는 ~10억 조합이라 사실상 안 나지만 안전하게
+    let attempt = 0;
+    while (attempt < 5) {
+      const token = generateRecipientToken();
+      try {
+        await pool.query(
+          'INSERT INTO dearday_recipient (card_id, num, name, group_name) VALUES ($1, $2, $3, $4)',
+          [card.id, token, name, '']
+        );
+        inserted.push(token);
+        break;
+      } catch (e: any) {
+        attempt++;
+      }
     }
   }
   revalidatePath(`/cards/${slug}/manage`);

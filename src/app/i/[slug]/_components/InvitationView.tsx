@@ -168,7 +168,7 @@ export default function InvitationView({ card, feed, recipientName, recipientId 
 
   // 펼쳐진 카드
   return (
-    <main className="min-h-screen flex flex-col items-center py-8 px-4" style={{ background: theme.colors.bg, fontFamily: theme.fontFamily, color: theme.colors.ink }}>
+    <main className="min-h-screen flex flex-col items-center pt-2 pb-8 px-4" style={{ background: theme.colors.bg, fontFamily: theme.fontFamily, color: theme.colors.ink }}>
       {/* 템플릿 카드 (반투명 정보박스 아래에 RSVP 포함) */}
       <div className="relative w-full max-w-md mb-6">
         <TemplateCard

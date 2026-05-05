@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
+import { useSession, signIn } from 'next-auth/react';
 import { Check, ChevronDown, ChevronUp, Minus, Plus, Sparkles } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { MobileHeader } from '@/components/layout/MobileHeader';
@@ -94,6 +95,7 @@ interface SinglePageWizardProps {
 export default function SinglePageWizard({ skipRehydrate, initialOpen }: SinglePageWizardProps = {}) {
   const router = useRouter();
   const params = useSearchParams();
+  const { status: sessionStatus } = useSession();
   const t = useTranslations('Wizard');
   const tEvent = useTranslations('EventTypes');
   const { draft, setDraft, setEventType, reset, editingSlug } = useWizardStore();
@@ -267,6 +269,13 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
   const layoutMeta = getLayout(draft.layout_id);
 
   const handlePublish = () => {
+    // 비로그인 상태면 Google 로그인으로 이동 — 입력값은 wizardStore(localStorage)에 보존되어
+    // 로그인 후 /cards/new로 돌아오면 그대로 복원된다.
+    if (!isEditMode && sessionStatus === 'unauthenticated') {
+      toast.message('Please sign in to publish your invitation');
+      signIn('google', { callbackUrl: '/cards/new' });
+      return;
+    }
     startTransition(async () => {
       if (isEditMode && editingSlug) {
         const res = await updateCard(editingSlug, draft);
@@ -911,8 +920,17 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
             <Button onClick={handlePublish} disabled={pending} full size="lg">
               {pending
                 ? (isEditMode ? 'Saving...' : 'Publishing...')
-                : (isEditMode ? '✏️ Save changes' : '🎉 Publish')}
+                : isEditMode
+                  ? '✏️ Save changes'
+                  : sessionStatus === 'unauthenticated'
+                    ? '🔒 Sign in to publish'
+                    : '🎉 Publish'}
             </Button>
+            {!isEditMode && sessionStatus === 'unauthenticated' && (
+              <p className="text-xs text-hydrangea-400 text-center">
+                Your inputs are saved — you'll come back here after signing in.
+              </p>
+            )}
           </div>
         </SectionShell>
       </div>

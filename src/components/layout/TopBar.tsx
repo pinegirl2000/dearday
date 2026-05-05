@@ -25,15 +25,15 @@ export default function TopBar() {
           <span className="dearday-logo" aria-hidden="true">
             <span className="dearday-logo-half dearday-logo-left">
               <svg viewBox="0 0 16 24" preserveAspectRatio="xMidYMid meet" width="100%" height="100%">
-                <path d="M 3 3 L 7 3 Q 14 3 14 12 Q 14 21 7 21 L 3 21 Z M 6 6 L 8 6 Q 11 6 11 12 Q 11 18 8 18 L 6 18 Z" fill="#FFFFFF" fillRule="evenodd" />
+                <path d="M 3 3 L 7 3 Q 14 3 14 12 Q 14 21 7 21 L 3 21 Z M 5 5 L 8 5 Q 12 5 12 12 Q 12 19 8 19 L 5 19 Z" fill="#FFFFFF" fillRule="evenodd" />
               </svg>
             </span>
             <span className="dearday-logo-half dearday-logo-right">
               <svg viewBox="0 0 16 24" preserveAspectRatio="xMidYMid meet" width="100%" height="100%">
-                <path d="M 3 3 L 7 3 Q 14 3 14 12 Q 14 21 7 21 L 3 21 Z M 6 6 L 8 6 Q 11 6 11 12 Q 11 18 8 18 L 6 18 Z" fill="#FFFFFF" fillRule="evenodd" />
+                <path d="M 3 3 L 7 3 Q 14 3 14 12 Q 14 21 7 21 L 3 21 Z M 5 5 L 8 5 Q 12 5 12 12 Q 12 19 8 19 L 5 19 Z" fill="#FFFFFF" fillRule="evenodd" />
               </svg>
             </span>
-            <Pencil className="dearday-logo-pencil" strokeWidth={1.6} />
+            <Pencil className="dearday-logo-pencil" strokeWidth={2.4} />
           </span>
           <span className="font-serif text-base font-semibold text-hydrangea-700 tracking-wide">DearDay</span>
         </Link>
