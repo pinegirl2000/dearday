@@ -139,7 +139,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
   return (
     <div className={compact ? 'space-y-2' : 'space-y-4'}>
       <div className="text-center">
-        <h3 className={`font-semibold ${compact ? 'text-sm' : 'text-lg'}`} style={{ color: theme.colors.deep }}>Will you join us?</h3>
+        <h3 className={`font-semibold ${compact ? 'text-sm' : 'text-lg'}`} style={{ color: ACCENT }}>Will you join us?</h3>
         {hasExisting && (
           <p className={`mt-1 ${compact ? 'text-[10px]' : 'text-xs'}`} style={{ color: ACCENT_DEEP, opacity: 0.75 }}>
             ✓ You already replied — edit and resubmit to update
