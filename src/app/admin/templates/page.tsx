@@ -68,6 +68,44 @@ export default async function TemplatesAdminPage() {
                     </span>
                   ))}
                 </div>
+
+                {/* 레이아웃 상세 정보 */}
+                <div className="mb-3 p-3 rounded-xl bg-hydrangea-50/50 text-[11px] space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-hydrangea-700">Layout details</span>
+                    <span className="px-1.5 py-0.5 rounded bg-white text-[10px] font-mono text-hydrangea-500">
+                      {layout.renderStyle}
+                    </span>
+                  </div>
+                  <div className="text-hydrangea-500 italic">{layout.description}</div>
+                  <div className="grid grid-cols-2 gap-1 text-hydrangea-600">
+                    <div>
+                      <span className="text-hydrangea-400">aspect ratio:</span> {layout.aspectRatio}
+                    </div>
+                    <div>
+                      <span className="text-hydrangea-400">accent:</span>
+                      <span className="inline-block w-2.5 h-2.5 rounded-full ml-1 align-middle" style={{ background: layout.accent }} />
+                      <span className="ml-1 font-mono text-[10px]">{layout.accent}</span>
+                    </div>
+                  </div>
+                  <div className="pt-1 border-t border-hydrangea-200/50">
+                    <div className="text-hydrangea-400 mb-1">fields ({Object.keys(layout.fields).length})</div>
+                    <div className="flex flex-wrap gap-1">
+                      {Object.entries(layout.fields).map(([key, field]) => {
+                        if (!field) return null;
+                        return (
+                          <span
+                            key={key}
+                            className="text-[10px] px-1.5 py-0.5 rounded bg-white border border-hydrangea-100 text-hydrangea-600"
+                            title={`x:${field.x}% y:${field.y}% w:${field.w}% size:${field.fontSize} weight:${field.fontWeight ?? '-'} align:${field.align}`}
+                          >
+                            {key} <span className="opacity-50 font-mono">{field.fontSize}px</span>
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
                 <div className="rounded-xl overflow-hidden bg-hydrangea-50/40 p-2">
                   <TemplateCard card={card} recipientName="John" />
                 </div>
