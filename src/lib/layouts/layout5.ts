@@ -1,63 +1,66 @@
 import type { LayoutMeta } from './types';
 
-// 레이아웃 5 — Side Text (text on the right)
-// 카드 왼편에 일러스트/꽃/곰돌이 등 배경 이미지 영역을 비워두고,
-// 모든 텍스트는 오른쪽 절반에 좌측 정렬로 배치.
+// 레이아웃 5 — Side Text
+// 왼쪽 일러스트 + 오른쪽 텍스트 (위쪽: invite/event/name 우측 컬럼,
+// 아래쪽: date/place/extra 카드 전체 폭)
+// 모든 카드 입력 항목 포함:
+//   subtitle, eventLabel, body, title, date, place, extra,
+//   그리고 place 아래 자동 렌더되는 contact_name/phone/map_url
 export const LAYOUT_5: LayoutMeta = {
   id: 'layout-5',
   name: 'Side Text',
-  description: '왼쪽 일러스트, 오른쪽 텍스트 — 좌측 정렬',
+  description: '왼쪽 일러스트, 오른쪽 텍스트 — 하단 정보는 전체 폭',
   renderStyle: 'absolute',
   aspectRatio: '420/700',
-  accent: '#1A2A3A',
+  accent: '#5E6B7C',
   fields: {
-    // 작은 안내 (small caps)
+    // 작은 안내 (greeting_oneliner) — 우측 상단 small caps
     subtitle: {
-      x: 48, y: 20, w: 48, align: 'left',
-      fontSize: 11, fontWeight: 500, color: '#1A2A3A',
-      letterSpacing: '0.22em', lineHeight: 1.7,
+      x: 50, y: 14, w: 46, align: 'left',
+      fontSize: 11, fontWeight: 500, color: '#5E6B7C',
+      letterSpacing: '0.18em', lineHeight: 1.5,
       fontFamily: "'Cormorant Garamond', 'Noto Serif KR', serif"
     },
-    // 큰 스크립트 라벨 — 이벤트별 자동
+    // 큰 스크립트 라벨 — 이벤트별 자동 ("Baptism" "Birthday Party" 등)
     eventLabel: {
-      x: 48, y: 26, w: 48, align: 'left',
-      fontSize: 36, fontWeight: 400, color: '#1A2A3A',
-      letterSpacing: '0', lineHeight: 1.0,
+      x: 50, y: 24, w: 48, align: 'left',
+      fontSize: 44, fontWeight: 400, color: '#5E6B7C',
+      letterSpacing: '0', lineHeight: 1.05,
       fontFamily: "'Sacramento', 'Great Vibes', cursive"
     },
-    // 메인 이름
+    // 작은 italic 안내 (body 자리) — "of our son" 같은 한 줄 코멘트
+    body: {
+      x: 50, y: 50, w: 46, align: 'left',
+      fontSize: 13, color: '#5E6B7C',
+      lineHeight: 1.6,
+      fontFamily: "'Cormorant Garamond', 'Noto Serif KR', serif"
+    },
+    // 메인 이름 — sans serif 강조
     title: {
-      x: 48, y: 38, w: 48, align: 'left',
-      fontSize: 22, fontWeight: 700, color: '#1A2A3A',
-      letterSpacing: '0.05em', lineHeight: 1.2,
+      x: 50, y: 56, w: 48, align: 'left',
+      fontSize: 24, fontWeight: 600, color: '#5E6B7C',
+      letterSpacing: '0.02em', lineHeight: 1.2,
       fontFamily: "'Playfair Display', 'Cormorant Garamond', 'Noto Serif KR', serif"
     },
-    // 본문
-    body: {
-      x: 48, y: 50, w: 48, align: 'left',
-      fontSize: 12, color: '#1A2A3A',
-      lineHeight: 1.7,
-      fontFamily: "'Cormorant Garamond', 'Noto Serif KR', serif"
-    },
-    // 날짜
+    // 날짜 — 하단 전체 폭, italic
     date: {
-      x: 48, y: 64, w: 48, align: 'left',
-      fontSize: 13, fontWeight: 500, color: '#1A2A3A',
-      letterSpacing: '0.18em',
+      x: 6, y: 78, w: 88, align: 'left',
+      fontSize: 13, fontWeight: 400, color: '#5E6B7C',
+      letterSpacing: '0.04em', lineHeight: 1.5,
       fontFamily: "'Cormorant Garamond', 'Noto Serif KR', serif"
     },
-    // 주소
+    // 주소 — 하단 전체 폭
     place: {
-      x: 48, y: 71, w: 48, align: 'left',
-      fontSize: 12, color: '#1A2A3A',
-      letterSpacing: '0.12em', lineHeight: 1.6,
+      x: 6, y: 84, w: 88, align: 'left',
+      fontSize: 12, color: '#5E6B7C',
+      letterSpacing: '0.04em', lineHeight: 1.5,
       fontFamily: "'Cormorant Garamond', 'Noto Serif KR', serif"
     },
-    // extra (Reception to follow 등)
+    // RSVP 안내 등 — 하단 전체 폭
     extra: {
-      x: 48, y: 88, w: 48, align: 'left',
-      fontSize: 11, color: '#1A2A3A',
-      lineHeight: 1.6, letterSpacing: '0.04em',
+      x: 6, y: 92, w: 88, align: 'left',
+      fontSize: 11, color: '#5E6B7C',
+      letterSpacing: '0.04em', lineHeight: 1.5,
       fontFamily: "'Cormorant Garamond', 'Noto Serif KR', serif"
     }
   }

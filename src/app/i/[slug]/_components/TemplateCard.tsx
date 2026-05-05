@@ -219,10 +219,28 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
       )}
       {f.eventLabel && (
         <FieldText field={f.eventLabel} delay={0.05}>
-          {(layout.id === 'layout-4' || layout.id === 'layout-3')
+          {(layout.id === 'layout-4' || layout.id === 'layout-3' || layout.id === 'layout-5')
             ? getEventLabelScript(card.event_type)
             : getEventLabelText(card.event_type)}
         </FieldText>
+      )}
+      {/* Side Text + Baptism: 우측 상단에 십자가 */}
+      {layout.id === 'layout-5' && card.event_type === 'baptism' && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            right: '8%',
+            top: '6%',
+            color: tplMain || '#5E6B7C',
+            fontSize: 28,
+            lineHeight: 1,
+            fontFamily: 'serif',
+            opacity: 0.85
+          }}
+        >
+          ✝
+        </div>
       )}
       {card.greeting_oneliner && f.subtitle && <FieldText field={f.subtitle} delay={0.1}>{applyName(card.greeting_oneliner, recipientName)}</FieldText>}
       <FieldText field={f.title} delay={0.2}>{applyName(card.title, recipientName)}</FieldText>
