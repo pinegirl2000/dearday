@@ -105,7 +105,7 @@ export default function VintageScriptCard({ card, recipientName, background, rsv
             <p style={{
               fontSize: 12, fontWeight: 400, color: main,
               letterSpacing: '0.22em', lineHeight: 1.7,
-              margin: 0, marginBottom: 10
+              margin: 0, marginBottom: 32
             }}>
               {applyName(card.greeting_oneliner, recipientName)}
             </p>
