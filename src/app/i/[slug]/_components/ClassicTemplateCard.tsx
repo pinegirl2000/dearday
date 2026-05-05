@@ -182,8 +182,8 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
               <div style={{
                 display: 'flex',
                 flexDirection: 'column',
-                gap: 12,
-                padding: '22px 24px',
+                gap: 6,
+                padding: '12px 18px',
                 // Topdown Text는 box를 title 바로 아래에 (body가 box 다음으로 이동)
                 margin: card.layout_id === 'layout-7' ? '14px auto 14px' : '60px auto 14px',
                 maxWidth: 320,
@@ -206,22 +206,21 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
                   </div>
                 )}
                 {(card.event_place || card.map_url) && (
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, color: tpl?.colorMain || COLORS.textDark, letterSpacing: '0.04em' }}>
-                    <MapPin size={15} strokeWidth={1.4} style={{ color: tpl?.colorMain || COLORS.primary, flexShrink: 0, marginTop: 2 }} />
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: tpl?.colorMain || COLORS.textDark, letterSpacing: '0.04em' }}>
+                    <MapPin size={15} strokeWidth={1.4} style={{ color: tpl?.colorMain || COLORS.primary, flexShrink: 0 }} />
+                    <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap', minWidth: 0 }}>
                       {card.event_place && <span style={{ fontWeight: 500 }}>{card.event_place}</span>}
-                      {card.map_url && (
-                        <span style={{ fontSize: 12, color: COLORS.textMid, wordBreak: 'break-word' }}>
-                          {isUrl(card.map_url) ? (
-                            <a href={card.map_url} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: COLORS.primary, textDecoration: 'underline' }}>
-                              View map <ExternalLink size={11} strokeWidth={1.5} />
-                            </a>
-                          ) : (
-                            <span>{card.map_url}</span>
-                          )}
-                        </span>
+                      {card.map_url && isUrl(card.map_url) && (
+                        <a href={card.map_url} target="_blank" rel="noreferrer"
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: tpl?.colorMain || COLORS.primary, textDecoration: 'underline', fontSize: 10, opacity: 0.75 }}
+                        >
+                          view map <ExternalLink size={9} strokeWidth={1.5} />
+                        </a>
                       )}
-                    </div>
+                      {card.map_url && !isUrl(card.map_url) && (
+                        <span style={{ fontSize: 11, color: COLORS.textMid, wordBreak: 'break-word' }}>{card.map_url}</span>
+                      )}
+                    </span>
                   </div>
                 )}
               </div>
