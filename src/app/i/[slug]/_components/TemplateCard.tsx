@@ -1,6 +1,9 @@
 'use client';
 
 import { motion } from 'framer-motion';
+// NOTE: framer-motion의 whileInView는 장식용 fade-in에만 사용. 본문/연락처처럼
+// "반드시 보여야 하는" 정보는 whileInView로 감싸지 말 것 — IntersectionObserver
+// 첫 측정 누락 시 opacity:0에 갇혀 영구히 안 보이는 사고가 났음.
 import { getLayout, formatGreeting, applyName, type TextField } from '@/lib/layouts';
 import { getBackground } from '@/lib/backgrounds';
 import type { BaseCard } from '@/types/card';
@@ -88,11 +91,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
       {card.event_place && f.place && <FieldText field={f.place} delay={0.4}>{card.event_place}</FieldText>}
       {/* 주소(map_url)와 전화는 layout 필드에 없으므로 place 아래 또는 body 위에 인라인 배치 */}
       {(card.map_url || card.contact_phone || card.contact_name) && f.place && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.1 }}
-          transition={{ duration: 0.7, delay: 0.5, ease: 'easeOut' }}
+        <div
           style={{
             position: 'absolute',
             left: `${f.place.x}%`,
@@ -118,7 +117,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
             <a href={`tel:${card.contact_phone}`} style={{ color: f.place.color, textDecoration: 'none' }}>📞 {card.contact_phone}</a>
           )}
           {card.contact_name && <span>— {applyName(card.contact_name, recipientName)} —</span>}
-        </motion.div>
+        </div>
       )}
       {card.body && f.body && <FieldText field={f.body} delay={0.65}>{applyName(card.body, recipientName)}</FieldText>}
       {card.extra_info && f.extra && <FieldText field={f.extra} delay={0.75}>{applyName(card.extra_info, recipientName)}</FieldText>}
