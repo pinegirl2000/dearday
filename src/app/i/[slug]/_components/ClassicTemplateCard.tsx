@@ -184,7 +184,8 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
                 flexDirection: 'column',
                 gap: 12,
                 padding: '22px 24px',
-                margin: '60px auto 14px',
+                // Topdown Text: 박스를 카드 하단부로 더 밀어내기
+                margin: card.layout_id === 'layout-7' ? '160px auto 14px' : '60px auto 14px',
                 maxWidth: 320,
                 background: 'linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.40) 100%)',
                 backdropFilter: 'blur(10px)',
