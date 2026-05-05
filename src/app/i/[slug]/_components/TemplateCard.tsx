@@ -246,30 +246,39 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
       )}
       {card.greeting_oneliner && f.subtitle && <FieldText field={f.subtitle} delay={0.1}>{applyName(card.greeting_oneliner, recipientName)}</FieldText>}
       <FieldText field={f.title} delay={0.2}>{applyName(card.title, recipientName)}</FieldText>
-      {/* Side Text 전용: 하단 date+place 영역 연핑크 정보 박스 */}
-      {layout.id === 'layout-5' && (card.event_date || card.event_place) && f.date && f.place && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true, amount: 0.1 }}
-          transition={{ duration: 0.5, delay: 0.25 }}
-          style={{
-            position: 'absolute',
-            left: '6%', right: '6%',
-            top: `calc(${f.date.y - 2}%)`,
-            bottom: `calc(${100 - (f.place.y + 5)}%)`,
-            // 연핑크 박스 — 입체적 그라디언트 + 강한 그림자
-            background: 'linear-gradient(180deg, rgba(255,235,239,0.97) 0%, rgba(245,200,210,0.92) 100%)',
-            backdropFilter: 'blur(16px) saturate(150%)',
-            WebkitBackdropFilter: 'blur(16px) saturate(150%)',
-            border: '1px solid rgba(255,255,255,0.85)',
-            borderRadius: 14,
-            // 깊은 컬러 그림자 + 짧은 grounding + inset 하이라이트/하단 라인
-            boxShadow: '0 18px 40px rgba(232,140,150,0.32), 0 6px 14px rgba(232,140,150,0.18), inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -1px 0 rgba(232,140,150,0.10)',
-            zIndex: 0
-          }}
-        />
-      )}
+      {/* Side Text 전용: 하단 date+place 영역 정보 박스 — 템플릿 sub 색상 톤 (없으면 흰색) */}
+      {layout.id === 'layout-5' && (card.event_date || card.event_place) && f.date && f.place && (() => {
+        // sub 색상이 정의된 경우에만 sub 톤 적용. 없으면 순수 흰색 박스 + 중성 그림자.
+        const hasSub = !!tplSub;
+        const subTint = tplSub || '#FFFFFF';
+        return (
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true, amount: 0.1 }}
+            transition={{ duration: 0.5, delay: 0.25 }}
+            style={{
+              position: 'absolute',
+              left: '6%', right: '6%',
+              top: `calc(${f.date.y - 2}%)`,
+              bottom: `calc(${100 - (f.place.y + 5)}%)`,
+              // sub 있으면: 흰색 반투명 위에 sub 솔리드 → 톤 비치는 frosted
+              // sub 없으면: 그냥 흰색 그라디언트
+              background: hasSub
+                ? `linear-gradient(180deg, rgba(255,255,255,0.82) 0%, rgba(255,255,255,0.68) 100%), ${subTint}`
+                : 'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.82) 100%)',
+              backdropFilter: 'blur(16px) saturate(150%)',
+              WebkitBackdropFilter: 'blur(16px) saturate(150%)',
+              border: '1px solid rgba(255,255,255,0.85)',
+              borderRadius: 14,
+              boxShadow: hasSub
+                ? `0 18px 40px ${subTint}40, 0 6px 14px ${subTint}26, inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -1px 0 ${subTint}1A`
+                : '0 14px 32px rgba(0,0,0,0.14), 0 4px 10px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.95)',
+              zIndex: 0
+            }}
+          />
+        );
+      })()}
       {/* Side Text 전용: 박스 아래 호스트 이름 + 전화 (extra 위) */}
       {layout.id === 'layout-5' && (card.contact_name || card.contact_phone) && (
         <div
