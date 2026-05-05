@@ -204,9 +204,11 @@ export function findTemplateByPair(bg_id?: string | null, layout_id?: string | n
   return TEMPLATES.find((t) => t.bg_id === bg_id);
 }
 
-/** 이벤트 타입에 추천되는 템플릿만 정렬 */
+/**
+ * 이벤트 타입에 추천되는 템플릿만 반환.
+ * 사용자 마법사에서 이 결과를 그대로 노출 → wedding 이벤트에는 wedding이
+ * recommendEvents에 포함된 템플릿만 나타남.
+ */
 export function getTemplatesFor(event: EventType): TemplateMeta[] {
-  const recommended = TEMPLATES.filter((t) => t.recommendEvents.includes(event));
-  const others = TEMPLATES.filter((t) => !t.recommendEvents.includes(event));
-  return [...recommended, ...others];
+  return TEMPLATES.filter((t) => t.recommendEvents.includes(event));
 }

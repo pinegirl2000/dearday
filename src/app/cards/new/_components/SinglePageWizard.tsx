@@ -404,12 +404,18 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
               {(() => {
                 const event = (draft.event_type as EventType) || 'etc';
                 const tpls = getTemplatesFor(event);
+                if (tpls.length === 0) {
+                  return (
+                    <div className="text-center py-8 text-sm text-hydrangea-400">
+                      이 이벤트에 등록된 템플릿이 없습니다.
+                    </div>
+                  );
+                }
                 return (
                   <div className="grid grid-cols-3 gap-2">
                     {tpls.map((t) => {
                       const bg = getBackground(t.bg_id);
                       const selected = draft.bg_id === t.bg_id && draft.layout_id === t.layout_id;
-                      const recommended = t.recommendEvents.includes(event);
                       return (
                         <motion.button
                           key={t.id}
@@ -423,9 +429,6 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
                             <img src={bg.imageUrl} alt={t.name} className="absolute inset-0 w-full h-full object-cover" />
                           ) : (
                             <div className="absolute inset-0" style={{ background: bg.gradient }} />
-                          )}
-                          {recommended && !selected && (
-                            <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded-full bg-white/90 text-[9px] font-semibold text-hydrangea-600">Rec</span>
                           )}
                           <div className="absolute bottom-0 left-0 right-0 bg-black/45 text-white text-[10px] py-0.5 text-center truncate px-1">
                             {t.name}
