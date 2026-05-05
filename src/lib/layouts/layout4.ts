@@ -25,7 +25,7 @@ export const LAYOUT_4: LayoutMeta = {
       x: 8, y: 18, w: 84, align: 'center',
       fontSize: 42, fontWeight: 400, color: '#1A2A3A',
       letterSpacing: '0',
-      fontFamily: "'Great Vibes', 'Pinyon Script', cursive"
+      fontFamily: "'Sacramento', 'Great Vibes', cursive"
     },
     // 메인 이름 — 큰 볼드 세리프
     title: {

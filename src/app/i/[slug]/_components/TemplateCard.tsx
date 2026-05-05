@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Phone } from 'lucide-react';
+import { Phone, MapPin } from 'lucide-react';
 // NOTE: framer-motion의 whileInView는 장식용 fade-in에만 사용. 본문/연락처처럼
 // "반드시 보여야 하는" 정보는 whileInView로 감싸지 말 것 — IntersectionObserver
 // 첫 측정 누락 시 opacity:0에 갇혀 영구히 안 보이는 사고가 났음.
@@ -165,9 +165,22 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
           ? <SplitDate field={f.date} iso={card.event_date} delay={0.3} />
           : <FieldText field={f.date} delay={0.3}>{formatDate(card.event_date)}</FieldText>
       )}
-      {card.event_place && f.place && <FieldText field={f.place} delay={0.4}>{card.event_place}</FieldText>}
-      {/* 주소(map_url)와 전화는 layout 필드에 없으므로 place 아래 또는 body 위에 인라인 배치 */}
-      {(card.map_url || card.contact_phone || card.contact_name) && f.place && (
+      {card.event_place && f.place && (
+        <FieldText field={f.place} delay={0.4}>
+          <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <span>{card.event_place}</span>
+            {card.map_url && (
+              isUrl(card.map_url) ? (
+                <a href={card.map_url} target="_blank" rel="noreferrer"
+                  style={{ color: f.place.color, textDecoration: 'underline', fontSize: '0.6em', opacity: 0.75 }}
+                >view map ↗</a>
+              ) : null
+            )}
+          </span>
+        </FieldText>
+      )}
+      {/* 전화/호스트는 place 아래 인라인 배치 (map_url은 place와 함께 한 줄에 합쳐짐) */}
+      {(card.contact_phone || card.contact_name) && f.place && (
         <div
           style={{
             position: 'absolute',
@@ -183,13 +196,6 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
             gap: 4
           }}
         >
-          {card.map_url && (
-            isUrl(card.map_url) ? (
-              <a href={card.map_url} target="_blank" rel="noreferrer" style={{ color: f.place.color, textDecoration: 'underline' }}>View map ↗</a>
-            ) : (
-              <span>{card.map_url}</span>
-            )
-          )}
           {card.contact_phone && (
             <a
               href={`tel:${card.contact_phone}`}

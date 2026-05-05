@@ -189,39 +189,37 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
                 padding: '22px 24px',
                 margin: '0 auto 14px',
                 maxWidth: 320,
-                background: 'linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.78) 100%)',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255,255,255,0.9)',
+                background: 'rgba(255,255,255,0.7)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                border: '1px solid rgba(255,255,255,0.85)',
                 borderRadius: 18,
-                boxShadow: '0 14px 32px rgba(123,94,167,0.22), 0 4px 10px rgba(123,94,167,0.12), inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -1px 0 rgba(123,94,167,0.06)',
+                boxShadow: '0 14px 32px rgba(123,94,167,0.18), 0 4px 10px rgba(123,94,167,0.10), inset 0 1px 0 rgba(255,255,255,0.95)',
                 fontFamily: SANS,
                 alignItems: 'stretch',
                 textAlign: 'left'
               }}>
                 {card.event_date && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: COLORS.textDark, letterSpacing: '0.06em' }}>
-                    <CalendarDays size={16} strokeWidth={1.4} style={{ color: COLORS.primary, flexShrink: 0 }} />
-                    <span style={{ fontWeight: 500 }}>{formatDate(card.event_date)}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 17, color: COLORS.textDark, letterSpacing: '0.04em' }}>
+                    <CalendarDays size={20} strokeWidth={1.5} style={{ color: COLORS.primary, flexShrink: 0 }} />
+                    <span style={{ fontWeight: 600 }}>{formatDate(card.event_date)}</span>
                   </div>
                 )}
                 {(card.event_place || card.map_url) && (
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, color: COLORS.textDark, letterSpacing: '0.04em' }}>
-                    <MapPin size={15} strokeWidth={1.4} style={{ color: COLORS.primary, flexShrink: 0, marginTop: 2 }} />
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
-                      {card.event_place && <span style={{ fontWeight: 500 }}>{card.event_place}</span>}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 16, color: COLORS.textDark, letterSpacing: '0.03em', flexWrap: 'wrap' }}>
+                    <MapPin size={20} strokeWidth={1.5} style={{ color: COLORS.primary, flexShrink: 0 }} />
+                    <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap', minWidth: 0 }}>
+                      {card.event_place && <span style={{ fontWeight: 600 }}>{card.event_place}</span>}
                       {card.map_url && (
-                        <span style={{ fontSize: 12, color: COLORS.textMid, wordBreak: 'break-word' }}>
-                          {isUrl(card.map_url) ? (
-                            <a href={card.map_url} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: COLORS.primary, textDecoration: 'underline' }}>
-                              View map <ExternalLink size={11} strokeWidth={1.5} />
-                            </a>
-                          ) : (
-                            <span>{card.map_url}</span>
-                          )}
-                        </span>
+                        isUrl(card.map_url) ? (
+                          <a href={card.map_url} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: COLORS.primary, textDecoration: 'underline', fontSize: 10, opacity: 0.75 }}>
+                            view map <ExternalLink size={9} strokeWidth={1.5} />
+                          </a>
+                        ) : (
+                          <span style={{ fontSize: 10, color: COLORS.textMid, wordBreak: 'break-word', opacity: 0.75 }}>{card.map_url}</span>
+                        )
                       )}
-                    </div>
+                    </span>
                   </div>
                 )}
               </div>

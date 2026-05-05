@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
-import { Noto_Serif_KR, Noto_Sans_KR, Playfair_Display, Great_Vibes, Cormorant_Garamond } from 'next/font/google';
+import { Noto_Serif_KR, Noto_Sans_KR, Playfair_Display, Great_Vibes, Cormorant_Garamond, Sacramento } from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 import { getServerSession } from 'next-auth';
@@ -41,6 +41,12 @@ const greatVibes = Great_Vibes({
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
   weight: ['400', '500', '600'],
+  display: 'swap'
+});
+
+const sacramento = Sacramento({
+  subsets: ['latin'],
+  weight: ['400'],
   display: 'swap'
 });
 
