@@ -15,7 +15,8 @@ interface Props {
   rsvpSlot?: React.ReactNode;
 }
 
-const SCRIPT = "'Sacramento', 'Great Vibes', cursive";
+// 'Wedding Party' 라벨은 Playfair Display Italic Bold — 모던 청첩장 스타일
+const SCRIPT = "'Playfair Display', 'Cormorant Garamond', 'Noto Serif KR', serif";
 const SERIF_BOLD = "'Playfair Display', 'Cormorant Garamond', 'Noto Serif KR', serif";
 const SERIF = "'Cormorant Garamond', 'Noto Serif KR', serif";
 
@@ -106,8 +107,9 @@ export default function VintageScriptCard({ card, recipientName, background, rsv
         <FadeUp delay={0.1}>
           <div style={{
             fontFamily: SCRIPT,
-            fontSize: 44, fontWeight: 400, color: main,
-            lineHeight: 1, marginTop: 28, marginBottom: 18
+            fontSize: 38, fontWeight: 700, fontStyle: 'italic', color: main,
+            letterSpacing: '0.01em',
+            lineHeight: 1.1, marginTop: 28, marginBottom: 18
           }}>
             {getEventLabelScript(card.event_type)}
           </div>
