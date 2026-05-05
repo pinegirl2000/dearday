@@ -116,10 +116,10 @@ export default function InvitationView({ card, feed, recipientName, recipientId,
                   fontWeight: titleField.fontWeight,
                   // 봉투 색상 계열로 통일
                   color: envelopeDeep,
-                  fontSize: Math.min(titleField.fontSize, 26),
+                  fontSize: Math.min(titleField.fontSize, 16),
                   letterSpacing: titleField.letterSpacing,
                   lineHeight: titleField.lineHeight || 1.2,
-                  marginBottom: 8
+                  marginBottom: 6
                 }}
               >
                 {applyName(card.title, recipientName)}
@@ -131,9 +131,9 @@ export default function InvitationView({ card, feed, recipientName, recipientId,
                     // 봉투 색상 계열, 살짝 옅게
                     color: envelopeDeep,
                     opacity: 0.75,
-                    fontSize: 12,
+                    fontSize: 9,
                     letterSpacing: dateField?.letterSpacing,
-                    marginTop: 6
+                    marginTop: 4
                   }}
                 >
                   {formatDate(card.event_date)}
