@@ -16,21 +16,21 @@ export const LAYOUT_5: LayoutMeta = {
   fields: {
     // 작은 안내 (greeting_oneliner) — 우측 상단 small caps
     subtitle: {
-      x: 50, y: 18, w: 46, align: 'left',
+      x: 50, y: 18, w: 46, align: 'center',
       fontSize: 11, fontWeight: 500, color: '#5E6B7C',
       letterSpacing: '0.18em', lineHeight: 1.5,
       fontFamily: "'Cormorant Garamond', 'Noto Serif KR', serif"
     },
     // 메인 이름 — 큰 스크립트 (eventLabel 대신 title을 강조)
     title: {
-      x: 50, y: 30, w: 48, align: 'left',
+      x: 50, y: 30, w: 48, align: 'center',
       fontSize: 36, fontWeight: 400, color: '#5E6B7C',
       letterSpacing: '0', lineHeight: 1.05,
       fontFamily: "'Sacramento', 'Great Vibes', cursive"
     },
     // 작은 italic 안내 (body 자리) — "of our son" 같은 한 줄 코멘트
     body: {
-      x: 50, y: 56, w: 46, align: 'left',
+      x: 50, y: 56, w: 46, align: 'center',
       fontSize: 13, color: '#5E6B7C',
       lineHeight: 1.6,
       fontFamily: "'Cormorant Garamond', 'Noto Serif KR', serif"
