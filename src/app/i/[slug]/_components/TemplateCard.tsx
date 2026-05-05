@@ -328,7 +328,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
         />
       )}
       {card.event_date && f.date && (
-        layout.id === 'layout-4'
+        (layout.id === 'layout-4' || layout.id === 'layout-5')
           ? <SplitDate field={f.date} iso={card.event_date} delay={0.3} />
           : layout.id === 'layout-3'
             ? <ModernSplitDate field={f.date} iso={card.event_date} delay={0.3} />
