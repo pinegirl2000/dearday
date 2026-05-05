@@ -24,7 +24,7 @@ const initialDraft: CardDraft = {
   theme: 'hydrangea',
   bg_id: 'bg-none',
   layout_id: 'layout-classic',
-  envelope_anim: 'envelope-1',
+  envelope_anim: 'none',
   font_family: 'serif',
   rsvp_enabled: true,
   rsvp_max_per_card: 4,
