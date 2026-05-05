@@ -187,7 +187,7 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
                 gap: 6,
                 padding: '12px 18px',
                 // Topdown Text는 box를 title 바로 아래에 (body가 box 다음으로 이동)
-                margin: card.layout_id === 'layout-7' ? '14px auto 14px' : '60px auto 14px',
+                margin: card.layout_id === 'layout-7' ? '-16px auto 14px' : '60px auto 14px',
                 maxWidth: 320,
                 background: 'linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.40) 100%)',
                 backdropFilter: 'blur(10px)',
@@ -241,11 +241,10 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
           </div>
         </FadeUp>
 
-        {/* Topdown Text 전용: 박스 다음에 body 렌더 */}
+        {/* Topdown Text 전용: 박스 다음에 body 렌더 (divider 없음, 큰 갭) */}
         {card.layout_id === 'layout-7' && card.body && (
           <FadeUp delay={0.45}>
-            <div style={{ textAlign: 'center', padding: '20px 10px 12px' }}>
-              <Divider color={palette.title} />
+            <div style={{ textAlign: 'center', padding: '60px 10px 16px' }}>
               <div style={{
                 lineHeight: 2.0,
                 color: tpl?.colorMain || COLORS.textDark,
