@@ -374,16 +374,16 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
             gap: 4
           }}
         >
+          {/* 호스트 이름 위, 전화번호 아래 (tel: 링크 — 모바일 다이얼러 연결) */}
+          {card.contact_name && <span>— {applyName(card.contact_name, recipientName)} —</span>}
           {card.contact_phone && (
             <a
               href={`tel:${card.contact_phone}`}
-              style={{ color: f.place.color, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+              style={{ color: f.place.color, textDecoration: 'none' }}
             >
-              <Phone size={11} strokeWidth={1.6} style={{ color: f.place.color }} />
               {card.contact_phone}
             </a>
           )}
-          {card.contact_name && <span>— {applyName(card.contact_name, recipientName)} —</span>}
         </div>
       )}
       {/* Vintage Script: 본문 위 ✽ divider */}
