@@ -33,6 +33,52 @@ function isUrl(s?: string | null): s is string {
   return /^https?:\/\//i.test(s);
 }
 
+/** Vintage Script 전용 — SUNDAY | 15 NOV | AT 5 PM 3분할 + 세로 디바이더 */
+function SplitDate({ field, iso, delay = 0 }: { field: TextField; iso: string; delay?: number }) {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return null;
+  const weekday = d.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+  const day = String(d.getDate());
+  const month = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+  const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+    .toLowerCase().replace(/\s/g, ' ');
+  const time12 = `AT ${time.replace(':00', '').toUpperCase()}`;
+  const divColor = field.color || '#1A2A3A';
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.1 }}
+      transition={{ duration: 0.8, delay, ease: 'easeOut' }}
+      style={{
+        position: 'absolute',
+        left: `${field.x}%`,
+        top: `${field.y}%`,
+        width: `${field.w}%`,
+        color: field.color,
+        fontFamily: field.fontFamily,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 14
+      }}
+    >
+      <span style={{ fontSize: field.fontSize, letterSpacing: field.letterSpacing, fontWeight: field.fontWeight }}>
+        {weekday}
+      </span>
+      <span style={{ width: 1, height: 36, background: divColor, opacity: 0.55 }} />
+      <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1.1 }}>
+        <span style={{ fontSize: (field.fontSize || 13) + 8, fontWeight: 600 }}>{day}</span>
+        <span style={{ fontSize: (field.fontSize || 13) - 2, letterSpacing: '0.18em' }}>{month}</span>
+      </span>
+      <span style={{ width: 1, height: 36, background: divColor, opacity: 0.55 }} />
+      <span style={{ fontSize: field.fontSize, letterSpacing: field.letterSpacing, fontWeight: field.fontWeight }}>
+        {time12}
+      </span>
+    </motion.div>
+  );
+}
+
 function FieldText({ field, children, delay = 0 }: { field: TextField; children: React.ReactNode; delay?: number }) {
   return (
     <motion.div
@@ -109,7 +155,11 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
       {f.eventLabel && <FieldText field={f.eventLabel} delay={0.05}>{getEventLabelText(card.event_type)}</FieldText>}
       {card.greeting_oneliner && f.subtitle && <FieldText field={f.subtitle} delay={0.1}>{applyName(card.greeting_oneliner, recipientName)}</FieldText>}
       <FieldText field={f.title} delay={0.2}>{applyName(card.title, recipientName)}</FieldText>
-      {card.event_date && f.date && <FieldText field={f.date} delay={0.3}>{formatDate(card.event_date)}</FieldText>}
+      {card.event_date && f.date && (
+        layout.id === 'layout-4'
+          ? <SplitDate field={f.date} iso={card.event_date} delay={0.3} />
+          : <FieldText field={f.date} delay={0.3}>{formatDate(card.event_date)}</FieldText>
+      )}
       {card.event_place && f.place && <FieldText field={f.place} delay={0.4}>{card.event_place}</FieldText>}
       {/* 주소(map_url)와 전화는 layout 필드에 없으므로 place 아래 또는 body 위에 인라인 배치 */}
       {(card.map_url || card.contact_phone || card.contact_name) && f.place && (
