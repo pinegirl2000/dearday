@@ -28,7 +28,8 @@ interface Props {
 }
 
 export default function InvitationView({ card, feed, recipientName, recipientId, existingRsvp }: Props) {
-  const [open, setOpen] = useState(false);
+  // 봉투 'none'이면 봉투 단계 건너뛰고 바로 카드 표시
+  const [open, setOpen] = useState(card.envelope_anim === 'none');
   const [opening, setOpening] = useState(false);
   const theme = getTheme(card.theme);
   const meta = getEventTypeMeta(card.event_type);
