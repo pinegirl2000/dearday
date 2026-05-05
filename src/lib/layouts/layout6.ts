@@ -18,37 +18,44 @@ export const LAYOUT_6: LayoutMeta = {
       letterSpacing: '0', lineHeight: 1.0,
       fontFamily: "'Sacramento', 'Great Vibes', cursive"
     },
-    // 메인 이름 — 정중앙 (y:46)
+    // subtitle (greeting_oneliner) — title 바로 위 작은 small caps
+    subtitle: {
+      x: 12, y: 49, w: 76, align: 'center',
+      fontSize: 10, fontWeight: 500, color: '#1A2A3A',
+      letterSpacing: '0.22em', lineHeight: 1.5,
+      fontFamily: "'Cormorant Garamond', 'Noto Serif KR', serif"
+    },
+    // 메인 이름
     title: {
-      x: 10, y: 46, w: 80, align: 'center',
+      x: 10, y: 54, w: 80, align: 'center',
       fontSize: 22, fontWeight: 600, color: '#1A2A3A',
       letterSpacing: '0.18em', lineHeight: 1.2,
       fontFamily: "'Cormorant Garamond', 'Noto Serif KR', serif"
     },
     // 메시지
     body: {
-      x: 14, y: 56, w: 72, align: 'center',
+      x: 14, y: 62, w: 72, align: 'center',
       fontSize: 13, color: '#1A2A3A',
       lineHeight: 1.6,
       fontFamily: "'Cormorant Garamond', 'Noto Serif KR', serif"
     },
     // MAY | 18 | 2025 + SATURDAY, AT 6 O'CLOCK
     date: {
-      x: 8, y: 66, w: 84, align: 'center',
+      x: 8, y: 72, w: 84, align: 'center',
       fontSize: 13, fontWeight: 500, color: '#1A2A3A',
       letterSpacing: '0.18em',
       fontFamily: "'Cormorant Garamond', 'Noto Serif KR', serif"
     },
     // 주소
     place: {
-      x: 10, y: 78, w: 80, align: 'center',
+      x: 10, y: 82, w: 80, align: 'center',
       fontSize: 12, color: '#1A2A3A',
       letterSpacing: '0.16em', lineHeight: 1.6,
       fontFamily: "'Cormorant Garamond', 'Noto Serif KR', serif"
     },
     // Reception to follow — script (정보 박스 안, place 바로 아래)
     extra: {
-      x: 12, y: 84, w: 76, align: 'center',
+      x: 12, y: 90, w: 76, align: 'center',
       fontSize: 16, fontWeight: 400, color: '#1A2A3A',
       lineHeight: 1.2, letterSpacing: '0',
       fontFamily: "'Sacramento', 'Great Vibes', cursive"
