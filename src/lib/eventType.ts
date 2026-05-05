@@ -54,23 +54,6 @@ export const EVENT_TYPES: EventTypeMeta[] = [
     }
   },
   {
-    id: 'opening',
-    emoji: '🎉',
-    label: 'Opening',
-    defaultTitle: 'Grand Opening',
-    recommendTheme: 'modern',
-    recommendEnvelope: 'envelope-1',
-    recommendBackgrounds: ['bg-4', 'bg-none', 'bg-1', 'bg-3', 'bg-2'],
-    fields: {
-      titleLabel: 'Main title',
-      titlePlaceholder: 'e.g. We\'re opening our doors! Come see our new space and enjoy some light refreshments.',
-      subtitlePlaceholder: 'e.g. Grand Opening Celebration',
-      placePlaceholder: 'e.g. [Business Name], 456 Innovation Way, Suite 200, Austin, TX',
-      bodyPlaceholder: 'e.g. We\'re opening our doors! Come see our new space and enjoy some light refreshments.',
-      memoPlaceholder: 'e.g. Ribbon cutting ceremony starts promptly at 10:00 AM.'
-    }
-  },
-  {
     id: 'baptism',
     emoji: '🕊️',
     label: 'Baptism',
@@ -102,6 +85,23 @@ export const EVENT_TYPES: EventTypeMeta[] = [
       placePlaceholder: 'e.g. The Miller Residence, 321 Oak Drive, Miami, FL',
       bodyPlaceholder: 'e.g. You\'re invited to a backyard BBQ to kick off the summer season!',
       memoPlaceholder: 'e.g. Please let us know if you have any dietary restrictions (Vegan/GF).'
+    }
+  },
+  {
+    id: 'opening',
+    emoji: '🎉',
+    label: 'Opening',
+    defaultTitle: 'Grand Opening',
+    recommendTheme: 'modern',
+    recommendEnvelope: 'envelope-1',
+    recommendBackgrounds: ['bg-4', 'bg-none', 'bg-1', 'bg-3', 'bg-2'],
+    fields: {
+      titleLabel: 'Main title',
+      titlePlaceholder: 'e.g. We\'re opening our doors! Come see our new space and enjoy some light refreshments.',
+      subtitlePlaceholder: 'e.g. Grand Opening Celebration',
+      placePlaceholder: 'e.g. [Business Name], 456 Innovation Way, Suite 200, Austin, TX',
+      bodyPlaceholder: 'e.g. We\'re opening our doors! Come see our new space and enjoy some light refreshments.',
+      memoPlaceholder: 'e.g. Ribbon cutting ceremony starts promptly at 10:00 AM.'
     }
   },
   {
