@@ -538,13 +538,13 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                         selected ? 'border-hydrangea-500 bg-hydrangea-50' : 'border-hydrangea-100/60 bg-white'
                       }`}
                     >
-                      <div className="pointer-events-none mb-1.5 flex items-center justify-center overflow-hidden w-full" style={{ height: 90 }}>
+                      <div className="pointer-events-none mb-2 flex items-center justify-center overflow-hidden w-full" style={{ height: 130 }}>
                         {e.id === 'none' ? (
-                          <div className="w-[80px] h-[58px] rounded-md border-2 border-dashed border-hydrangea-200 bg-white flex items-center justify-center text-[10px] text-hydrangea-400">
+                          <div className="w-[120px] h-[86px] rounded-md border-2 border-dashed border-hydrangea-200 bg-white flex items-center justify-center text-[11px] text-hydrangea-400">
                             None
                           </div>
                         ) : (
-                          <Env isOpen={false} width={80}>{null}</Env>
+                          <Env isOpen={false} width={120}>{null}</Env>
                         )}
                       </div>
                       <div className="flex items-center gap-1.5">
