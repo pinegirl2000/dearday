@@ -200,14 +200,14 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
                 textAlign: 'left'
               }}>
                 {card.event_date && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: COLORS.textDark, letterSpacing: '0.06em' }}>
-                    <CalendarDays size={16} strokeWidth={1.4} style={{ color: COLORS.primary, flexShrink: 0 }} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: tpl?.colorMain || COLORS.textDark, letterSpacing: '0.06em' }}>
+                    <CalendarDays size={16} strokeWidth={1.4} style={{ color: tpl?.colorMain || COLORS.primary, flexShrink: 0 }} />
                     <span style={{ fontWeight: 500 }}>{formatDate(card.event_date)}</span>
                   </div>
                 )}
                 {(card.event_place || card.map_url) && (
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, color: COLORS.textDark, letterSpacing: '0.04em' }}>
-                    <MapPin size={15} strokeWidth={1.4} style={{ color: COLORS.primary, flexShrink: 0, marginTop: 2 }} />
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, color: tpl?.colorMain || COLORS.textDark, letterSpacing: '0.04em' }}>
+                    <MapPin size={15} strokeWidth={1.4} style={{ color: tpl?.colorMain || COLORS.primary, flexShrink: 0, marginTop: 2 }} />
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
                       {card.event_place && <span style={{ fontWeight: 500 }}>{card.event_place}</span>}
                       {card.map_url && (
