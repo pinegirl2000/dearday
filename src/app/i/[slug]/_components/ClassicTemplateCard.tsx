@@ -62,10 +62,10 @@ function isUrl(s?: string | null): s is string {
   return /^https?:\/\//i.test(s);
 }
 
-function Divider({ color }: { color?: string }) {
+function Divider({ color, icon = '✽' }: { color?: string; icon?: string }) {
   return (
     <div style={{ textAlign: 'center', padding: '3px 0' }}>
-      <span style={{ color: color || COLORS.accent, fontSize: 12 }}>✽</span>
+      <span style={{ color: color || COLORS.accent, fontSize: 12 }}>{icon}</span>
     </div>
   );
 }
@@ -91,6 +91,8 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
     subtitle: tpl?.colorMain || basePalette.subtitle,
     accent: basePalette.accent
   };
+  // Baptism이면 장식을 ✽ → ✝ 십자가로 교체
+  const decoIcon = card.event_type === 'baptism' ? '✝' : '✽';
 
   return (
     <div
@@ -123,7 +125,7 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
           <FadeUp delay={0.05}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '8px 0 12px' }}>
               <div style={{ width: 60, height: 1, background: `linear-gradient(90deg, transparent, ${palette.title}, transparent)`, opacity: 0.6 }} />
-              <div style={{ color: palette.title, fontSize: 18 }}>✽</div>
+              <div style={{ color: palette.title, fontSize: 18 }}>{decoIcon}</div>
               <div style={{ width: 60, height: 1, background: `linear-gradient(90deg, transparent, ${palette.title}, transparent)`, opacity: 0.6 }} />
             </div>
           </FadeUp>
@@ -155,7 +157,7 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
             </h1>
             {card.body && card.layout_id !== 'layout-7' && (
               <>
-                <Divider color={palette.title} />
+                <Divider color={palette.title} icon={decoIcon} />
                 <div style={{
                   lineHeight: 2.0,
                   color: tpl?.colorMain || COLORS.textDark,
