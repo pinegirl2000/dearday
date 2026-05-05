@@ -62,10 +62,10 @@ function isUrl(s?: string | null): s is string {
   return /^https?:\/\//i.test(s);
 }
 
-function Divider() {
+function Divider({ color }: { color?: string }) {
   return (
     <div style={{ textAlign: 'center', padding: '10px 0' }}>
-      <span style={{ color: COLORS.accent, fontSize: 18 }}>✽</span>
+      <span style={{ color: color || COLORS.accent, fontSize: 18 }}>✽</span>
     </div>
   );
 }
@@ -118,12 +118,12 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
         />
       )}
       <div style={{ position: 'relative', padding: '24px 20px 40px', zIndex: 1 }}>
-        {/* 상단 장식 */}
+        {/* 상단 장식 — 템플릿 메인 색상으로 ✽ + gradient 라인 */}
         <FadeUp delay={0.05}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '8px 0 12px' }}>
-            <div style={{ width: 60, height: 1, background: `linear-gradient(90deg, transparent, ${COLORS.accent}, transparent)` }} />
-            <div style={{ color: COLORS.accent, fontSize: 18 }}>✽</div>
-            <div style={{ width: 60, height: 1, background: `linear-gradient(90deg, transparent, ${COLORS.accent}, transparent)` }} />
+            <div style={{ width: 60, height: 1, background: `linear-gradient(90deg, transparent, ${palette.title}, transparent)`, opacity: 0.6 }} />
+            <div style={{ color: palette.title, fontSize: 18 }}>✽</div>
+            <div style={{ width: 60, height: 1, background: `linear-gradient(90deg, transparent, ${palette.title}, transparent)`, opacity: 0.6 }} />
           </div>
         </FadeUp>
 
@@ -156,7 +156,7 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
             <h1 style={{ fontSize: 24, fontWeight: 500, color: palette.title, letterSpacing: '0.4em', margin: '0 0 8px', lineHeight: 1.3 }}>
               {applyName(card.title, recipientName)}
             </h1>
-            {card.body && <Divider />}
+            {card.body && <Divider color={palette.title} />}
             {card.body && (
               <div style={{
                 lineHeight: 2.0,
