@@ -136,9 +136,9 @@ export default function TemplateExpandList({ templates, eventType, configs }: Pr
     }
     return init;
   });
-  // 어떤 템플릿이 dirty(저장 필요) 상태인지
-  const [dirtyIds, setDirtyIds] = useState<Set<string>>(new Set());
+  // 자동 저장 상태 표시 (saving / saved)
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [savedAt, setSavedAt] = useState<Record<string, number>>({});
 
   const getAllowed = (t: typeof TEMPLATES[number]): LayoutId[] => {
     if (allowedOverride[t.id] && allowedOverride[t.id].length > 0) {
@@ -150,35 +150,25 @@ export default function TemplateExpandList({ templates, eventType, configs }: Pr
     return getTemplateLayouts(t);
   };
 
-  const toggleAllowed = (templateId: string, layoutId: LayoutId, currentList: LayoutId[]) => {
-    setAllowedOverride((s) => {
-      const next = currentList.includes(layoutId)
-        ? currentList.filter((x) => x !== layoutId)
-        : [...currentList, layoutId];
-      // 최소 1개는 유지
-      if (next.length === 0) return s;
-      return { ...s, [templateId]: next };
-    });
-    setDirtyIds((s) => new Set(s).add(templateId));
-  };
-
-  const handleSave = async (templateId: string) => {
-    const allowed = allowedOverride[templateId];
-    if (!allowed || allowed.length === 0) {
-      toast.error('최소 1개 layout 선택 필요');
+  const toggleAllowed = async (templateId: string, layoutId: LayoutId, currentList: LayoutId[]) => {
+    const next = currentList.includes(layoutId)
+      ? currentList.filter((x) => x !== layoutId)
+      : [...currentList, layoutId];
+    if (next.length === 0) {
+      toast.error('최소 1개 layout 필요');
       return;
     }
+    // 즉시 UI 업데이트 (낙관적)
+    setAllowedOverride((s) => ({ ...s, [templateId]: next }));
+    // 자동 저장
     setSavingId(templateId);
-    const res = await saveTemplateAllowedLayouts(templateId, allowed);
+    const res = await saveTemplateAllowedLayouts(templateId, next);
     setSavingId(null);
     if (!res.ok) {
       toast.error(res.error || '저장 실패');
       return;
     }
-    setDirtyIds((s) => {
-      const n = new Set(s); n.delete(templateId); return n;
-    });
-    toast.success('저장됨');
+    setSavedAt((s) => ({ ...s, [templateId]: Date.now() }));
   };
 
   const handleReset = async (t: typeof TEMPLATES[number]) => {
@@ -190,9 +180,6 @@ export default function TemplateExpandList({ templates, eventType, configs }: Pr
       const n = { ...s };
       delete n[t.id];
       return n;
-    });
-    setDirtyIds((s) => {
-      const n = new Set(s); n.delete(t.id); return n;
     });
     toast.success('코드 default로 복귀');
   };
@@ -284,38 +271,31 @@ export default function TemplateExpandList({ templates, eventType, configs }: Pr
                       </div>
                     )}
 
-                    {/* Allowed Layouts — 멀티선택 + DB 저장 */}
+                    {/* Allowed Layouts — 멀티선택 (토글 시 자동 저장) */}
                     <div>
                       <div className="text-[10px] text-hydrangea-400 mb-1 flex items-center justify-between gap-2">
                         <span>
-                          Allowed layouts (multi-select)
+                          Allowed layouts (multi-select · auto-save)
                           {' · '}
                           <span className="text-hydrangea-500">{allowed.length} selected</span>
-                          {dirtyIds.has(t.id) && (
-                            <span className="ml-1 text-orange-500 font-semibold">· unsaved</span>
+                          {savingId === t.id && (
+                            <span className="ml-1 text-orange-500 font-semibold">· saving…</span>
+                          )}
+                          {savingId !== t.id && savedAt[t.id] && Date.now() - savedAt[t.id] < 3000 && (
+                            <span className="ml-1 text-green-600 font-semibold">· saved</span>
                           )}
                         </span>
-                        <span className="flex items-center gap-1.5">
-                          {(configs?.[t.id] || dirtyIds.has(t.id)) && (
-                            <button
-                              type="button"
-                              onClick={() => handleReset(t)}
-                              disabled={savingId === t.id}
-                              className="text-[9px] px-2 py-0.5 rounded bg-white border border-hydrangea-200 text-hydrangea-500 disabled:opacity-50"
-                              title="DB 설정 삭제 → 코드 default로 복귀"
-                            >
-                              Reset
-                            </button>
-                          )}
+                        {configs?.[t.id] && (
                           <button
                             type="button"
-                            onClick={() => handleSave(t.id)}
-                            disabled={savingId === t.id || !dirtyIds.has(t.id)}
-                            className="text-[10px] px-2 py-0.5 rounded bg-hydrangea-500 text-white font-semibold disabled:opacity-40"
+                            onClick={() => handleReset(t)}
+                            disabled={savingId === t.id}
+                            className="text-[9px] px-2 py-0.5 rounded bg-white border border-hydrangea-200 text-hydrangea-500 disabled:opacity-50"
+                            title="DB 설정 삭제 → 코드 default로 복귀"
                           >
-                            {savingId === t.id ? 'Saving…' : 'Save'}
+                            Reset
                           </button>
-                        </span>
+                        )}
                       </div>
                       <div className="grid grid-cols-2 gap-1.5">
                         {LAYOUTS.map((l) => {

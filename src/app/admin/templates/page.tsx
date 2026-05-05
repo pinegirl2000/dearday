@@ -16,20 +16,69 @@ export const dynamic = 'force-dynamic';
 
 const ALL_EVENT_IDS: EventType[] = EVENT_TYPES.map((e) => e.id);
 
+type ViewTab = 'template' | 'event';
+
 interface PageProps {
-  searchParams?: { event?: string };
+  searchParams?: { event?: string; view?: string };
 }
 
 export default async function TemplatesAdminPage({ searchParams }: PageProps) {
   const session = await getServerSession(authOptions);
   if (!isAdminEmail(session?.user?.email)) redirect('/');
 
+  const view: ViewTab = searchParams?.view === 'event' ? 'event' : 'template';
   const eventParam = searchParams?.event;
   const selectedEvent: EventType | null = eventParam && ALL_EVENT_IDS.includes(eventParam as EventType)
     ? (eventParam as EventType)
     : null;
 
-  // 이벤트 선택 전 화면 — 이벤트 picker
+  const configs = Object.fromEntries(await getAllTemplateConfigs());
+
+  const ViewTabs = (
+    <div className="flex gap-2 mb-4 border-b border-hydrangea-100">
+      <Link
+        href="/admin/templates?view=template"
+        className={`px-3 py-2 text-sm font-medium border-b-2 transition ${
+          view === 'template'
+            ? 'border-hydrangea-500 text-hydrangea-700'
+            : 'border-transparent text-hydrangea-400 hover:text-hydrangea-600'
+        }`}
+      >
+        Template별
+      </Link>
+      <Link
+        href="/admin/templates?view=event"
+        className={`px-3 py-2 text-sm font-medium border-b-2 transition ${
+          view === 'event'
+            ? 'border-hydrangea-500 text-hydrangea-700'
+            : 'border-transparent text-hydrangea-400 hover:text-hydrangea-600'
+        }`}
+      >
+        Event별
+      </Link>
+    </div>
+  );
+
+  // ===== Template별 보기 — 모든 템플릿 평면 리스트 =====
+  if (view === 'template') {
+    return (
+      <PageContainer noPadding>
+        <MobileHeader title="템플릿 관리" back />
+        <div className="px-4 pt-3 pb-12">
+          {ViewTabs}
+          <p className="text-xs text-hydrangea-400 mb-3">
+            전체 {TEMPLATES.length}개 템플릿. 펼쳐서 layout 설정/저장 가능.
+          </p>
+          <TemplateExpandList
+            templates={TEMPLATES.slice()}
+            configs={configs}
+          />
+        </div>
+      </PageContainer>
+    );
+  }
+
+  // ===== Event별 보기 =====
   if (!selectedEvent) {
     const eventCounts: Record<string, number> = {};
     for (const ev of ALL_EVENT_IDS) {
@@ -40,6 +89,7 @@ export default async function TemplatesAdminPage({ searchParams }: PageProps) {
       <PageContainer noPadding>
         <MobileHeader title="템플릿 관리" back />
         <div className="px-4 pt-3 pb-12">
+          {ViewTabs}
           <p className="text-xs text-hydrangea-400 mb-4">
             먼저 이벤트를 선택하세요. 한 템플릿이 여러 이벤트에 속할 수 있습니다.
           </p>
@@ -47,7 +97,7 @@ export default async function TemplatesAdminPage({ searchParams }: PageProps) {
             {EVENT_TYPES.map((e) => (
               <Link
                 key={e.id}
-                href={`/admin/templates?event=${e.id}`}
+                href={`/admin/templates?view=event&event=${e.id}`}
                 className="aspect-square rounded-2xl bg-white border border-hydrangea-100 flex flex-col items-center justify-center gap-2 active:scale-95 transition shadow-sm hover:bg-hydrangea-50/40"
               >
                 <span className="text-4xl">{e.emoji}</span>
@@ -63,7 +113,7 @@ export default async function TemplatesAdminPage({ searchParams }: PageProps) {
     );
   }
 
-  // 이벤트 선택 후 — 템플릿 리스트 + 클릭 펼침
+  // 이벤트 선택 후 — 템플릿 리스트
   const eventMeta = EVENT_TYPES.find((e) => e.id === selectedEvent)!;
   const filtered = TEMPLATES.filter((t) => t.recommendEvents.includes(selectedEvent));
 
@@ -71,8 +121,9 @@ export default async function TemplatesAdminPage({ searchParams }: PageProps) {
     <PageContainer noPadding>
       <MobileHeader title="템플릿 관리" back />
       <div className="px-4 pt-3 pb-12">
+        {ViewTabs}
         <Link
-          href="/admin/templates"
+          href="/admin/templates?view=event"
           className="inline-flex items-center gap-1 text-xs text-hydrangea-500 mb-3 hover:text-hydrangea-700"
         >
           <ChevronLeft className="w-3.5 h-3.5" /> 이벤트 다시 선택
@@ -91,7 +142,7 @@ export default async function TemplatesAdminPage({ searchParams }: PageProps) {
           <TemplateExpandList
             templates={filtered}
             eventType={selectedEvent}
-            configs={Object.fromEntries(await getAllTemplateConfigs())}
+            configs={configs}
           />
         )}
       </div>
