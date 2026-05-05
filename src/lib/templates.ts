@@ -70,7 +70,7 @@ export const TEMPLATES: TemplateMeta[] = [
     bg_id: 'bg-img-3',
     layout_id: 'layout-classic',
     colorMain: '#7B5EA7',
-    colorSub: '#9B7FCB',
+    colorSub: '#EFE7F8',
     recommendEvents: ['wedding', 'baptism', 'meeting', 'etc'],
     allowedLayouts: ['layout-classic', 'layout-4', 'layout-7']
   },
