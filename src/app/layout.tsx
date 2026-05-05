@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
-import { Noto_Serif_KR, Noto_Sans_KR, Caveat } from 'next/font/google';
+import { Noto_Serif_KR, Noto_Sans_KR, Playfair_Display } from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 import { getServerSession } from 'next-auth';
@@ -26,9 +26,10 @@ const notoSans = Noto_Sans_KR({
   display: 'swap'
 });
 
-const caveat = Caveat({
+const playfair = Playfair_Display({
   subsets: ['latin'],
-  weight: ['600', '700'],
+  weight: ['500', '600', '700'],
+  style: ['italic'],
   variable: '--font-brand',
   display: 'swap'
 });
@@ -52,7 +53,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const session = await getServerSession(authOptions);
 
   return (
-    <html lang={locale} className={`${notoSerif.variable} ${notoSans.variable} ${caveat.variable}`}>
+    <html lang={locale} className={`${notoSerif.variable} ${notoSans.variable} ${playfair.variable}`}>
       <head>
         <Script
           id="adsense-script"
