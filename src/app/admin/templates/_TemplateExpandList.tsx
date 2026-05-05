@@ -18,25 +18,101 @@ interface Props {
   eventType?: string;
 }
 
+interface SampleData {
+  title: string;
+  greeting_oneliner: string;
+  body: string;
+  event_date: string;
+  event_place: string;
+  contact_name: string;
+  contact_phone: string;
+  extra_info: string;
+}
+
+const SAMPLE_BY_EVENT: Record<string, SampleData> = {
+  wedding: {
+    title: '민준 ♥ 서연',
+    greeting_oneliner: 'Together with our families',
+    body: '두 사람의 약속을\n함께 축복해주세요.',
+    event_date: '2026-06-14T19:00:00.000Z',
+    event_place: '서울 그랜드 호텔 그랜드볼룸',
+    contact_name: '신랑 김민준 신부 박서연 드림',
+    contact_phone: '+65-1234-5678',
+    extra_info: 'Reception to follow'
+  },
+  birthday: {
+    title: '소율 · First Birthday',
+    greeting_oneliner: 'A precious first year',
+    body: '소중한 첫 돌\n함께 축하해주세요.',
+    event_date: '2026-07-05T11:00:00.000Z',
+    event_place: '리츠칼튼 그랜드볼룸',
+    contact_name: '소율의 부모 김지훈 박나영 드림',
+    contact_phone: '+65-2222-3333',
+    extra_info: 'Lunch will be served'
+  },
+  opening: {
+    title: 'Round Cafe · Grand Opening',
+    greeting_oneliner: 'A new beginning',
+    body: '새로운 공간을 엽니다\n함께 축하해주세요.',
+    event_date: '2026-09-20T17:00:00.000Z',
+    event_place: '강남 라운지 1F',
+    contact_name: 'Round Cafe 일동',
+    contact_phone: '+65-7777-8888',
+    extra_info: 'Light reception to follow'
+  },
+  baptism: {
+    title: '하준 세례식',
+    greeting_oneliner: 'A blessed first step',
+    body: '하나님의 자녀로\n새 이름을 받는 날\n함께해주세요.',
+    event_date: '2026-05-03T10:30:00.000Z',
+    event_place: '평강교회 본당',
+    contact_name: '하준의 부모 김도현 이수민 드림',
+    contact_phone: '+65-9999-1111',
+    extra_info: 'Lunch fellowship after the service'
+  },
+  meeting: {
+    title: '봄날의 모임',
+    greeting_oneliner: 'See you again',
+    body: '오랜만에 한자리에\n반갑게 모여요.',
+    event_date: '2026-04-12T14:00:00.000Z',
+    event_place: '한강공원 잔디광장',
+    contact_name: '모임 주최 일동',
+    contact_phone: '+65-3333-4444',
+    extra_info: 'Picnic mats provided'
+  },
+  etc: {
+    title: 'Special Day',
+    greeting_oneliner: 'A precious moment',
+    body: '소중한 순간을\n함께 나누어 주세요.',
+    event_date: '2026-08-10T18:00:00.000Z',
+    event_place: 'Sample Venue',
+    contact_name: 'Host 일동',
+    contact_phone: '+65-1000-2000',
+    extra_info: 'Light reception'
+  }
+};
+
 function buildPreview(t: Tpl, layoutOverride?: LayoutId, eventType?: string): BaseCard {
+  const ev = eventType && SAMPLE_BY_EVENT[eventType] ? eventType : 'wedding';
+  const sample = SAMPLE_BY_EVENT[ev];
   return {
     id: 'preview',
     slug: 'preview',
-    event_type: (eventType as any) || 'wedding',
+    event_type: ev as any,
     layout_id: (layoutOverride || t.layout_id) as LayoutId,
     bg_id: t.bg_id,
     envelope_anim: 'envelope-1',
     theme: 'hydrangea',
     font_family: 'serif',
-    title: '민준 ♥ 서연',
-    greeting_oneliner: 'Together with our families',
-    body: '두 사람의 약속을\n함께 축복해주세요.',
-    event_date: '2026-06-14T11:00:00.000Z',
-    event_place: '서울 그랜드 호텔 그랜드볼룸',
+    title: sample.title,
+    greeting_oneliner: sample.greeting_oneliner,
+    body: sample.body,
+    event_date: sample.event_date,
+    event_place: sample.event_place,
     map_url: 'https://maps.google.com',
-    contact_name: '신랑 김민준 신부 박서연 드림',
-    contact_phone: '+65-1234-5678',
-    extra_info: 'Reception to follow',
+    contact_name: sample.contact_name,
+    contact_phone: sample.contact_phone,
+    extra_info: sample.extra_info,
     rsvp_enabled: false,
     plan: 'free'
   } as BaseCard;
