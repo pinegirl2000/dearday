@@ -417,7 +417,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
             left: '5%',
             right: '5%',
             // Editorial(layout-3) / Center Text(layout-6)는 컴팩트하므로 더 위쪽에 배치
-            bottom: (layout.id === 'layout-3' || layout.id === 'layout-6') ? '20%' : '4%',
+            bottom: (layout.id === 'layout-3' || layout.id === 'layout-6') ? '12%' : '4%',
             zIndex: 8
           }}
         >
