@@ -156,7 +156,7 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
             <h1 style={{ fontSize: 24, fontWeight: 500, color: palette.title, letterSpacing: '0.4em', margin: '0 0 8px', lineHeight: 1.3 }}>
               {applyName(card.title, recipientName)}
             </h1>
-            <Divider />
+            {card.body && <Divider />}
             {card.body && (
               <div style={{
                 lineHeight: 2.0,
@@ -189,41 +189,54 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
                 padding: '22px 24px',
                 margin: '0 auto 14px',
                 maxWidth: 320,
-                background: 'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 100%)',
-                backdropFilter: 'blur(14px) saturate(140%)',
-                WebkitBackdropFilter: 'blur(14px) saturate(140%)',
-                border: '1px solid rgba(255,255,255,0.95)',
+                background: 'linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.78) 100%)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255,255,255,0.9)',
                 borderRadius: 18,
-                boxShadow: '0 18px 40px rgba(123,94,167,0.28), 0 6px 14px rgba(123,94,167,0.16), inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -1px 0 rgba(123,94,167,0.06)',
+                boxShadow: '0 14px 32px rgba(123,94,167,0.22), 0 4px 10px rgba(123,94,167,0.12), inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -1px 0 rgba(123,94,167,0.06)',
                 fontFamily: SANS,
                 alignItems: 'stretch',
                 textAlign: 'left'
               }}>
                 {card.event_date && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 17, color: COLORS.textDark, letterSpacing: '0.04em' }}>
-                    <CalendarDays size={20} strokeWidth={1.5} style={{ color: COLORS.primary, flexShrink: 0 }} />
-                    <span style={{ fontWeight: 600 }}>{formatDate(card.event_date)}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: COLORS.textDark, letterSpacing: '0.06em' }}>
+                    <CalendarDays size={16} strokeWidth={1.4} style={{ color: COLORS.primary, flexShrink: 0 }} />
+                    <span style={{ fontWeight: 500 }}>{formatDate(card.event_date)}</span>
                   </div>
                 )}
                 {(card.event_place || card.map_url) && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 16, color: COLORS.textDark, letterSpacing: '0.03em', flexWrap: 'wrap' }}>
-                    <MapPin size={20} strokeWidth={1.5} style={{ color: COLORS.primary, flexShrink: 0 }} />
-                    <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap', minWidth: 0 }}>
-                      {card.event_place && <span style={{ fontWeight: 600 }}>{card.event_place}</span>}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, color: COLORS.textDark, letterSpacing: '0.04em' }}>
+                    <MapPin size={15} strokeWidth={1.4} style={{ color: COLORS.primary, flexShrink: 0, marginTop: 2 }} />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
+                      {card.event_place && <span style={{ fontWeight: 500 }}>{card.event_place}</span>}
                       {card.map_url && (
-                        isUrl(card.map_url) ? (
-                          <a href={card.map_url} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: COLORS.primary, textDecoration: 'underline', fontSize: 10, opacity: 0.75 }}>
-                            view map <ExternalLink size={9} strokeWidth={1.5} />
-                          </a>
-                        ) : (
-                          <span style={{ fontSize: 10, color: COLORS.textMid, wordBreak: 'break-word', opacity: 0.75 }}>{card.map_url}</span>
-                        )
+                        <span style={{ fontSize: 12, color: COLORS.textMid, wordBreak: 'break-word' }}>
+                          {isUrl(card.map_url) ? (
+                            <a href={card.map_url} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: COLORS.primary, textDecoration: 'underline' }}>
+                              View map <ExternalLink size={11} strokeWidth={1.5} />
+                            </a>
+                          ) : (
+                            <span>{card.map_url}</span>
+                          )}
+                        </span>
                       )}
-                    </span>
+                    </div>
                   </div>
                 )}
               </div>
             )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', fontFamily: SANS }}>
+
+              {card.extra_info && (
+                <div style={{
+                  marginTop: 8, padding: '8px 20px', background: COLORS.accentLight,
+                  borderRadius: 20, fontSize: 13, color: COLORS.primaryDark
+                }}>
+                  {applyName(card.extra_info, recipientName)}
+                </div>
+              )}
+            </div>
           </div>
         </FadeUp>
 
@@ -235,23 +248,16 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
           </FadeUp>
         )}
 
-        {(card.contact_name || card.contact_phone || card.extra_info) && (
-          <div style={{ textAlign: 'center', padding: '10px 20px 20px', fontFamily: SANS }}>
-            {card.contact_name && (
-              <p style={{ fontSize: 13, color: tpl?.colorSub || COLORS.textLight, letterSpacing: '0.15em' }}>
-                — {applyName(card.contact_name, recipientName)} —
-              </p>
-            )}
+        {card.contact_name && (
+          <div style={{ textAlign: 'center', padding: '10px 20px 20px' }}>
+            <p style={{ fontSize: 13, color: tpl?.colorSub || COLORS.textLight, letterSpacing: '0.15em' }}>
+              — {applyName(card.contact_name, recipientName)} —
+            </p>
             {card.contact_phone && (
               <p style={{ fontSize: 11, color: tpl?.colorSub || COLORS.textLight, marginTop: 4, letterSpacing: '0.05em', opacity: 0.85 }}>
                 <a href={`tel:${card.contact_phone}`} style={{ color: 'inherit', textDecoration: 'none' }}>
                   {card.contact_phone}
                 </a>
-              </p>
-            )}
-            {card.extra_info && (
-              <p style={{ fontSize: 12, color: tpl?.colorSub || COLORS.textLight, marginTop: 6, letterSpacing: '0.05em', opacity: 0.9, lineHeight: 1.5 }}>
-                {applyName(card.extra_info, recipientName)}
               </p>
             )}
           </div>

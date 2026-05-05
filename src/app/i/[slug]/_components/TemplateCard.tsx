@@ -160,6 +160,29 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
       )}
       {card.greeting_oneliner && f.subtitle && <FieldText field={f.subtitle} delay={0.1}>{applyName(card.greeting_oneliner, recipientName)}</FieldText>}
       <FieldText field={f.title} delay={0.2}>{applyName(card.title, recipientName)}</FieldText>
+      {/* Vintage Script 전용: 날짜/장소 영역을 감싸는 반투명 흰색 정보 박스 */}
+      {layout.id === 'layout-4' && (card.event_date || card.event_place) && f.date && f.place && (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.1 }}
+          transition={{ duration: 0.6, delay: 0.25 }}
+          style={{
+            position: 'absolute',
+            left: '8%',
+            right: '8%',
+            top: `calc(${Math.min(f.date.y, f.place.y) - 3}% )`,
+            bottom: `calc(${100 - (f.place.y + 12)}%)`,
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(255,255,255,0.86) 100%)',
+            backdropFilter: 'blur(14px) saturate(140%)',
+            WebkitBackdropFilter: 'blur(14px) saturate(140%)',
+            border: '1px solid rgba(255,255,255,0.95)',
+            borderRadius: 16,
+            boxShadow: '0 18px 40px rgba(0,0,0,0.16), 0 6px 14px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.95)',
+            zIndex: 0
+          }}
+        />
+      )}
       {card.event_date && f.date && (
         layout.id === 'layout-4'
           ? <SplitDate field={f.date} iso={card.event_date} delay={0.3} />
