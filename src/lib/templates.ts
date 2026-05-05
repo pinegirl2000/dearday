@@ -139,6 +139,50 @@ export const TEMPLATES: TemplateMeta[] = [
     colorSub: '#85A8C9',
     recommendEvents: ['birthday', 'baptism', 'etc'],
     allowedLayouts: ['layout-classic', 'layout-5']
+  },
+  {
+    id: 'tpl-pink-ribbon-arch',
+    name: 'Pink Ribbon Arch',
+    description: 'Soft pink ribbon over a clean white arch',
+    bg_id: 'bg-img-8',
+    layout_id: 'layout-classic',
+    colorMain: '#A65A6F',
+    colorSub: '#E89AA0',
+    recommendEvents: ['wedding', 'birthday', 'baptism', 'etc'],
+    allowedLayouts: ['layout-classic', 'layout-4']
+  },
+  {
+    id: 'tpl-pink-ribbon-mono',
+    name: 'Pink Ribbon',
+    description: 'Soft pink ribbon on a monochrome pink wash',
+    bg_id: 'bg-img-9',
+    layout_id: 'layout-classic',
+    colorMain: '#A65A6F',
+    colorSub: '#E89AA0',
+    recommendEvents: ['birthday', 'baptism', 'etc'],
+    allowedLayouts: ['layout-classic']
+  },
+  {
+    id: 'tpl-eucalyptus-gold',
+    name: 'Eucalyptus Gold',
+    description: 'Eucalyptus leaves with gold geometric frame',
+    bg_id: 'bg-img-10',
+    layout_id: 'layout-classic',
+    colorMain: '#A07C2C',
+    colorSub: '#476956',
+    recommendEvents: ['wedding', 'opening', 'meeting', 'etc'],
+    allowedLayouts: ['layout-classic', 'layout-3']
+  },
+  {
+    id: 'tpl-bear-blue-sky',
+    name: 'Blue Bear Sky',
+    description: 'Watercolor bear floating among blue clouds',
+    bg_id: 'bg-img-11',
+    layout_id: 'layout-classic',
+    colorMain: '#5A8AB8',
+    colorSub: '#9CC0DD',
+    recommendEvents: ['birthday', 'baptism', 'etc'],
+    allowedLayouts: ['layout-classic', 'layout-5']
   }
 ];
 

@@ -6,7 +6,7 @@ export type BackgroundId =
   | 'bg-none'
   | 'bg-1' | 'bg-2' | 'bg-3' | 'bg-4'
   | 'bg-img-1' | 'bg-img-2' | 'bg-img-3' | 'bg-img-4'
-  | 'bg-img-6' | 'bg-img-7';
+  | 'bg-img-6' | 'bg-img-7' | 'bg-img-8' | 'bg-img-9' | 'bg-img-10' | 'bg-img-11';
 
 export interface BackgroundMeta {
   id: BackgroundId;
@@ -66,6 +66,11 @@ export const BACKGROUNDS: BackgroundMeta[] = [
   // Baby/Birthday/Baptism — 곰돌이 + 풍선
   { id: 'bg-img-6', name: 'Pink Teddy Balloons', imageUrl: '/templates/template-6-bg.png', tone: 'light', availableEvents: ['birthday', 'baptism', 'etc'] },
   { id: 'bg-img-7', name: 'Blue Teddy Cloud', imageUrl: '/templates/template-7-bg.png', tone: 'light', availableEvents: ['birthday', 'baptism', 'etc'] },
+  // Pink ribbon / luxury / bear with balloons
+  { id: 'bg-img-8', name: 'Pink Ribbon Arch', imageUrl: '/templates/template-8-bg.png', tone: 'light', availableEvents: ['wedding', 'birthday', 'baptism', 'etc'] },
+  { id: 'bg-img-9', name: 'Pink Ribbon Mono', imageUrl: '/templates/template-9-bg.png', tone: 'light', availableEvents: ['birthday', 'baptism', 'etc'] },
+  { id: 'bg-img-10', name: 'Eucalyptus Gold Frame', imageUrl: '/templates/template-10-bg.png', tone: 'light', availableEvents: ALL_EVENTS },
+  { id: 'bg-img-11', name: 'Blue Bear Sky', imageUrl: '/templates/template-11-bg.png', tone: 'light', availableEvents: ['birthday', 'baptism', 'etc'] },
   // legacy fallback
   {
     id: 'bg-none',

@@ -1,6 +1,6 @@
 export type EventType = 'wedding' | 'birthday' | 'opening' | 'baptism' | 'meeting' | 'etc';
 export type ThemeId = 'hydrangea' | 'modern' | 'vintage' | 'minimal';
-export type BackgroundId = 'bg-none' | 'bg-1' | 'bg-2' | 'bg-3' | 'bg-4' | 'bg-img-1' | 'bg-img-2' | 'bg-img-3' | 'bg-img-4' | 'bg-img-6' | 'bg-img-7';
+export type BackgroundId = 'bg-none' | 'bg-1' | 'bg-2' | 'bg-3' | 'bg-4' | 'bg-img-1' | 'bg-img-2' | 'bg-img-3' | 'bg-img-4' | 'bg-img-6' | 'bg-img-7' | 'bg-img-8' | 'bg-img-9' | 'bg-img-10' | 'bg-img-11';
 export type LayoutId = 'layout-classic' | 'layout-3' | 'layout-4' | 'layout-5';
 export type EnvelopeAnimId = 'envelope-1' | 'envelope-2' | 'envelope-3' | 'envelope-4' | 'none';
 export type Plan = 'free' | 'paid';
