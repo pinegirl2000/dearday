@@ -23,8 +23,19 @@ export interface TemplateMeta {
   colorSub?: string;
   /** 추천 이벤트 타입 */
   recommendEvents: EventType[];
+  /**
+   * 사용자가 이 템플릿에서 선택할 수 있는 layout 목록.
+   * 미정의 시 [layout_id] 하나만 사용 가능 (현재 동작).
+   */
+  allowedLayouts?: LayoutId[];
   /** 썸네일 미리보기에 쓸 이름 (자유 텍스트) */
   badge?: string;
+}
+
+/** 템플릿이 허용하는 layout 목록을 안전하게 반환 */
+export function getTemplateLayouts(t: TemplateMeta): LayoutId[] {
+  if (t.allowedLayouts && t.allowedLayouts.length > 0) return t.allowedLayouts;
+  return [t.layout_id];
 }
 
 export const TEMPLATES: TemplateMeta[] = [
@@ -37,6 +48,7 @@ export const TEMPLATES: TemplateMeta[] = [
     colorMain: '#7B5EA7',
     colorSub: '#FFFFFF',
     recommendEvents: ['wedding', 'baptism', 'meeting', 'etc'],
+    allowedLayouts: ['layout-classic'],
     badge: 'Wedding'
   },
   {
@@ -48,6 +60,7 @@ export const TEMPLATES: TemplateMeta[] = [
     colorMain: '#7B5EA7',
     colorSub: '#5A3D7A',
     recommendEvents: ['wedding', 'meeting', 'etc'],
+    allowedLayouts: ['layout-classic', 'layout-4'],
     badge: 'Romantic'
   },
   {
@@ -58,7 +71,8 @@ export const TEMPLATES: TemplateMeta[] = [
     layout_id: 'layout-classic',
     colorMain: '#476956',
     colorSub: '#7AA088',
-    recommendEvents: ['baptism', 'meeting', 'etc']
+    recommendEvents: ['baptism', 'meeting', 'etc'],
+    allowedLayouts: ['layout-classic']
   },
   {
     id: 'tpl-beige-warm',
@@ -68,7 +82,8 @@ export const TEMPLATES: TemplateMeta[] = [
     layout_id: 'layout-classic',
     colorMain: '#6E5A3D',
     colorSub: '#9C8B6E',
-    recommendEvents: ['baptism', 'meeting', 'opening', 'etc']
+    recommendEvents: ['baptism', 'meeting', 'opening', 'etc'],
+    allowedLayouts: ['layout-classic']
   },
   {
     id: 'tpl-mint-fresh',
@@ -78,7 +93,8 @@ export const TEMPLATES: TemplateMeta[] = [
     layout_id: 'layout-classic',
     colorMain: '#476956',
     colorSub: '#7AA088',
-    recommendEvents: ['birthday', 'meeting', 'opening', 'etc']
+    recommendEvents: ['birthday', 'meeting', 'opening', 'etc'],
+    allowedLayouts: ['layout-classic']
   },
   {
     id: 'tpl-coral-bright',
@@ -88,7 +104,8 @@ export const TEMPLATES: TemplateMeta[] = [
     layout_id: 'layout-classic',
     colorMain: '#8E5A4D',
     colorSub: '#B0857A',
-    recommendEvents: ['birthday', 'opening', 'etc']
+    recommendEvents: ['birthday', 'opening', 'etc'],
+    allowedLayouts: ['layout-classic', 'layout-4']
   },
   {
     id: 'tpl-vintage-gold',
@@ -98,7 +115,8 @@ export const TEMPLATES: TemplateMeta[] = [
     layout_id: 'layout-classic',
     colorMain: '#A07C2C',
     colorSub: '#8A6A2C',
-    recommendEvents: ['wedding', 'opening', 'etc']
+    recommendEvents: ['wedding', 'opening', 'etc'],
+    allowedLayouts: ['layout-classic', 'layout-3']
   },
   {
     id: 'tpl-teddy-pink',
@@ -108,7 +126,8 @@ export const TEMPLATES: TemplateMeta[] = [
     layout_id: 'layout-classic',
     colorMain: '#8E5A4D',
     colorSub: '#E89AA0', // 풍선/리본의 로즈핑크 — 십자가 색상에도 사용
-    recommendEvents: ['birthday', 'baptism', 'etc']
+    recommendEvents: ['birthday', 'baptism', 'etc'],
+    allowedLayouts: ['layout-classic', 'layout-5']
   },
   {
     id: 'tpl-teddy-blue',
@@ -118,7 +137,8 @@ export const TEMPLATES: TemplateMeta[] = [
     layout_id: 'layout-classic',
     colorMain: '#5A8AB8',
     colorSub: '#85A8C9',
-    recommendEvents: ['birthday', 'baptism', 'etc']
+    recommendEvents: ['birthday', 'baptism', 'etc'],
+    allowedLayouts: ['layout-classic', 'layout-5']
   }
 ];
 

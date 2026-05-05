@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp } from 'lucide-react';
-import { TEMPLATES } from '@/lib/templates';
+import { ChevronDown, ChevronUp, Check } from 'lucide-react';
+import { TEMPLATES, getTemplateLayouts } from '@/lib/templates';
 import { getBackground } from '@/lib/backgrounds';
 import { getLayout, LAYOUTS } from '@/lib/layouts';
 import { EVENT_TYPES } from '@/lib/eventType';
@@ -120,14 +120,34 @@ function buildPreview(t: Tpl, layoutOverride?: LayoutId, eventType?: string): Ba
 
 export default function TemplateExpandList({ templates, eventType }: Props) {
   const [openId, setOpenId] = useState<string | null>(null);
-  // 펼친 항목별로 사용자가 임시로 선택한 레이아웃 (preview only)
-  const [layoutOverride, setLayoutOverride] = useState<Record<string, LayoutId>>({});
+  // 펼친 항목별로 — 미리보기 렌더에 쓸 단일 active layout (사용자가 카드 위로 다시 탭한 layout)
+  const [previewLayout, setPreviewLayout] = useState<Record<string, LayoutId>>({});
+  // 펼친 항목별로 — allowed layouts 멀티선택 상태 (preview only, 코드에 저장 X)
+  const [allowedOverride, setAllowedOverride] = useState<Record<string, LayoutId[]>>({});
+
+  const getAllowed = (t: typeof TEMPLATES[number]): LayoutId[] => {
+    return (allowedOverride[t.id] && allowedOverride[t.id].length > 0)
+      ? allowedOverride[t.id]
+      : getTemplateLayouts(t);
+  };
+
+  const toggleAllowed = (templateId: string, layoutId: LayoutId, currentList: LayoutId[]) => {
+    setAllowedOverride((s) => {
+      const next = currentList.includes(layoutId)
+        ? currentList.filter((x) => x !== layoutId)
+        : [...currentList, layoutId];
+      // 최소 1개는 유지
+      if (next.length === 0) return s;
+      return { ...s, [templateId]: next };
+    });
+  };
 
   return (
     <div className="space-y-2">
       {templates.map((t) => {
         const bg = getBackground(t.bg_id);
-        const activeLayoutId = (layoutOverride[t.id] || t.layout_id) as LayoutId;
+        const allowed = getAllowed(t);
+        const activeLayoutId = (previewLayout[t.id] || (allowed.includes(t.layout_id) ? t.layout_id : allowed[0])) as LayoutId;
         const layout = getLayout(activeLayoutId);
         const isOpen = openId === t.id;
         const card = buildPreview(t, activeLayoutId, eventType);
@@ -209,45 +229,68 @@ export default function TemplateExpandList({ templates, eventType }: Props) {
                       </div>
                     )}
 
-                    {/* 레이아웃 선택 (미리보기 임시 변경) */}
+                    {/* Allowed Layouts — 멀티선택 (preview only) */}
                     <div>
-                      <div className="text-[10px] text-hydrangea-400 mb-1">
-                        Try different layout
-                        {activeLayoutId !== t.layout_id && (
-                          <span className="ml-1.5 text-hydrangea-500">
-                            (default: {t.layout_id})
-                          </span>
-                        )}
+                      <div className="text-[10px] text-hydrangea-400 mb-1 flex items-center justify-between">
+                        <span>
+                          Allowed layouts (multi-select)
+                          {' · '}
+                          <span className="text-hydrangea-500">{allowed.length} selected</span>
+                        </span>
+                        <span className="text-[9px] text-hydrangea-400 italic">
+                          preview · edit src/lib/templates.ts to persist
+                        </span>
                       </div>
-                      <div className="grid grid-cols-3 gap-1.5">
+                      <div className="grid grid-cols-2 gap-1.5">
                         {LAYOUTS.map((l) => {
-                          const selected = activeLayoutId === l.id;
+                          const isAllowed = allowed.includes(l.id);
                           const isDefault = t.layout_id === l.id;
+                          const isPreviewing = activeLayoutId === l.id;
                           return (
-                            <button
+                            <div
                               key={l.id}
-                              type="button"
-                              onClick={() =>
-                                setLayoutOverride((s) => ({ ...s, [t.id]: l.id as LayoutId }))
-                              }
-                              className={`relative text-left p-2 rounded-lg border-2 transition ${
-                                selected
-                                  ? 'border-hydrangea-500 bg-hydrangea-50'
-                                  : 'border-hydrangea-100/60 bg-white hover:bg-hydrangea-50/40'
+                              className={`relative p-2 rounded-lg border-2 transition ${
+                                isAllowed
+                                  ? 'border-hydrangea-400 bg-hydrangea-50/60'
+                                  : 'border-hydrangea-100/40 bg-white opacity-50'
                               }`}
                             >
-                              <div className="text-[11px] font-semibold text-hydrangea-700 truncate">
-                                {l.name}
+                              <div className="flex items-start gap-2">
+                                <button
+                                  type="button"
+                                  aria-label={isAllowed ? 'Remove layout' : 'Add layout'}
+                                  onClick={() => toggleAllowed(t.id, l.id as LayoutId, allowed)}
+                                  className={`mt-0.5 w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition ${
+                                    isAllowed
+                                      ? 'border-hydrangea-500 bg-hydrangea-500'
+                                      : 'border-hydrangea-300 bg-white'
+                                  }`}
+                                >
+                                  {isAllowed && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={!isAllowed}
+                                  onClick={() => setPreviewLayout((s) => ({ ...s, [t.id]: l.id as LayoutId }))}
+                                  className="flex-1 text-left disabled:cursor-not-allowed"
+                                >
+                                  <div className="text-[11px] font-semibold text-hydrangea-700 truncate">
+                                    {l.name}
+                                    {isDefault && (
+                                      <span className="ml-1 text-[8px] px-1 py-0.5 rounded bg-hydrangea-500/10 text-hydrangea-600 font-semibold">
+                                        default
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="text-[9px] text-hydrangea-400 mt-0.5 truncate">
+                                    {l.renderStyle} · {l.aspectRatio}
+                                    {isPreviewing && isAllowed && (
+                                      <span className="ml-1 text-hydrangea-500 font-semibold">(previewing)</span>
+                                    )}
+                                  </div>
+                                </button>
                               </div>
-                              <div className="text-[9px] text-hydrangea-400 mt-0.5 truncate">
-                                {l.renderStyle} · {l.aspectRatio}
-                              </div>
-                              {isDefault && (
-                                <span className="absolute top-1 right-1 text-[8px] px-1 py-0.5 rounded bg-hydrangea-500/10 text-hydrangea-600 font-semibold">
-                                  default
-                                </span>
-                              )}
-                            </button>
+                            </div>
                           );
                         })}
                       </div>
