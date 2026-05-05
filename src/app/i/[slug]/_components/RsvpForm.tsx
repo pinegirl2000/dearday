@@ -289,7 +289,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
                         setNames(arr);
                       }}
                       className={`w-full px-2 rounded-md bg-white focus:outline-none focus:ring-1 ${compact ? 'h-7 text-[11px]' : 'h-8 text-xs'}`}
-                      style={{ border: `1.5px solid ${theme.colors.accent}` }}
+                      style={{ border: `1px solid ${ACCENT}66`, color: ACCENT_DEEP }}
                     />
                   </label>
                 ))}
