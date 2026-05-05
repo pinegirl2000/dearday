@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { Phone } from 'lucide-react';
 // NOTE: framer-motion의 whileInView는 장식용 fade-in에만 사용. 본문/연락처처럼
 // "반드시 보여야 하는" 정보는 whileInView로 감싸지 말 것 — IntersectionObserver
 // 첫 측정 누락 시 opacity:0에 갇혀 영구히 안 보이는 사고가 났음.
@@ -190,7 +191,13 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
             )
           )}
           {card.contact_phone && (
-            <a href={`tel:${card.contact_phone}`} style={{ color: f.place.color, textDecoration: 'none' }}>📞 {card.contact_phone}</a>
+            <a
+              href={`tel:${card.contact_phone}`}
+              style={{ color: f.place.color, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+            >
+              <Phone size={11} strokeWidth={1.6} style={{ color: f.place.color }} />
+              {card.contact_phone}
+            </a>
           )}
           {card.contact_name && <span>— {applyName(card.contact_name, recipientName)} —</span>}
         </div>

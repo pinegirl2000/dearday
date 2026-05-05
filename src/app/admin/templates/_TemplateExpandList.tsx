@@ -32,8 +32,8 @@ function buildPreview(t: Tpl, layoutOverride?: LayoutId): BaseCard {
     event_date: '2026-06-14T11:00:00.000Z',
     event_place: '서울 그랜드 호텔 그랜드볼룸',
     map_url: 'https://maps.google.com',
-    contact_name: 'Save the date',
-    contact_phone: '+82 10-1234-5678',
+    contact_name: '신랑 ○○○ 신부 ○○○ 드림',
+    contact_phone: '+65-1234-5678',
     extra_info: 'Reception to follow',
     rsvp_enabled: false,
     plan: 'free'
