@@ -145,7 +145,7 @@ const EVENT_LABEL_TEXT: Record<EventType, string> = {
  * layout-4(Vintage Script)처럼 우아한 스크립트가 어울리는 레이아웃에서 사용.
  */
 const EVENT_LABEL_SCRIPT: Record<EventType, string> = {
-  wedding: 'Wedding Party',
+  wedding: 'The Wedding',
   birthday: 'Birthday Party',
   opening: 'Grand Opening',
   baptism: 'Baptism Day',
