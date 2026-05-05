@@ -106,6 +106,17 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
   const [envelopeOpen, setEnvelopeOpen] = useState(false);
   const [envelopeOpening, setEnvelopeOpening] = useState(false);
 
+  // 봉투 없음(none) 선택 시 미리보기 자동으로 카드 펼친 상태로
+  useEffect(() => {
+    if (draft.envelope_anim === 'none') {
+      setEnvelopeOpen(true);
+      setEnvelopeOpening(false);
+    } else {
+      // 봉투가 있는 상태로 다시 바뀌면 닫힌 상태로 리셋
+      setEnvelopeOpen(false);
+    }
+  }, [draft.envelope_anim]);
+
   const [hydrated, setHydrated] = useState(!!skipRehydrate);
   const [savedSnapshot, setSavedSnapshot] = useState<string | null>(null);
   const [savingSticky, setSavingSticky] = useState(false);
