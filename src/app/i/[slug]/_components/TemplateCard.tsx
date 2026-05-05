@@ -131,8 +131,9 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
     // greeting_oneliner(subtitle)도 메인 색상 사용
     subtitle: withColor(baseFields.subtitle, tplMain),
     body: withColor(baseFields.body, tplMain),
-    date: withColor(baseFields.date, tplSub),
-    place: withColor(baseFields.place, tplSub),
+    // date/place는 정보박스 안에 들어가므로 메인 색상으로 또렷하게
+    date: withColor(baseFields.date, tplMain),
+    place: withColor(baseFields.place, tplMain),
     extra: withColor(baseFields.extra, tplSub)
   };
   const greeting = formatGreeting(recipientName, card.recipient_template);
@@ -173,12 +174,12 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
             right: '8%',
             top: `calc(${Math.min(f.date.y, f.place.y) - 3}% )`,
             bottom: `calc(${100 - (f.place.y + 12)}%)`,
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(255,255,255,0.86) 100%)',
-            backdropFilter: 'blur(14px) saturate(140%)',
-            WebkitBackdropFilter: 'blur(14px) saturate(140%)',
-            border: '1px solid rgba(255,255,255,0.95)',
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.30) 100%)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            border: '1px solid rgba(255,255,255,0.55)',
             borderRadius: 16,
-            boxShadow: '0 18px 40px rgba(0,0,0,0.16), 0 6px 14px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.95)',
+            boxShadow: '0 8px 22px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.7)',
             zIndex: 0
           }}
         />
@@ -230,6 +231,26 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
           )}
           {card.contact_name && <span>— {applyName(card.contact_name, recipientName)} —</span>}
         </div>
+      )}
+      {/* Vintage Script: 본문 위 ✽ divider */}
+      {layout.id === 'layout-4' && card.body && f.body && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true, amount: 0.1 }}
+          transition={{ duration: 0.5, delay: 0.55 }}
+          style={{
+            position: 'absolute',
+            left: '20%', right: '20%',
+            top: `calc(${f.body.y}% - 6%)`,
+            textAlign: 'center',
+            color: tplMain || f.body.color || '#1A2A3A',
+            fontSize: 18,
+            opacity: 0.6
+          }}
+        >
+          ✽
+        </motion.div>
       )}
       {card.body && f.body && <FieldText field={f.body} delay={0.65}>{applyName(card.body, recipientName)}</FieldText>}
       {card.extra_info && f.extra && <FieldText field={f.extra} delay={0.75}>{applyName(card.extra_info, recipientName)}</FieldText>}
