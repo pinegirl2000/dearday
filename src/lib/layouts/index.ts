@@ -5,6 +5,7 @@ import { LAYOUT_3 } from './layout3';
 import { LAYOUT_4 } from './layout4';
 import { LAYOUT_5 } from './layout5';
 import { LAYOUT_6 } from './layout6';
+import { LAYOUT_7 } from './layout7';
 import type { LayoutId, LayoutMeta } from './types';
 
 export type { LayoutId, LayoutMeta, TextField, RenderStyle } from './types';
@@ -12,6 +13,7 @@ export { templateToTheme, formatGreeting, applyName } from './types';
 
 export const LAYOUTS: LayoutMeta[] = [
   LAYOUT_CLASSIC,
+  LAYOUT_7,
   LAYOUT_4,
   LAYOUT_3,
   LAYOUT_6,
