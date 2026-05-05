@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { ClassicEnvelope, EnvelopeBeige, EnvelopeMint, EnvelopeCoral, NoneEnvelope } from '@/components/envelopes';
+import { ClassicEnvelope, EnvelopeBeige, EnvelopeMint, EnvelopeCoral, EnvelopeBlue, NoneEnvelope } from '@/components/envelopes';
 import { getTheme } from '@/lib/theme';
 import { getEventTypeMeta } from '@/lib/eventType';
 import { formatGreeting, getLayout, applyName } from '@/lib/layouts';
@@ -16,6 +16,7 @@ const ENVELOPE_MAP = {
   'envelope-2': EnvelopeBeige,
   'envelope-3': EnvelopeMint,
   'envelope-4': EnvelopeCoral,
+  'envelope-5': EnvelopeBlue,
   'none': NoneEnvelope
 } as const;
 
@@ -41,6 +42,7 @@ export default function InvitationView({ card, feed, recipientName, recipientId,
     'envelope-2': '#9C8B6E',
     'envelope-3': '#82B095',
     'envelope-4': '#C68676',
+    'envelope-5': '#8FB5D0',
     'none':       '#7B5EA7'
   };
   const ENVELOPE_DEEP: Record<string, string> = {
@@ -48,6 +50,7 @@ export default function InvitationView({ card, feed, recipientName, recipientId,
     'envelope-2': '#6E5A3D',
     'envelope-3': '#476956',
     'envelope-4': '#8E5A4D',
+    'envelope-5': '#5A7B96',
     'none':       '#5A3D7A'
   };
   const buttonBg = BUTTON_COLOR[card.envelope_anim] || '#A990CC';

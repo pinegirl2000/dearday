@@ -13,13 +13,14 @@ import { Input, Textarea, Button, PhoneInput } from '@/components/ui';
 import { useWizardStore } from '@/stores/wizardStore';
 import { EVENT_TYPES, getEventTypeMeta } from '@/lib/eventType';
 import { getBackground } from '@/lib/backgrounds';
-import { ENVELOPE_ANIMS, ClassicEnvelope, EnvelopeBeige, EnvelopeMint, EnvelopeCoral, NoneEnvelope } from '@/components/envelopes';
+import { ENVELOPE_ANIMS, ClassicEnvelope, EnvelopeBeige, EnvelopeMint, EnvelopeCoral, EnvelopeBlue, NoneEnvelope } from '@/components/envelopes';
 
 const ENVELOPE_MAP = {
   'envelope-1': ClassicEnvelope,
   'envelope-2': EnvelopeBeige,
   'envelope-3': EnvelopeMint,
   'envelope-4': EnvelopeCoral,
+  'envelope-5': EnvelopeBlue,
   'none': NoneEnvelope
 } as const;
 import { publishCard, updateCard } from '@/lib/actions/publishCard';

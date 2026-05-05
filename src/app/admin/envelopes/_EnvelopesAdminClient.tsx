@@ -7,6 +7,7 @@ import {
   EnvelopeBeige,
   EnvelopeMint,
   EnvelopeCoral,
+  EnvelopeBlue,
   NoneEnvelope
 } from '@/components/envelopes';
 
@@ -15,6 +16,7 @@ const ENVELOPE_MAP: Record<string, React.ComponentType<any>> = {
   'envelope-2': EnvelopeBeige,
   'envelope-3': EnvelopeMint,
   'envelope-4': EnvelopeCoral,
+  'envelope-5': EnvelopeBlue,
   'none': NoneEnvelope
 };
 

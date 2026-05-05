@@ -27,6 +27,7 @@ const ENVELOPE_PALETTE: Record<string, { primary: string; soft: string; deep: st
   'envelope-2': { primary: '#9C8B6E', soft: '#EFE6D4', deep: '#6E5A3D' },  // 베이지/브라운
   'envelope-3': { primary: '#82B095', soft: '#DFEDDF', deep: '#476956' },  // 민트
   'envelope-4': { primary: '#C68676', soft: '#F8DCD2', deep: '#8E5A4D' },  // 코랄
+  'envelope-5': { primary: '#8FB5D0', soft: '#DCEBF5', deep: '#5A7B96' },  // 연파랑
   'none':       { primary: '#7B5EA7', soft: '#E8DFF3', deep: '#5A3D7A' }
 };
 
@@ -114,7 +115,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
         return;
       }
       setDone(true);
-      toast.success('응답해 주셔서 감사합니다!');
+      toast.success('Thank you for your reply!');
     });
   };
 
