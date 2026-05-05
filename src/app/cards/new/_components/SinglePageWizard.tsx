@@ -487,59 +487,40 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
             {/* 수신자 이름 봉투 표시 — Yes 시 textbox에 $NAME 기본 */}
             {draft.envelope_anim && draft.envelope_anim !== 'none' && (() => {
               const showName = draft.recipient_template !== null && draft.recipient_template !== undefined;
+              const opt1 = 'To. $NAME';
+              const opt2 = '$NAME님께';
+              const current = draft.recipient_template;
+              const options = [
+                { label: 'To. [NAME]', value: opt1 },
+                { label: '[NAME]님께', value: opt2 },
+                { label: 'No', value: null as string | null }
+              ];
               return (
                 <div>
                   <label className="block text-sm font-medium text-hydrangea-700 mb-1.5">
                     Show recipient name on the envelope?
                   </label>
                   <div className="flex gap-2 items-center flex-wrap">
-                    <button type="button"
-                      onClick={() => setDraft({ recipient_template: draft.recipient_template ?? lastRecipientTemplate.current ?? 'To. $NAME' })}
-                      className={`px-4 min-h-[44px] rounded-xl border-2 text-sm font-medium transition flex-shrink-0 ${
-                        showName ? 'border-hydrangea-500 bg-hydrangea-50 text-hydrangea-700' : 'border-hydrangea-100 bg-white text-hydrangea-400'
-                      }`}>
-                      Yes
-                    </button>
-                    <button type="button"
-                      onClick={() => setDraft({ recipient_template: null })}
-                      className={`px-4 min-h-[44px] rounded-xl border-2 text-sm font-medium transition flex-shrink-0 ${
-                        !showName ? 'border-hydrangea-500 bg-hydrangea-50 text-hydrangea-700' : 'border-hydrangea-100 bg-white text-hydrangea-400'
-                      }`}>
-                      No
-                    </button>
-                    {showName && (() => {
-                      const opt1 = 'To. $NAME';
-                      const opt2 = '$NAME님께';
-                      const current = draft.recipient_template;
+                    {options.map((o) => {
+                      const isSelected = current === o.value || (o.value === null && current === null);
                       return (
-                        <div className="flex gap-2 items-center">
-                          <label className={`inline-flex items-center gap-1.5 px-3 min-h-[44px] rounded-xl border-2 text-sm cursor-pointer transition ${
-                            current === opt1 ? 'border-hydrangea-500 bg-hydrangea-50 text-hydrangea-700 font-medium' : 'border-hydrangea-100 bg-white text-hydrangea-500'
-                          }`}>
-                            <input
-                              type="radio"
-                              name="recipient_format"
-                              checked={current === opt1}
-                              onChange={() => setDraft({ recipient_template: opt1 })}
-                              className="accent-hydrangea-500"
-                            />
-                            To. [NAME]
-                          </label>
-                          <label className={`inline-flex items-center gap-1.5 px-3 min-h-[44px] rounded-xl border-2 text-sm cursor-pointer transition ${
-                            current === opt2 ? 'border-hydrangea-500 bg-hydrangea-50 text-hydrangea-700 font-medium' : 'border-hydrangea-100 bg-white text-hydrangea-500'
-                          }`}>
-                            <input
-                              type="radio"
-                              name="recipient_format"
-                              checked={current === opt2}
-                              onChange={() => setDraft({ recipient_template: opt2 })}
-                              className="accent-hydrangea-500"
-                            />
-                            [NAME]님께
-                          </label>
-                        </div>
+                        <label
+                          key={o.label}
+                          className={`inline-flex items-center gap-1.5 px-3 min-h-[44px] rounded-xl border-2 text-sm cursor-pointer transition ${
+                            isSelected ? 'border-hydrangea-500 bg-hydrangea-50 text-hydrangea-700 font-medium' : 'border-hydrangea-100 bg-white text-hydrangea-500'
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="recipient_format"
+                            checked={isSelected}
+                            onChange={() => setDraft({ recipient_template: o.value })}
+                            className="accent-hydrangea-500"
+                          />
+                          {o.label}
+                        </label>
                       );
-                    })()}
+                    })}
                   </div>
                 </div>
               );
