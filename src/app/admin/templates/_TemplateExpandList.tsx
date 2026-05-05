@@ -20,7 +20,7 @@ function buildPreview(t: Tpl, layoutOverride?: LayoutId): BaseCard {
   return {
     id: 'preview',
     slug: 'preview',
-    event_type: 'etc',
+    event_type: 'wedding',
     layout_id: (layoutOverride || t.layout_id) as LayoutId,
     bg_id: t.bg_id,
     envelope_anim: 'envelope-1',

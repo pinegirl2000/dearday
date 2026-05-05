@@ -132,7 +132,7 @@ export function getEventTypeMeta(id: EventType): EventTypeMeta {
  * layout.fields.eventLabel 위치에 caps 스타일로 표시 (layout-classic 등).
  */
 const EVENT_LABEL_TEXT: Record<EventType, string> = {
-  wedding: 'WEDDING',
+  wedding: 'WEDDING INVITATION',
   birthday: 'BIRTHDAY',
   opening: 'OPENING',
   baptism: 'BAPTISM',

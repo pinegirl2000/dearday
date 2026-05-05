@@ -156,7 +156,7 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
             <h1 style={{ fontSize: 24, fontWeight: 500, color: palette.title, letterSpacing: '0.4em', margin: '0 0 8px', lineHeight: 1.3 }}>
               {applyName(card.title, recipientName)}
             </h1>
-            {card.body && <Divider />}
+            <Divider />
             {card.body && (
               <div style={{
                 lineHeight: 2.0,
