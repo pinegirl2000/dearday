@@ -417,7 +417,8 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
             position: 'absolute',
             left: '5%',
             right: '5%',
-            bottom: '3%',
+            // Editorial(layout-3)은 100px 위로 올려 호스트/extra와 겹치지 않게
+            bottom: layout.id === 'layout-3' ? 'calc(3% + 100px)' : '3%',
             zIndex: 8
           }}
         >
