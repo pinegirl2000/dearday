@@ -47,6 +47,53 @@ function isUrl(s?: string | null): s is string {
   return /^https?:\/\//i.test(s);
 }
 
+/** Modern Bold 전용 — MAY | 18 | 2025 + SATURDAY, AT 6 O'CLOCK 2줄 */
+function ModernSplitDate({ field, iso, delay = 0 }: { field: TextField; iso: string; delay?: number }) {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return null;
+  const month = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+  const day = String(d.getDate());
+  const year = String(d.getFullYear());
+  const weekday = d.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+  const hour = d.getHours();
+  const minutes = d.getMinutes();
+  // "AT 6 O'CLOCK" 또는 "AT 6:30 PM"
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const h12 = hour % 12 === 0 ? 12 : hour % 12;
+  const timeText = minutes === 0
+    ? `AT ${h12} O'CLOCK${ampm === 'PM' ? ' PM' : ''}`
+    : `AT ${h12}:${String(minutes).padStart(2, '0')} ${ampm}`;
+  const divColor = field.color || '#1A2A3A';
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.1 }}
+      transition={{ duration: 0.8, delay, ease: 'easeOut' }}
+      style={{
+        position: 'absolute',
+        left: `${field.x}%`,
+        top: `${field.y}%`,
+        width: `${field.w}%`,
+        color: field.color,
+        fontFamily: field.fontFamily,
+        textAlign: 'center'
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginBottom: 8 }}>
+        <span style={{ fontSize: (field.fontSize || 13) + 6, fontWeight: 600, letterSpacing: '0.18em' }}>{month}</span>
+        <span style={{ width: 1, height: 26, background: divColor, opacity: 0.55 }} />
+        <span style={{ fontSize: (field.fontSize || 13) + 12, fontWeight: 700 }}>{day}</span>
+        <span style={{ width: 1, height: 26, background: divColor, opacity: 0.55 }} />
+        <span style={{ fontSize: (field.fontSize || 13) + 6, fontWeight: 600, letterSpacing: '0.12em' }}>{year}</span>
+      </div>
+      <div style={{ fontSize: field.fontSize || 13, fontWeight: 500, letterSpacing: '0.18em' }}>
+        {weekday}, {timeText}
+      </div>
+    </motion.div>
+  );
+}
+
 /** Vintage Script 전용 — SUNDAY | 15 NOV | AT 5 PM 3분할 + 세로 디바이더 */
 function SplitDate({ field, iso, delay = 0 }: { field: TextField; iso: string; delay?: number }) {
   const d = new Date(iso);
@@ -206,7 +253,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
         layout.id === 'layout-4'
           ? <SplitDate field={f.date} iso={card.event_date} delay={0.3} />
           : layout.id === 'layout-3'
-            ? <FieldText field={f.date} delay={0.3}>{formatDateCompact(card.event_date)}</FieldText>
+            ? <ModernSplitDate field={f.date} iso={card.event_date} delay={0.3} />
             : <FieldText field={f.date} delay={0.3}>{formatDate(card.event_date)}</FieldText>
       )}
       {card.event_place && f.place && (
