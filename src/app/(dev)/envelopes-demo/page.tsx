@@ -101,8 +101,8 @@ export default function EnvelopesDemoPage() {
                 <span className="text-xs text-neutral-500">{recommend}</span>
               </div>
 
-              <div className="w-full flex justify-center min-h-[420px] items-end">
-                <Component isOpen={open[key]} width={300}>
+              <div className="w-full flex justify-center min-h-[260px] items-end">
+                <Component isOpen={open[key]} width={220}>
                   {content}
                 </Component>
               </div>
