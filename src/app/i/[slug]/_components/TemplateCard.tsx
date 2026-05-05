@@ -30,6 +30,18 @@ function formatDate(iso?: string | null) {
   } catch { return iso; }
 }
 
+/** layout-3 같은 모던 디자인 전용 — 11.12.2025 형식 */
+function formatDateCompact(iso?: string | null) {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    return `${dd}.${mm}.${yyyy}`;
+  } catch { return iso || ''; }
+}
+
 function isUrl(s?: string | null): s is string {
   if (!s) return false;
   return /^https?:\/\//i.test(s);
@@ -160,7 +172,9 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
       )}
       {f.eventLabel && (
         <FieldText field={f.eventLabel} delay={0.05}>
-          {layout.id === 'layout-4' ? getEventLabelScript(card.event_type) : getEventLabelText(card.event_type)}
+          {(layout.id === 'layout-4' || layout.id === 'layout-3')
+            ? getEventLabelScript(card.event_type)
+            : getEventLabelText(card.event_type)}
         </FieldText>
       )}
       {card.greeting_oneliner && f.subtitle && <FieldText field={f.subtitle} delay={0.1}>{applyName(card.greeting_oneliner, recipientName)}</FieldText>}
@@ -191,7 +205,9 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
       {card.event_date && f.date && (
         layout.id === 'layout-4'
           ? <SplitDate field={f.date} iso={card.event_date} delay={0.3} />
-          : <FieldText field={f.date} delay={0.3}>{formatDate(card.event_date)}</FieldText>
+          : layout.id === 'layout-3'
+            ? <FieldText field={f.date} delay={0.3}>{formatDateCompact(card.event_date)}</FieldText>
+            : <FieldText field={f.date} delay={0.3}>{formatDate(card.event_date)}</FieldText>
       )}
       {card.event_place && f.place && (
         <FieldText field={f.place} delay={0.4}>

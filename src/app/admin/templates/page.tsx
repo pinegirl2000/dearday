@@ -87,7 +87,7 @@ export default async function TemplatesAdminPage({ searchParams }: PageProps) {
             이 이벤트에 추천되는 템플릿이 없습니다.
           </div>
         ) : (
-          <TemplateExpandList templates={filtered} />
+          <TemplateExpandList templates={filtered} eventType={selectedEvent} />
         )}
       </div>
     </PageContainer>

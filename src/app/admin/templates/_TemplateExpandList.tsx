@@ -14,13 +14,15 @@ type Tpl = (typeof TEMPLATES)[number];
 
 interface Props {
   templates: Tpl[];
+  /** 현재 필터 중인 이벤트 — 미리보기 카드의 event_type으로 전달 */
+  eventType?: string;
 }
 
-function buildPreview(t: Tpl, layoutOverride?: LayoutId): BaseCard {
+function buildPreview(t: Tpl, layoutOverride?: LayoutId, eventType?: string): BaseCard {
   return {
     id: 'preview',
     slug: 'preview',
-    event_type: 'wedding',
+    event_type: (eventType as any) || 'wedding',
     layout_id: (layoutOverride || t.layout_id) as LayoutId,
     bg_id: t.bg_id,
     envelope_anim: 'envelope-1',
@@ -40,7 +42,7 @@ function buildPreview(t: Tpl, layoutOverride?: LayoutId): BaseCard {
   } as BaseCard;
 }
 
-export default function TemplateExpandList({ templates }: Props) {
+export default function TemplateExpandList({ templates, eventType }: Props) {
   const [openId, setOpenId] = useState<string | null>(null);
   // 펼친 항목별로 사용자가 임시로 선택한 레이아웃 (preview only)
   const [layoutOverride, setLayoutOverride] = useState<Record<string, LayoutId>>({});
@@ -52,7 +54,7 @@ export default function TemplateExpandList({ templates }: Props) {
         const activeLayoutId = (layoutOverride[t.id] || t.layout_id) as LayoutId;
         const layout = getLayout(activeLayoutId);
         const isOpen = openId === t.id;
-        const card = buildPreview(t, activeLayoutId);
+        const card = buildPreview(t, activeLayoutId, eventType);
 
         return (
           <div key={t.id} className="rounded-2xl border border-hydrangea-100 bg-white overflow-hidden">
