@@ -13,7 +13,7 @@ export const LAYOUT_6: LayoutMeta = {
   fields: {
     // 큰 스크립트 라벨 — 카드 중상단
     eventLabel: {
-      x: 8, y: 30, w: 84, align: 'center',
+      x: 8, y: 38, w: 84, align: 'center',
       fontSize: 48, fontWeight: 400, color: '#1A2A3A',
       letterSpacing: '0', lineHeight: 1.0,
       fontFamily: "'Sacramento', 'Great Vibes', cursive"
