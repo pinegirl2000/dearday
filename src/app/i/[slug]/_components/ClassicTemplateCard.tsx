@@ -87,7 +87,8 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
   const tpl = findTemplateByPair(card.bg_id, card.layout_id);
   const palette = {
     title: tpl?.colorMain || basePalette.title,
-    subtitle: tpl?.colorSub || basePalette.subtitle,
+    // greeting_oneliner(subtitle)도 메인 색상 사용 — 타이틀과 시각적으로 한 묶음
+    subtitle: tpl?.colorMain || basePalette.subtitle,
     accent: basePalette.accent
   };
 
