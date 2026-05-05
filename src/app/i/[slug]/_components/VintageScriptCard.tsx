@@ -58,7 +58,7 @@ function SplitDate({ iso, color }: { iso: string; color: string }) {
         <span style={{ fontSize: 13, letterSpacing: '0.2em' }}>{month}</span>
       </span>
       <span style={{ width: 1, height: 50, background: color, opacity: 0.55 }} />
-      <span style={{ fontSize: 16, fontWeight: 500, letterSpacing: '0.18em' }}>AT {time}</span>
+      <span style={{ fontSize: 16, fontWeight: 500, letterSpacing: '0.18em' }}>{time}</span>
     </div>
   );
 }
