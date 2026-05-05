@@ -258,11 +258,12 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
             left: '6%', right: '6%',
             top: `calc(${f.date.y - 2}%)`,
             bottom: `calc(${100 - (f.place.y + 5)}%)`,
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.40) 100%)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
-            border: '1px solid rgba(255,255,255,0.65)',
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.82) 100%)',
+            backdropFilter: 'blur(14px) saturate(140%)',
+            WebkitBackdropFilter: 'blur(14px) saturate(140%)',
+            border: '1px solid rgba(255,255,255,0.95)',
             borderRadius: 12,
+            boxShadow: '0 12px 28px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.95)',
             zIndex: 0
           }}
         />
