@@ -258,13 +258,14 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
             left: '6%', right: '6%',
             top: `calc(${f.date.y - 2}%)`,
             bottom: `calc(${100 - (f.place.y + 5)}%)`,
-            // 연핑크 박스 — 흰 위에 분홍 톤 살짝
-            background: 'linear-gradient(180deg, rgba(252,222,228,0.95) 0%, rgba(248,210,217,0.85) 100%)',
-            backdropFilter: 'blur(14px) saturate(140%)',
-            WebkitBackdropFilter: 'blur(14px) saturate(140%)',
-            border: '1px solid rgba(255,224,228,0.95)',
-            borderRadius: 12,
-            boxShadow: '0 10px 24px rgba(232,154,160,0.20), inset 0 1px 0 rgba(255,255,255,0.85)',
+            // 연핑크 박스 — 입체적 그라디언트 + 강한 그림자
+            background: 'linear-gradient(180deg, rgba(255,235,239,0.97) 0%, rgba(245,200,210,0.92) 100%)',
+            backdropFilter: 'blur(16px) saturate(150%)',
+            WebkitBackdropFilter: 'blur(16px) saturate(150%)',
+            border: '1px solid rgba(255,255,255,0.85)',
+            borderRadius: 14,
+            // 깊은 컬러 그림자 + 짧은 grounding + inset 하이라이트/하단 라인
+            boxShadow: '0 18px 40px rgba(232,140,150,0.32), 0 6px 14px rgba(232,140,150,0.18), inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -1px 0 rgba(232,140,150,0.10)',
             zIndex: 0
           }}
         />
