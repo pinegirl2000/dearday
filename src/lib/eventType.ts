@@ -133,11 +133,11 @@ export function getEventTypeMeta(id: EventType): EventTypeMeta {
  */
 const EVENT_LABEL_TEXT: Record<EventType, string> = {
   wedding: 'WEDDING INVITATION',
-  birthday: 'BIRTHDAY',
-  opening: 'OPENING',
-  baptism: 'BAPTISM',
-  meeting: 'GATHERING',
-  etc: 'INVITATION'
+  birthday: "YOU'RE INVITED",
+  opening: "YOU'RE INVITED",
+  baptism: "YOU'RE INVITED",
+  meeting: "YOU'RE INVITED",
+  etc: "YOU'RE INVITED"
 };
 
 /**
