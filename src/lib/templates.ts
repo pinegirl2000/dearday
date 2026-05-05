@@ -48,7 +48,7 @@ export const TEMPLATES: TemplateMeta[] = [
     colorMain: '#7B5EA7',
     colorSub: '#FFFFFF',
     recommendEvents: ['wedding', 'baptism', 'meeting', 'etc'],
-    allowedLayouts: ['layout-classic', 'layout-7', 'layout-6'],
+    allowedLayouts: ['layout-classic'],
     badge: 'Wedding'
   },
   {
