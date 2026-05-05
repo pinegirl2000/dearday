@@ -339,8 +339,8 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
             const tpls = getTemplatesFor(activeEvent);
             return (
               <div className="space-y-3 mt-2">
-                {/* 이벤트 탭 — 가로 스크롤 가능 */}
-                <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
+                {/* 이벤트 탭 — 6개 그리드 (한 화면에 모두 표시, 스크롤 없음) */}
+                <div className="grid grid-cols-6 gap-1">
                   {EVENT_TYPES.map((e) => {
                     const selected = activeEvent === e.id;
                     return (
@@ -348,18 +348,17 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
                         key={e.id}
                         type="button"
                         onClick={() => {
-                          // 탭 클릭 → 해당 이벤트로 변경. 기존 템플릿 선택은 초기화
                           setEventType(e.id);
                           setDraft({ bg_id: undefined, layout_id: undefined } as any);
                         }}
-                        className={`flex-shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition ${
+                        className={`flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 rounded-lg transition min-w-0 ${
                           selected
                             ? 'bg-hydrangea-500 text-white shadow'
                             : 'bg-white text-hydrangea-700 border border-hydrangea-100 active:bg-hydrangea-50'
                         }`}
                       >
-                        <span>{e.emoji}</span>
-                        <span>{tEvent(e.id)}</span>
+                        <span className="text-base leading-none">{e.emoji}</span>
+                        <span className="text-[9px] font-medium tracking-tight truncate max-w-full">{tEvent(e.id)}</span>
                       </button>
                     );
                   })}
