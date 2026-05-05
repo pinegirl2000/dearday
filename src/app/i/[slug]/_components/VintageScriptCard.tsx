@@ -157,8 +157,8 @@ export default function VintageScriptCard({ card, recipientName, background, rsv
         {(card.event_date || card.event_place || card.map_url) && (
           <FadeUp delay={0.3}>
             <div style={{
-              maxWidth: 340, margin: '0 auto 18px',
-              padding: '18px 20px',
+              maxWidth: 280, margin: '0 auto 18px',
+              padding: '16px 18px',
               background: 'linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.35) 100%)',
               backdropFilter: 'blur(8px)',
               WebkitBackdropFilter: 'blur(8px)',
