@@ -446,43 +446,6 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
               })()}
             </div>
 
-            {/* 선택한 템플릿이 여러 layout을 허용하면 layout 선택기 표시 */}
-            {(() => {
-              const tpl = findTemplateByPair(draft.bg_id, draft.layout_id) || TEMPLATES.find((t) => t.bg_id === draft.bg_id);
-              if (!tpl) return null;
-              const allowed = getTemplateLayouts(tpl);
-              if (allowed.length <= 1) return null;
-              return (
-                <div>
-                  <h4 className="text-xs font-semibold text-hydrangea-700 mb-2">📐 Layout</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    {allowed.map((lid) => {
-                      const lay = getLayout(lid);
-                      const selected = draft.layout_id === lid;
-                      return (
-                        <motion.button
-                          key={lid}
-                          onClick={() => setDraft({ layout_id: lid as LayoutId })}
-                          whileTap={{ scale: 0.96 }}
-                          className={`relative p-3 rounded-xl border-2 text-left transition ${
-                            selected ? 'border-hydrangea-500 bg-hydrangea-50' : 'border-hydrangea-100/60 bg-white'
-                          }`}
-                        >
-                          <div className="text-xs font-semibold text-hydrangea-700">{lay.name}</div>
-                          <div className="text-[10px] text-hydrangea-400 mt-0.5 leading-tight">{lay.description}</div>
-                          {selected && (
-                            <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-hydrangea-500 flex items-center justify-center">
-                              <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
-                            </div>
-                          )}
-                        </motion.button>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })()}
-
             <Button onClick={() => advance(3)} disabled={!isDone(2)} full size="md">
               Next
             </Button>
@@ -693,16 +656,53 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen }: SingleP
           </div>
         </SectionShell>
 
-        {/* 4. 미리보기 & 발행 */}
+        {/* 4. 레이아웃 / 미리보기 / 발행 */}
         <SectionShell
           id={4}
-          title="Preview & Publish"
+          title="Layout, Preview & Publish"
           open={open === 4}
           done={false}
           enabled={isEnabled(4)}
           onToggle={() => setOpen(4)}
         >
           <div className="space-y-4 mt-2">
+            {/* 선택한 템플릿이 여러 layout 허용 시 → 사용자가 고르고 미리볼 수 있게 */}
+            {(() => {
+              const tpl = findTemplateByPair(draft.bg_id, draft.layout_id) || TEMPLATES.find((t) => t.bg_id === draft.bg_id);
+              if (!tpl) return null;
+              const allowed = getTemplateLayouts(tpl);
+              if (allowed.length <= 1) return null;
+              return (
+                <div>
+                  <h4 className="text-xs font-semibold text-hydrangea-700 mb-2">📐 Layout — pick one to preview</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {allowed.map((lid) => {
+                      const lay = getLayout(lid);
+                      const selected = draft.layout_id === lid;
+                      return (
+                        <motion.button
+                          key={lid}
+                          onClick={() => setDraft({ layout_id: lid as LayoutId })}
+                          whileTap={{ scale: 0.96 }}
+                          className={`relative p-3 rounded-xl border-2 text-left transition ${
+                            selected ? 'border-hydrangea-500 bg-hydrangea-50' : 'border-hydrangea-100/60 bg-white'
+                          }`}
+                        >
+                          <div className="text-xs font-semibold text-hydrangea-700">{lay.name}</div>
+                          <div className="text-[10px] text-hydrangea-400 mt-0.5 leading-tight">{lay.description}</div>
+                          {selected && (
+                            <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-hydrangea-500 flex items-center justify-center">
+                              <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
+                            </div>
+                          )}
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* 봉투 → 클릭하면 초대장 카드 표시 (실제 동작 미리보기) */}
             {(() => {
               const Env = ENVELOPE_MAP[(draft.envelope_anim as keyof typeof ENVELOPE_MAP) || 'envelope-1'];
