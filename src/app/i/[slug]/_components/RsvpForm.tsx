@@ -154,7 +154,8 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
       </div>
 
       {compact ? (
-        <div className={`grid ${attend === true && max > 1 ? 'grid-cols-3' : 'grid-cols-2'} gap-1.5 items-stretch`}>
+        <div className={`grid ${attend === true && max > 1 ? 'grid-cols-3' : 'grid-cols-2'} gap-1.5 items-stretch mx-auto`}
+          style={{ maxWidth: 280 }}>
           <motion.button
             whileTap={{ scale: 0.96 }}
             onClick={() => { setAttend(true); if (max <= 1) handleSubmit(true); }}
@@ -207,7 +208,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 mx-auto" style={{ maxWidth: 320 }}>
           <motion.button
             whileTap={{ scale: 0.96 }}
             onClick={() => { setAttend(true); if (max <= 1) handleSubmit(true); }}
