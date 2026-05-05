@@ -78,7 +78,7 @@ const ITEMS: {
 
 export default function EnvelopesDemoPage() {
   const [open, setOpen] = useState<Record<Key, boolean>>({
-    'envelope-1': false, 'envelope-2': false, 'envelope-3': false, 'envelope-4': false, none: false
+    'envelope-1': false, 'envelope-2': false, 'envelope-3': false, 'envelope-4': false, none: true
   });
   const toggle = (k: Key) => setOpen((s) => ({ ...s, [k]: !s[k] }));
 
@@ -107,13 +107,15 @@ export default function EnvelopesDemoPage() {
                 </Component>
               </div>
 
-              <button
-                type="button"
-                onClick={() => toggle(key)}
-                className="mt-6 px-6 py-2.5 rounded-full bg-[#7B5EA7] text-white text-sm font-medium shadow-lg hover:bg-[#6B4D9C] active:scale-95 transition self-center"
-              >
-                {open[key] ? '닫기' : '열기'}
-              </button>
+              {key !== 'none' && (
+                <button
+                  type="button"
+                  onClick={() => toggle(key)}
+                  className="mt-6 px-6 py-2.5 rounded-full bg-[#7B5EA7] text-white text-sm font-medium shadow-lg hover:bg-[#6B4D9C] active:scale-95 transition self-center"
+                >
+                  {open[key] ? '닫기' : '열기'}
+                </button>
+              )}
             </section>
           ))}
         </div>
