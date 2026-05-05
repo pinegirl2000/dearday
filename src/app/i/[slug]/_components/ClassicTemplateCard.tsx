@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { CalendarDays, MapPin, Phone, ExternalLink } from 'lucide-react';
 import { formatGreeting, applyName, getLayout } from '@/lib/layouts';
 import { getEventLabelText } from '@/lib/eventType';
+import { findTemplateByPair } from '@/lib/templates';
 import type { BackgroundMeta } from '@/lib/backgrounds';
 import type { BaseCard } from '@/types/card';
 
@@ -81,7 +82,14 @@ const BG_PALETTE: Record<string, { title: string; subtitle: string; accent: stri
 export default function ClassicTemplateCard({ card, recipientName, background, rsvpSlot }: Props) {
   const greeting = formatGreeting(recipientName, card.recipient_template);
   const hasBgImage = !!background?.imageUrl;
-  const palette = BG_PALETTE[card.bg_id] || BG_PALETTE['bg-1'];
+  const basePalette = BG_PALETTE[card.bg_id] || BG_PALETTE['bg-1'];
+  // 템플릿 페어링이 있으면 colorMain/colorSub로 override
+  const tpl = findTemplateByPair(card.bg_id, card.layout_id);
+  const palette = {
+    title: tpl?.colorMain || basePalette.title,
+    subtitle: tpl?.colorSub || basePalette.subtitle,
+    accent: basePalette.accent
+  };
 
   return (
     <div
@@ -128,7 +136,7 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
               return (
                 <div style={{
                   fontSize: labelField.fontSize,
-                  color: labelField.color,
+                  color: tpl?.colorMain || labelField.color,
                   fontWeight: labelField.fontWeight,
                   letterSpacing: labelField.letterSpacing,
                   fontFamily: labelField.fontFamily,
@@ -151,7 +159,7 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
             {card.body && (
               <div style={{
                 lineHeight: 2.0,
-                color: COLORS.textDark,
+                color: tpl?.colorSub || COLORS.textDark,
                 fontSize: 15,
                 padding: '0 10px',
                 textAlign: 'center',

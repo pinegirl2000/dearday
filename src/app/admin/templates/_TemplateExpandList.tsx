@@ -120,6 +120,17 @@ export default function TemplateExpandList({ templates }: Props) {
                       />
                     </div>
 
+                    {/* 페어링된 색상 */}
+                    {(t.colorMain || t.colorSub) && (
+                      <div>
+                        <div className="text-[10px] text-hydrangea-400 mb-1">Paired colors (override layout)</div>
+                        <div className="grid grid-cols-2 gap-2 text-[11px]">
+                          <ColorRow label="Main" value={t.colorMain} fallback="(layout default)" />
+                          <ColorRow label="Sub" value={t.colorSub} fallback="(layout default)" />
+                        </div>
+                      </div>
+                    )}
+
                     {/* 레이아웃 선택 (미리보기 임시 변경) */}
                     <div>
                       <div className="text-[10px] text-hydrangea-400 mb-1">
@@ -219,6 +230,22 @@ export default function TemplateExpandList({ templates }: Props) {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+function ColorRow({ label, value, fallback }: { label: string; value?: string; fallback?: string }) {
+  return (
+    <div className="px-2 py-1.5 rounded-lg bg-hydrangea-50/60 flex items-center gap-2">
+      <div className="text-[9px] text-hydrangea-400 uppercase tracking-wider w-8 flex-shrink-0">{label}</div>
+      {value ? (
+        <>
+          <span className="inline-block w-4 h-4 rounded border border-hydrangea-200 flex-shrink-0" style={{ background: value }} />
+          <span className="font-mono text-[11px] text-hydrangea-700 truncate">{value}</span>
+        </>
+      ) : (
+        <span className="text-[10px] text-hydrangea-400 italic">{fallback}</span>
+      )}
     </div>
   );
 }

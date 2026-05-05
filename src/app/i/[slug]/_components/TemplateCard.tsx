@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { getLayout, formatGreeting, applyName, type TextField } from '@/lib/layouts';
 import { getBackground } from '@/lib/backgrounds';
 import { getEventLabelText } from '@/lib/eventType';
+import { findTemplateByPair } from '@/lib/templates';
 import type { BaseCard } from '@/types/card';
 import ClassicTemplateCard from './ClassicTemplateCard';
 
@@ -62,12 +63,30 @@ function FieldText({ field, children, delay = 0 }: { field: TextField; children:
 export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
   const layout = getLayout(card.layout_id);
   const bg = getBackground(card.bg_id);
+  const tpl = findTemplateByPair(card.bg_id, card.layout_id);
 
   if (layout.renderStyle === 'flow') {
     return <ClassicTemplateCard card={card} recipientName={recipientName} background={bg} rsvpSlot={rsvpSlot} />;
   }
 
-  const f = layout.fields;
+  // 페어링된 템플릿 색상으로 layout 필드 색상 override
+  const tplMain = tpl?.colorMain;
+  const tplSub = tpl?.colorSub;
+  const withColor = (field: TextField | undefined, color?: string): TextField | undefined => {
+    if (!field || !color) return field;
+    return { ...field, color };
+  };
+  const baseFields = layout.fields;
+  const f = {
+    ...baseFields,
+    eventLabel: withColor(baseFields.eventLabel, tplMain),
+    title: withColor(baseFields.title, tplMain) || baseFields.title,
+    subtitle: withColor(baseFields.subtitle, tplSub),
+    body: withColor(baseFields.body, tplSub),
+    date: withColor(baseFields.date, tplSub),
+    place: withColor(baseFields.place, tplSub),
+    extra: withColor(baseFields.extra, tplSub)
+  };
   const greeting = formatGreeting(recipientName, card.recipient_template);
 
   return (

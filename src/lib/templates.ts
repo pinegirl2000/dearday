@@ -11,6 +11,16 @@ export interface TemplateMeta {
   description: string;
   bg_id: BackgroundId;
   layout_id: LayoutId;
+  /**
+   * 메인 텍스트 색상 (제목, 이벤트 라벨 등 강조 텍스트용).
+   * 정의되어 있으면 layout의 기본 색상을 override.
+   */
+  colorMain?: string;
+  /**
+   * 서브 텍스트 색상 (부제, 본문, 날짜/장소 등 보조 텍스트용).
+   * 정의되어 있으면 layout의 기본 색상을 override.
+   */
+  colorSub?: string;
   /** 추천 이벤트 타입 */
   recommendEvents: EventType[];
   /** 썸네일 미리보기에 쓸 이름 (자유 텍스트) */
@@ -24,6 +34,8 @@ export const TEMPLATES: TemplateMeta[] = [
     description: 'Soft lavender gradient — timeless and elegant',
     bg_id: 'bg-1',
     layout_id: 'layout-classic',
+    colorMain: '#7B5EA7',
+    colorSub: '#FFFFFF',
     recommendEvents: ['wedding', 'baptism', 'meeting', 'etc'],
     badge: 'Wedding'
   },
