@@ -1,8 +1,8 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { LAYOUTS, getLayout } from '@/lib/layouts';
 import { TEMPLATES, getTemplateLayouts } from '@/lib/templates';
+import { LAYOUTS, getLayout } from '@/lib/layouts';
 import TemplateCard from '@/app/i/[slug]/_components/TemplateCard';
 import TemplateInfoPanel, { TemplateColorRow } from './_TemplateInfoPanel';
 import type { BaseCard, LayoutId } from '@/types/card';
@@ -53,69 +53,62 @@ function buildPreview(t: (typeof TEMPLATES)[number], layoutId: LayoutId): BaseCa
   } as BaseCard;
 }
 
-export default function LayoutBrowser({ configs }: Props) {
-  const [layoutId, setLayoutId] = useState<LayoutId>(LAYOUTS[0].id);
-  const [tplId, setTplId] = useState<string | null>(null);
+export default function TemplateBrowser({ configs }: Props) {
+  const [tplId, setTplId] = useState<string>(TEMPLATES[0].id);
+  const [layoutId, setLayoutId] = useState<LayoutId | null>(null);
 
-  const templates = useMemo(
-    () => TEMPLATES.filter((t) => effectiveLayouts(t, configs).includes(layoutId)),
-    [layoutId, configs]
+  const selectedTpl = TEMPLATES.find((t) => t.id === tplId) || TEMPLATES[0];
+  const allowedLayouts = useMemo(
+    () => effectiveLayouts(selectedTpl, configs),
+    [selectedTpl, configs]
   );
-
-  const selectedTpl = templates.find((t) => t.id === tplId) || templates[0] || null;
+  const activeLayoutId = (layoutId && allowedLayouts.includes(layoutId)) ? layoutId : allowedLayouts[0];
 
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label className="block text-[10px] font-semibold text-hydrangea-700 mb-1">Layout</label>
+          <label className="block text-[10px] font-semibold text-hydrangea-700 mb-1">Template</label>
           <select
-            value={layoutId}
+            value={tplId}
             onChange={(e) => {
-              setLayoutId(e.target.value as LayoutId);
-              setTplId(null);
+              setTplId(e.target.value);
+              setLayoutId(null);
             }}
             className="w-full px-2 py-2 rounded-lg border border-hydrangea-200 bg-white text-xs text-hydrangea-700 focus:outline-none focus:ring-2 focus:ring-hydrangea-300"
           >
-            {LAYOUTS.map((l) => {
-              const count = TEMPLATES.filter((t) => effectiveLayouts(t, configs).includes(l.id)).length;
-              return (
-                <option key={l.id} value={l.id}>
-                  {l.name} ({count})
-                </option>
-              );
-            })}
-          </select>
-        </div>
-        <div>
-          <label className="block text-[10px] font-semibold text-hydrangea-700 mb-1">Template</label>
-          <select
-            value={selectedTpl?.id || ''}
-            onChange={(e) => setTplId(e.target.value)}
-            disabled={templates.length === 0}
-            className="w-full px-2 py-2 rounded-lg border border-hydrangea-200 bg-white text-xs text-hydrangea-700 focus:outline-none focus:ring-2 focus:ring-hydrangea-300 disabled:opacity-50"
-          >
-            {templates.length === 0 && <option value="">— 사용 템플릿 없음 —</option>}
-            {templates.map((t) => (
+            {TEMPLATES.map((t) => (
               <option key={t.id} value={t.id}>{t.name}</option>
             ))}
           </select>
         </div>
+        <div>
+          <label className="block text-[10px] font-semibold text-hydrangea-700 mb-1">Layout</label>
+          <select
+            value={activeLayoutId || ''}
+            onChange={(e) => setLayoutId(e.target.value as LayoutId)}
+            disabled={allowedLayouts.length === 0}
+            className="w-full px-2 py-2 rounded-lg border border-hydrangea-200 bg-white text-xs text-hydrangea-700 focus:outline-none focus:ring-2 focus:ring-hydrangea-300 disabled:opacity-50"
+          >
+            {allowedLayouts.map((id) => {
+              const lay = getLayout(id);
+              return (
+                <option key={id} value={id}>{lay.name}</option>
+              );
+            })}
+            {allowedLayouts.length === 0 && <option value="">— allowed layout 없음 —</option>}
+          </select>
+        </div>
       </div>
 
-      {selectedTpl && (
+      {activeLayoutId && (
         <>
           <TemplateColorRow template={selectedTpl} />
           <div className="bg-hydrangea-50/40 rounded-2xl p-3">
-            <TemplateCard card={buildPreview(selectedTpl, layoutId)} />
+            <TemplateCard card={buildPreview(selectedTpl, activeLayoutId)} />
           </div>
-          <TemplateInfoPanel template={selectedTpl} layoutId={layoutId} />
+          <TemplateInfoPanel template={selectedTpl} layoutId={activeLayoutId} />
         </>
-      )}
-      {!selectedTpl && (
-        <div className="text-center py-8 text-sm text-hydrangea-400 border border-dashed border-hydrangea-200 rounded-xl">
-          이 layout을 사용하는 템플릿이 없습니다.
-        </div>
       )}
     </div>
   );

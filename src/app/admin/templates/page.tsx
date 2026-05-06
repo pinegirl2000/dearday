@@ -16,6 +16,7 @@ import TemplateExpandList from './_TemplateExpandList';
 import SortableTemplateList from './_SortableTemplateList';
 import LayoutBrowser from './_LayoutBrowser';
 import EventBrowser from './_EventBrowser';
+import TemplateBrowser from './_TemplateBrowser';
 import { getAllTemplateEventOrders } from '@/lib/actions/templateOrder';
 
 export const dynamic = 'force-dynamic';
@@ -92,20 +93,14 @@ export default async function TemplatesAdminPage({ searchParams }: PageProps) {
     </div>
   );
 
-  // ===== Template별 보기 — 모든 템플릿 평면 리스트 =====
+  // ===== Template별 보기 — Template + Layout 드롭다운 + preview =====
   if (view === 'template') {
     return (
       <PageContainer noPadding>
         <MobileHeader title="템플릿 관리" back />
         <div className="px-4 pt-3 pb-12">
           {ViewTabs}
-          <p className="text-xs text-hydrangea-400 mb-3">
-            전체 {TEMPLATES.length}개 템플릿. 펼쳐서 layout 설정/저장 가능.
-          </p>
-          <TemplateExpandList
-            templates={TEMPLATES.slice()}
-            configs={configs}
-          />
+          <TemplateBrowser configs={configs} />
         </div>
       </PageContainer>
     );

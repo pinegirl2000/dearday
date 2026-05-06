@@ -234,7 +234,7 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
               {/* Topdown Text는 extra_info를 맨 아래로 이동 (이 자리에서는 렌더 X) */}
               {card.extra_info && card.layout_id !== 'layout-7' && (
                 <div style={{
-                  marginTop: 6, fontSize: 13, color: tpl?.colorSub || COLORS.primaryDark,
+                  marginTop: 6, fontSize: 13, color: tpl?.colorMain || COLORS.primaryDark,
                   letterSpacing: '0.04em', lineHeight: 1.6
                 }}>
                   {applyName(card.extra_info, recipientName)}
@@ -294,7 +294,7 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
         {/* Topdown Text 전용: extra_info를 맨 아래에 표시 */}
         {card.layout_id === 'layout-7' && card.extra_info && (
           <div style={{ textAlign: 'center', padding: '0 20px 20px' }}>
-            <p style={{ fontSize: 12, color: tpl?.colorSub || COLORS.primaryDark, letterSpacing: '0.04em', lineHeight: 1.6, opacity: 0.85 }}>
+            <p style={{ fontSize: 12, color: tpl?.colorMain || COLORS.primaryDark, letterSpacing: '0.04em', lineHeight: 1.6, opacity: 0.85 }}>
               {applyName(card.extra_info, recipientName)}
             </p>
           </div>
