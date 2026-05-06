@@ -4,7 +4,7 @@ import type { EventType } from '@/types/card';
 
 export type BackgroundId =
   | 'bg-none'
-  | 'bg-1' | 'bg-2' | 'bg-3' | 'bg-4'
+  | 'bg-1' | 'bg-2' | 'bg-3' | 'bg-4' | 'bg-cream'
   | 'bg-img-1' | 'bg-img-2' | 'bg-img-3' | 'bg-img-4'
   | 'bg-img-6' | 'bg-img-7' | 'bg-img-8' | 'bg-img-9' | 'bg-img-10' | 'bg-img-11'
   | 'bg-img-12' | 'bg-img-13' | 'bg-img-14' | 'bg-img-15' | 'bg-img-16' | 'bg-img-17' | 'bg-img-18' | 'bg-img-19';
@@ -57,6 +57,14 @@ export const BACKGROUNDS: BackgroundMeta[] = [
     name: 'Coral',
     imageUrl: '',
     gradient: 'linear-gradient(160deg, #FFF1EB 0%, #F8D3C9 35%, #F2C0B3 80%, #C68676 100%)',
+    tone: 'light',
+    availableEvents: ALL_EVENTS
+  },
+  {
+    id: 'bg-cream',
+    name: 'Cream',
+    imageUrl: '',
+    gradient: 'linear-gradient(160deg, #FFFAF0 0%, #FAEFD8 35%, #E8D9B5 80%, #C4AB7A 100%)',
     tone: 'light',
     availableEvents: ALL_EVENTS
   },

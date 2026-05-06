@@ -3,8 +3,54 @@
 import { pool } from '@/lib/db';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { isAdminEmail } from '@/lib/admin';
 import { generateSlug, generateOwnerToken } from '@/lib/slug';
 import type { CardDraft } from '@/types/card';
+
+/**
+ * 카드 소유권 검증 — admin OR 로그인 사용자 user_id 일치 OR ownerToken 일치
+ * 셋 중 하나라도 매치되면 ownership 인정.
+ */
+async function verifyCardOwnership(slug: string, ownerToken?: string | null) {
+  const session = await getServerSession(authOptions);
+  const userId = (session?.user as any)?.id || null;
+  const email = session?.user?.email || null;
+
+  if (isAdminEmail(email)) {
+    const { rows } = await pool.query<{ id: string }>(
+      'SELECT id FROM dearday_card WHERE slug=$1 LIMIT 1',
+      [slug]
+    );
+    return rows[0] || null;
+  }
+
+  const params: any[] = [slug];
+  const conds: string[] = [];
+  if (ownerToken) {
+    params.push(ownerToken);
+    conds.push(`owner_token = $${params.length}`);
+  }
+  if (userId) {
+    params.push(userId);
+    conds.push(`user_id = $${params.length}`);
+  }
+  if (conds.length === 0) return null;
+
+  const { rows } = await pool.query<{ id: string }>(
+    `SELECT id FROM dearday_card WHERE slug=$1 AND (${conds.join(' OR ')}) LIMIT 1`,
+    params
+  );
+  return rows[0] || null;
+}
+
+/**
+ * 클라이언트에서 호출 가능한 소유권 검증 — Edit/Manage 페이지 진입 시
+ * localStorage의 owner_token으로 확인. true 반환 시 렌더 진행.
+ */
+export async function checkCardAccess(slug: string, ownerToken?: string | null): Promise<boolean> {
+  const row = await verifyCardOwnership(slug, ownerToken);
+  return !!row;
+}
 
 interface PublishResult {
   ok: boolean;

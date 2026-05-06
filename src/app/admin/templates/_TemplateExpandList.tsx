@@ -217,7 +217,7 @@ export default function TemplateExpandList({ templates, eventType, configs }: Pr
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold text-hydrangea-700 truncate">{t.name}</span>
-                  {t.draft && (
+                  {t.draft && !(allowedOverride[t.id] && allowedOverride[t.id].length > 0) && (
                     <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 font-semibold uppercase tracking-wide flex-shrink-0">
                       Draft
                     </span>

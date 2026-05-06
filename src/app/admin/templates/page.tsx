@@ -5,31 +5,54 @@ import { authOptions } from '@/lib/auth';
 import { isAdminEmail } from '@/lib/admin';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { MobileHeader } from '@/components/layout/MobileHeader';
-import { TEMPLATES } from '@/lib/templates';
+import { TEMPLATES, getTemplateLayouts } from '@/lib/templates';
 import { getAllTemplateConfigs } from '@/lib/actions/templateConfig';
+import { getTemplateEventOrder } from '@/lib/actions/templateOrder';
 import { EVENT_TYPES } from '@/lib/eventType';
-import type { EventType } from '@/types/card';
+import { LAYOUTS } from '@/lib/layouts';
+import type { EventType, LayoutId } from '@/types/card';
 import { ChevronLeft } from 'lucide-react';
 import TemplateExpandList from './_TemplateExpandList';
+import SortableTemplateList from './_SortableTemplateList';
+import LayoutBrowser from './_LayoutBrowser';
+import EventBrowser from './_EventBrowser';
+import { getAllTemplateEventOrders } from '@/lib/actions/templateOrder';
 
 export const dynamic = 'force-dynamic';
 
 const ALL_EVENT_IDS: EventType[] = EVENT_TYPES.map((e) => e.id);
 
-type ViewTab = 'template' | 'event';
+type ViewTab = 'template' | 'event' | 'layout';
 
 interface PageProps {
-  searchParams?: { event?: string; view?: string };
+  searchParams?: { event?: string; layout?: string; view?: string };
+}
+
+function getEffectiveLayouts(
+  t: (typeof TEMPLATES)[number],
+  configs: Record<string, string[]>
+): LayoutId[] {
+  const cfg = configs[t.id];
+  if (cfg && cfg.length > 0) return cfg as LayoutId[];
+  return getTemplateLayouts(t);
 }
 
 export default async function TemplatesAdminPage({ searchParams }: PageProps) {
   const session = await getServerSession(authOptions);
   if (!isAdminEmail(session?.user?.email)) redirect('/');
 
-  const view: ViewTab = searchParams?.view === 'event' ? 'event' : 'template';
+  const view: ViewTab = searchParams?.view === 'event'
+    ? 'event'
+    : searchParams?.view === 'layout'
+      ? 'layout'
+      : 'template';
   const eventParam = searchParams?.event;
   const selectedEvent: EventType | null = eventParam && ALL_EVENT_IDS.includes(eventParam as EventType)
     ? (eventParam as EventType)
+    : null;
+  const layoutParam = searchParams?.layout;
+  const selectedLayout: LayoutId | null = layoutParam && LAYOUTS.some((l) => l.id === layoutParam)
+    ? (layoutParam as LayoutId)
     : null;
 
   const configs = Object.fromEntries(await getAllTemplateConfigs());
@@ -56,6 +79,16 @@ export default async function TemplatesAdminPage({ searchParams }: PageProps) {
       >
         Event별
       </Link>
+      <Link
+        href="/admin/templates?view=layout"
+        className={`px-3 py-2 text-sm font-medium border-b-2 transition ${
+          view === 'layout'
+            ? 'border-hydrangea-500 text-hydrangea-700'
+            : 'border-transparent text-hydrangea-400 hover:text-hydrangea-600'
+        }`}
+      >
+        Layout별
+      </Link>
     </div>
   );
 
@@ -78,44 +111,41 @@ export default async function TemplatesAdminPage({ searchParams }: PageProps) {
     );
   }
 
-  // ===== Event별 보기 =====
-  if (!selectedEvent) {
-    const eventCounts: Record<string, number> = {};
-    for (const ev of ALL_EVENT_IDS) {
-      eventCounts[ev] = TEMPLATES.filter((t) => t.recommendEvents.includes(ev)).length;
-    }
-
+  // ===== Event별 보기 — 드롭다운 + 템플릿 버튼 + preview =====
+  if (view === 'event') {
+    const ordersMap = await getAllTemplateEventOrders();
+    const eventOrdersObj: Record<string, string[]> = {};
+    ordersMap.forEach((v, k) => { eventOrdersObj[k] = v; });
     return (
       <PageContainer noPadding>
         <MobileHeader title="템플릿 관리" back />
         <div className="px-4 pt-3 pb-12">
           {ViewTabs}
-          <p className="text-xs text-hydrangea-400 mb-4">
-            먼저 이벤트를 선택하세요. 한 템플릿이 여러 이벤트에 속할 수 있습니다.
-          </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {EVENT_TYPES.map((e) => (
-              <Link
-                key={e.id}
-                href={`/admin/templates?view=event&event=${e.id}`}
-                className="aspect-square rounded-2xl bg-white border border-hydrangea-100 flex flex-col items-center justify-center gap-2 active:scale-95 transition shadow-sm hover:bg-hydrangea-50/40"
-              >
-                <span className="text-4xl">{e.emoji}</span>
-                <span className="text-sm font-semibold text-hydrangea-700">{e.label}</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-hydrangea-100 text-hydrangea-700">
-                  {eventCounts[e.id]} templates
-                </span>
-              </Link>
-            ))}
-          </div>
+          <EventBrowser configs={configs} eventOrders={eventOrdersObj} />
         </div>
       </PageContainer>
     );
   }
 
-  // 이벤트 선택 후 — 템플릿 리스트
-  const eventMeta = EVENT_TYPES.find((e) => e.id === selectedEvent)!;
-  const filtered = TEMPLATES.filter((t) => t.recommendEvents.includes(selectedEvent));
+  // ===== Layout별 보기 — 드롭다운 + 템플릿 버튼 + preview =====
+  if (view === 'layout') {
+    return (
+      <PageContainer noPadding>
+        <MobileHeader title="템플릿 관리" back />
+        <div className="px-4 pt-3 pb-12">
+          {ViewTabs}
+          <LayoutBrowser configs={configs} />
+        </div>
+      </PageContainer>
+    );
+  }
+
+  // 이벤트 선택 후 — 템플릿 리스트 (drag&drop 순서 지원)
+  if (!selectedEvent) redirect('/admin/templates?view=event');
+  const ev = selectedEvent as EventType;
+  const eventMeta = EVENT_TYPES.find((e) => e.id === ev)!;
+  const filtered = TEMPLATES.filter((t) => t.recommendEvents.includes(ev));
+  const eventOrder = await getTemplateEventOrder(ev);
 
   return (
     <PageContainer noPadding>
@@ -139,9 +169,10 @@ export default async function TemplatesAdminPage({ searchParams }: PageProps) {
             이 이벤트에 추천되는 템플릿이 없습니다.
           </div>
         ) : (
-          <TemplateExpandList
+          <SortableTemplateList
             templates={filtered}
-            eventType={selectedEvent}
+            eventType={ev}
+            initialOrder={eventOrder}
             configs={configs}
           />
         )}

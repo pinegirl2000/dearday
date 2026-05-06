@@ -126,6 +126,18 @@ CREATE TABLE IF NOT EXISTS dearday_template_config (
   updated_by TEXT
 );
 
+-- 이벤트별 템플릿 노출 순서 (admin drag&drop으로 지정)
+CREATE TABLE IF NOT EXISTS dearday_template_event_order (
+  event_id TEXT NOT NULL,
+  template_id TEXT NOT NULL,
+  sort_order INT NOT NULL DEFAULT 0,
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_by TEXT,
+  PRIMARY KEY (event_id, template_id)
+);
+CREATE INDEX IF NOT EXISTS idx_dearday_template_event_order_event
+  ON dearday_template_event_order(event_id, sort_order);
+
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_dearday_card_slug ON dearday_card(slug);
 CREATE INDEX IF NOT EXISTS idx_dearday_card_user ON dearday_card(user_id);

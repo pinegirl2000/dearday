@@ -57,6 +57,17 @@ export const TEMPLATES: TemplateMeta[] = [
     badge: 'Wedding'
   },
   {
+    id: 'tpl-cream-classic',
+    name: 'Cream Classic',
+    description: 'Soft cream gradient — warm and timeless',
+    bg_id: 'bg-cream',
+    layout_id: 'layout-classic',
+    colorMain: '#8C6F4A',
+    colorSub: '#FFFFFF',
+    recommendEvents: ['wedding', 'baptism', 'meeting', 'etc'],
+    allowedLayouts: ['layout-classic']
+  },
+  {
     id: 'tpl-watercolor-purple',
     name: 'Watercolor Lavender',
     description: 'Hand-painted purple florals on cream paper',

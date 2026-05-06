@@ -80,9 +80,11 @@ interface SinglePageWizardProps {
   initialOpen?: 1 | 2 | 3 | 4;
   /** admin이 DB에 저장한 템플릿별 allowedLayouts override */
   templateConfigs?: Record<string, string[]>;
+  /** admin이 DB에 저장한 이벤트별 템플릿 노출 순서 (event_id → template_id[]) */
+  eventOrders?: Record<string, string[]>;
 }
 
-export default function SinglePageWizard({ skipRehydrate, initialOpen, templateConfigs }: SinglePageWizardProps = {}) {
+export default function SinglePageWizard({ skipRehydrate, initialOpen, templateConfigs, eventOrders }: SinglePageWizardProps = {}) {
   const router = useRouter();
   const params = useSearchParams();
   const { status: sessionStatus } = useSession();
@@ -393,7 +395,21 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
         >
           {(() => {
             const activeEvent = (draft.event_type as EventType) || 'meeting';
-            const tpls = getTemplatesFor(activeEvent);
+            // draft 템플릿이라도 admin이 DB에 layout을 등록했으면 노출
+            const baseTpls = TEMPLATES.filter((t) =>
+              t.recommendEvents.includes(activeEvent) &&
+              (!t.draft || (templateConfigs && templateConfigs[t.id] && templateConfigs[t.id].length > 0))
+            );
+            // admin DB에 저장된 순서 적용 — 저장된 ID 우선, 미저장은 default 순서로 뒤에
+            const order = eventOrders?.[activeEvent];
+            const tpls = order && order.length > 0
+              ? [
+                  ...order
+                    .map((id) => baseTpls.find((t) => t.id === id))
+                    .filter((x): x is NonNullable<typeof x> => !!x),
+                  ...baseTpls.filter((t) => !order.includes(t.id))
+                ]
+              : baseTpls;
             return (
               <div className="space-y-3 mt-2">
                 {/* 이벤트 선택 */}
