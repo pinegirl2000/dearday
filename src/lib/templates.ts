@@ -30,6 +30,11 @@ export interface TemplateMeta {
   allowedLayouts?: LayoutId[];
   /** 썸네일 미리보기에 쓸 이름 (자유 텍스트) */
   badge?: string;
+  /**
+   * true면 사용자 마법사(getTemplatesFor)에서 제외 — 관리자 페이지에서는 노출.
+   * layout 미지정 등 운영 준비 전인 템플릿에 사용.
+   */
+  draft?: boolean;
 }
 
 /** 템플릿이 허용하는 layout 목록을 안전하게 반환 */
@@ -194,6 +199,95 @@ export const TEMPLATES: TemplateMeta[] = [
     colorSub: '#9CC0DD',
     recommendEvents: ['birthday', 'baptism', 'etc'],
     allowedLayouts: ['layout-classic', 'layout-5']
+  },
+  // === Draft batch (admin only — layout not yet curated) ===
+  {
+    id: 'tpl-party-balloons-cake',
+    name: 'Party Balloons & Cake',
+    description: 'Bright multicolor balloons with cake & gift — kids party',
+    bg_id: 'bg-img-12',
+    layout_id: 'layout-classic',
+    colorMain: '#E8588F',
+    colorSub: '#FCE4EE',
+    recommendEvents: ['birthday', 'etc'],
+    draft: true
+  },
+  {
+    id: 'tpl-pink-castle',
+    name: 'Pink Castle Floral',
+    description: 'Watercolor princess castle on pink clouds with rose border',
+    bg_id: 'bg-img-13',
+    layout_id: 'layout-classic',
+    colorMain: '#D67BA8',
+    colorSub: '#FCE8EE',
+    recommendEvents: ['birthday', 'baptism', 'etc'],
+    draft: true
+  },
+  {
+    id: 'tpl-sage-teddy',
+    name: 'Sage Teddy Frame',
+    description: 'Sage green stripes with teddy bear and ribbon frame',
+    bg_id: 'bg-img-14',
+    layout_id: 'layout-classic',
+    colorMain: '#6F9B7A',
+    colorSub: '#E8F1E5',
+    recommendEvents: ['birthday', 'baptism', 'etc'],
+    draft: true
+  },
+  {
+    id: 'tpl-pressed-flowers',
+    name: 'Pressed Flowers',
+    description: 'Pressed wildflowers on warm beige — botanical editorial',
+    bg_id: 'bg-img-15',
+    layout_id: 'layout-classic',
+    colorMain: '#B89456',
+    colorSub: '#F0EAD8',
+    recommendEvents: ['wedding', 'meeting', 'opening', 'etc'],
+    draft: true
+  },
+  {
+    id: 'tpl-pastel-cake-bunting',
+    name: 'Pastel Cake Bunting',
+    description: 'Pastel cakes & bunting flags on lilac — playful baby vibe',
+    bg_id: 'bg-img-16',
+    layout_id: 'layout-classic',
+    colorMain: '#5BA8C9',
+    colorSub: '#E8F4F8',
+    recommendEvents: ['birthday', 'baptism', 'etc'],
+    draft: true
+  },
+  {
+    id: 'tpl-rose-gold-balloons',
+    name: 'Rose Gold Balloons',
+    description: 'Rose gold balloons on watercolor pink — elegant celebration',
+    bg_id: 'bg-img-17',
+    layout_id: 'layout-classic',
+    colorMain: '#C97766',
+    colorSub: '#FCE5DD',
+    recommendEvents: ['birthday', 'wedding', 'etc'],
+    draft: true
+  },
+  {
+    id: 'tpl-gold-splatter',
+    name: 'Gold Splatter Beige',
+    description: 'Gold splatter & beige abstract — modern minimal luxe',
+    bg_id: 'bg-img-18',
+    layout_id: 'layout-classic',
+    colorMain: '#A07C2C',
+    colorSub: '#F5EFE0',
+    recommendEvents: ['wedding', 'opening', 'meeting', 'etc'],
+    draft: true
+  },
+  {
+    id: 'tpl-black-gold-gala',
+    name: 'Black Gold Gala',
+    description: 'Black background with gold balloons — gala / adult party',
+    bg_id: 'bg-img-19',
+    layout_id: 'layout-classic',
+    colorMain: '#D4A943',
+    colorSub: '#2A2218',
+    recommendEvents: ['birthday', 'opening', 'etc'],
+    draft: true
   }
 ];
 
@@ -221,5 +315,5 @@ export function findTemplateByPair(bg_id?: string | null, layout_id?: string | n
  * recommendEvents에 포함된 템플릿만 나타남.
  */
 export function getTemplatesFor(event: EventType): TemplateMeta[] {
-  return TEMPLATES.filter((t) => t.recommendEvents.includes(event));
+  return TEMPLATES.filter((t) => !t.draft && t.recommendEvents.includes(event));
 }

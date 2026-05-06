@@ -119,7 +119,7 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
           }}
         />
       )}
-      <div style={{ position: 'relative', padding: '24px 20px 40px', zIndex: 1 }}>
+      <div style={{ position: 'relative', padding: card.layout_id === 'layout-7' ? '110px 20px 40px' : '24px 20px 40px', zIndex: 1 }}>
         {/* 상단 장식 — 템플릿 메인 색상으로 ✽ + gradient 라인 (Topdown Text 제외) */}
         {card.layout_id !== 'layout-7' && (
           <FadeUp delay={0.05}>
@@ -133,7 +133,7 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
 
         {/* 앞면: eventLabel + 타이틀 (+ Topdown이 아닐 때 body 포함) */}
         <FadeUp delay={0.1}>
-          <div style={{ textAlign: 'center', padding: '8px 10px 12px' }}>
+          <div style={{ textAlign: 'center', padding: card.layout_id === 'layout-7' ? '0 10px 4px' : '8px 10px 12px' }}>
             {(() => {
               const lay = getLayout(card.layout_id);
               if (!lay.fields.eventLabel) return null;
@@ -146,7 +146,7 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
                   letterSpacing: labelField.letterSpacing,
                   fontFamily: labelField.fontFamily,
                   textAlign: labelField.align,
-                  marginBottom: 14
+                  marginBottom: card.layout_id === 'layout-7' ? 6 : 14
                 }}>
                   {getEventLabelText(card.event_type)}
                 </div>
@@ -247,7 +247,7 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
         {/* Topdown Text 전용: 박스 다음에 body 렌더 (divider 없음, 큰 갭) */}
         {card.layout_id === 'layout-7' && card.body && (
           <FadeUp delay={0.45}>
-            <div style={{ textAlign: 'center', padding: '180px 10px 16px' }}>
+            <div style={{ textAlign: 'center', padding: '130px 10px 16px' }}>
               <div style={{
                 lineHeight: 2.0,
                 color: tpl?.colorMain || COLORS.textDark,

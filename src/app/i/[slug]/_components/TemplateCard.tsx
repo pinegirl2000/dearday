@@ -220,13 +220,13 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
       )}
       {f.eventLabel && (
         <FieldText field={f.eventLabel} delay={0.05}>
-          {(layout.id === 'layout-4' || layout.id === 'layout-3' || layout.id === 'layout-5' || layout.id === 'layout-6')
+          {(layout.id === 'layout-4' || (layout.id === 'layout-3' || layout.id === 'layout-center') || (layout.id === 'layout-5' || layout.id === 'layout-rightbottom') || layout.id === 'layout-6' || layout.id === 'layout-topcenter')
             ? getEventLabelScript(card.event_type)
             : getEventLabelText(card.event_type)}
         </FieldText>
       )}
       {/* Side Text + Baptism: 우측 컬럼의 가로 중앙에 큰 십자가 — 템플릿 sub 색상 */}
-      {layout.id === 'layout-5' && card.event_type === 'baptism' && (
+      {(layout.id === 'layout-5' || layout.id === 'layout-rightbottom') && card.event_type === 'baptism' && (
         <div
           aria-hidden="true"
           style={{
@@ -248,7 +248,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
       {card.greeting_oneliner && f.subtitle && <FieldText field={f.subtitle} delay={0.1}>{applyName(card.greeting_oneliner, recipientName)}</FieldText>}
       <FieldText field={f.title} delay={0.2}>{applyName(card.title, recipientName)}</FieldText>
       {/* Side Text + Center Text: 하단 date+place 영역 정보 박스 — 템플릿 sub 색상 톤 (없으면 흰색) */}
-      {(layout.id === 'layout-5' || layout.id === 'layout-6') && (card.event_date || card.event_place) && f.date && f.place && (() => {
+      {((layout.id === 'layout-5' || layout.id === 'layout-rightbottom') || layout.id === 'layout-6') && (card.event_date || card.event_place) && f.date && f.place && (() => {
         // sub 색상이 정의된 경우에만 sub 톤 적용. 없으면 순수 흰색 박스 + 중성 그림자.
         const hasSub = !!tplSub;
         const subTint = tplSub || '#FFFFFF';
@@ -260,12 +260,25 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
             transition={{ duration: 0.5, delay: 0.25 }}
             style={{
               position: 'absolute',
-              left: '6%', right: '6%',
-              top: `calc(${f.date.y - 1}%)`,
-              // layout-6: extra(Lunch will be served 등)도 박스 안에 포함
+              // layout-5(Rightside): 우측에 좁고 세로로 긴 박스. 그 외: 카드 전체 폭.
+              left: layout.id === 'layout-5' ? '38%' : '6%',
+              right: layout.id === 'layout-5' ? '5%' : '6%',
+              top: layout.id === 'layout-6'
+                ? `calc(${f.date.y + 0.5}%)`
+                : layout.id === 'layout-5'
+                  ? `calc(${f.date.y - 5}%)`
+                  : layout.id === 'layout-rightbottom'
+                    ? `calc(${f.date.y - 3}%)`
+                    : `calc(${f.date.y - 1}%)`,
+              // layout-6: extra(Reception to follow 등)도 박스 안에 포함.
+              // layout-5/rightbottom: 박스 안 date+place(view map 포함) 가로세로 중앙정렬.
               bottom: layout.id === 'layout-6' && f.extra
                 ? `calc(${100 - (f.extra.y + 4)}%)`
-                : `calc(${100 - (f.place.y + 3)}%)`,
+                : layout.id === 'layout-5'
+                  ? `calc(${100 - (f.place.y + 13)}%)`
+                  : layout.id === 'layout-rightbottom'
+                    ? `calc(${100 - (f.place.y + 8)}%)`
+                    : `calc(${100 - (f.place.y + 3)}%)`,
               // sub 있으면: 흰색 반투명 위에 sub 솔리드 → 톤 비치는 frosted
               // sub 없으면: 그냥 흰색 그라디언트
               background: hasSub
@@ -284,7 +297,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
         );
       })()}
       {/* Side Text 전용: 박스 아래 호스트 이름 + 전화 (extra 위) */}
-      {layout.id === 'layout-5' && (card.contact_name || card.contact_phone) && (
+      {(layout.id === 'layout-5' || layout.id === 'layout-rightbottom') && (card.contact_name || card.contact_phone) && (
         <div
           style={{
             position: 'absolute',
@@ -332,9 +345,9 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
         />
       )}
       {card.event_date && f.date && (
-        (layout.id === 'layout-4' || layout.id === 'layout-5')
+        (layout.id === 'layout-4' || (layout.id === 'layout-5' || layout.id === 'layout-rightbottom'))
           ? <SplitDate field={f.date} iso={card.event_date} delay={0.3} />
-          : (layout.id === 'layout-3' || layout.id === 'layout-6')
+          : ((layout.id === 'layout-3' || layout.id === 'layout-center') || layout.id === 'layout-6' || layout.id === 'layout-topcenter')
             ? <ModernSplitDate field={f.date} iso={card.event_date} delay={0.3} />
             : <FieldText field={f.date} delay={0.3}>{formatDate(card.event_date)}</FieldText>
       )}
@@ -342,18 +355,25 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
         <FieldText field={f.place} delay={0.4}>
           <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
             <span>{card.event_place}</span>
-            {card.map_url && (
-              isUrl(card.map_url) ? (
+            {card.map_url && isUrl(card.map_url) && (
+              (layout.id === 'layout-6' || layout.id === 'layout-center') ? (
+                <a href={card.map_url} target="_blank" rel="noreferrer"
+                  aria-label="Open map"
+                  style={{ color: f.place.color, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', opacity: 0.85, marginLeft: 2 }}
+                >
+                  <MapPin size={Math.max(12, (f.place.fontSize || 12) - 1)} strokeWidth={1.6} />
+                </a>
+              ) : (
                 <a href={card.map_url} target="_blank" rel="noreferrer"
                   style={{ color: f.place.color, textDecoration: 'underline', fontSize: '0.6em', opacity: 0.75 }}
                 >view map ↗</a>
-              ) : null
+              )
             )}
           </span>
         </FieldText>
       )}
       {/* 전화/호스트는 place 아래 인라인 배치. layout-5는 별도 처리(위에서 처리)되므로 제외 */}
-      {layout.id !== 'layout-5' && (card.contact_phone || card.contact_name) && f.place && (
+      {layout.id !== 'layout-5' && layout.id !== 'layout-rightbottom' && (card.contact_phone || card.contact_name) && f.place && (
         <div
           style={{
             position: 'absolute',
@@ -362,7 +382,9 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
               ? `calc(${f.place.y + 8}%)`
               : layout.id === 'layout-6'
                 ? `calc(${f.place.y + 11}%)`  // 박스(extra 포함) 아래로
-                : layout.id === 'layout-3'
+              : layout.id === 'layout-topcenter'
+                ? `calc(${f.place.y + 11}%)`
+                : (layout.id === 'layout-3' || layout.id === 'layout-center')
                   ? `calc(${f.place.y + 6}%)`
                   : `calc(${f.place.y}% + 24px)`,
             width: `${f.place.w}%`,
@@ -371,19 +393,37 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
             color: f.place.color,
             fontFamily: f.place.fontFamily,
             display: 'flex',
-            flexDirection: 'column',
-            gap: 4
+            flexDirection: layout.id === 'layout-center' ? 'row' : 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: layout.id === 'layout-center' ? 8 : 4
           }}
         >
-          {/* 호스트 이름 위, 전화번호 아래 (tel: 링크 — 모바일 다이얼러 연결) */}
-          {card.contact_name && <span>— {applyName(card.contact_name, recipientName)} —</span>}
-          {card.contact_phone && (
-            <a
-              href={`tel:${card.contact_phone}`}
-              style={{ color: f.place.color, textDecoration: 'none' }}
-            >
-              {card.contact_phone}
-            </a>
+          {layout.id === 'layout-center' ? (
+            // 한 줄 포맷: — name / phone —
+            <span>
+              {card.contact_name && <>— {applyName(card.contact_name, recipientName)}</>}
+              {card.contact_name && card.contact_phone && <> / </>}
+              {card.contact_phone && (
+                <a href={`tel:${card.contact_phone}`} style={{ color: f.place.color, textDecoration: 'none' }}>
+                  {card.contact_phone}
+                </a>
+              )}
+              {(card.contact_name || card.contact_phone) && <> —</>}
+            </span>
+          ) : (
+            <>
+              {card.contact_name && <span>— {applyName(card.contact_name, recipientName)} —</span>}
+              {card.contact_phone && (
+                <a
+                  href={`tel:${card.contact_phone}`}
+                  style={{ color: f.place.color, textDecoration: 'none' }}
+                >
+                  {card.contact_phone}
+                </a>
+              )}
+            </>
           )}
         </div>
       )}
@@ -408,17 +448,24 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
         </motion.div>
       )}
       {card.body && f.body && <FieldText field={f.body} delay={0.65}>{applyName(card.body, recipientName)}</FieldText>}
-      {card.extra_info && f.extra && <FieldText field={f.extra} delay={0.75}>{applyName(card.extra_info, recipientName)}</FieldText>}
+      {card.extra_info && f.extra && (
+        <FieldText
+          field={(layout.id === 'layout-6' || layout.id === 'layout-topcenter') && tplMain ? { ...f.extra, color: tplMain } : f.extra}
+          delay={0.75}
+        >
+          {applyName(card.extra_info, recipientName)}
+        </FieldText>
+      )}
       {/* RSVP — Compact(layout-4) / Editorial(layout-3)은 카드 안 오버레이.
           Side Text(5) / Center Text(6)는 카드 밖 분리 (충돌 방지) */}
-      {rsvpSlot && (layout.id === 'layout-4' || layout.id === 'layout-3') && (
+      {rsvpSlot && (layout.id === 'layout-4' || (layout.id === 'layout-3' || layout.id === 'layout-center')) && (
         <div
           style={{
             position: 'absolute',
             left: '5%',
             right: '5%',
             // Editorial(layout-3)은 100px 위로 올려 호스트/extra와 겹치지 않게
-            bottom: layout.id === 'layout-3' ? 'calc(3% + 100px)' : '3%',
+            bottom: (layout.id === 'layout-3' || layout.id === 'layout-center') ? 'calc(3% + 100px)' : '3%',
             zIndex: 8
           }}
         >
@@ -427,7 +474,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
       )}
     </div>
     {/* Side Text(5) / Center Text(6) — RSVP를 카드 밖 아래에 분리 표시 */}
-    {rsvpSlot && (layout.id === 'layout-5' || layout.id === 'layout-6') && (
+    {rsvpSlot && ((layout.id === 'layout-5' || layout.id === 'layout-rightbottom') || layout.id === 'layout-6' || layout.id === 'layout-topcenter') && (
       <div className="mt-3 px-4">
         {rsvpSlot}
       </div>

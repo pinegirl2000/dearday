@@ -802,10 +802,13 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
               const SHORT_DESC: Record<string, string> = {
                 'layout-classic': 'Top-down flow',
                 'layout-7': 'Top-down + center',
-                'layout-3': 'Editorial script',
+                'layout-3': 'Topcenter2',
+                'layout-center': 'Center',
                 'layout-4': 'Compact boxed',
-                'layout-5': 'Side text',
-                'layout-6': 'Centered'
+                'layout-5': 'Rightside text',
+                'layout-rightbottom': 'Rightbottom text',
+                'layout-6': 'Centerdown',
+                'layout-topcenter': 'Topcenter1'
               };
               return (
                 <div>

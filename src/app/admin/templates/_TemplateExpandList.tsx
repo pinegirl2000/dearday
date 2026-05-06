@@ -52,7 +52,7 @@ const SAMPLE_BY_EVENT: Record<string, SampleData> = {
     event_place: 'The Lounge function room',
     contact_name: "Love, Riley's Family",
     contact_phone: '+65-2222-3333',
-    extra_info: 'Lunch will be served'
+    extra_info: ''
   },
   opening: {
     title: 'Round Cafe · Grand Opening',
@@ -97,7 +97,11 @@ const SAMPLE_BY_EVENT: Record<string, SampleData> = {
 };
 
 function buildPreview(t: Tpl, layoutOverride?: LayoutId, eventType?: string): BaseCard {
-  const ev = eventType && SAMPLE_BY_EVENT[eventType] ? eventType : 'wedding';
+  // 우선순위: 명시 eventType > 템플릿의 첫 recommendEvents > 'wedding'
+  const tplDefault = t.recommendEvents.find((e) => SAMPLE_BY_EVENT[e]);
+  const ev = (eventType && SAMPLE_BY_EVENT[eventType])
+    ? eventType
+    : (tplDefault || 'wedding');
   const sample = SAMPLE_BY_EVENT[ev];
   return {
     id: 'preview',
@@ -213,6 +217,11 @@ export default function TemplateExpandList({ templates, eventType, configs }: Pr
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold text-hydrangea-700 truncate">{t.name}</span>
+                  {t.draft && (
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 font-semibold uppercase tracking-wide flex-shrink-0">
+                      Draft
+                    </span>
+                  )}
                   <code className="text-[10px] font-mono text-hydrangea-400 hidden sm:inline">{t.id}</code>
                 </div>
                 <div className="text-xs text-hydrangea-500 truncate">{t.description}</div>
