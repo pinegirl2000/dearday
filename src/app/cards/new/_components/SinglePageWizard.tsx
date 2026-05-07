@@ -149,6 +149,8 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
   const { draft, setDraft, setEventType, reset, editingSlug } = useWizardStore();
   const isEditMode = !!editingSlug;
   const [open, setOpen] = useState<SectionId>((initialOpen as SectionId) || 1);
+  // 템플릿 클릭 시 큰 미리보기 모달
+  const [previewTpl, setPreviewTpl] = useState<typeof TEMPLATES[number] | null>(null);
   // 사용자가 Next 버튼으로 실제로 진행한 최대 단계 — 시각적 완료 표시용
   // edit 모드(initialOpen=4)는 처음부터 4단계까지 다 통과한 것으로 시작
   const [maxStepCompleted, setMaxStepCompleted] = useState<number>(
@@ -507,16 +509,16 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                       이 이벤트에 등록된 템플릿이 없습니다.
                     </div>
                   ) : (
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-5 gap-1.5">
                       {tpls.map((t) => {
                         const bg = getBackground(t.bg_id);
                         const selected = draft.bg_id === t.bg_id && draft.layout_id === t.layout_id;
                         return (
                           <motion.button
                             key={t.id}
-                            onClick={() => setDraft({ bg_id: t.bg_id as BackgroundId, layout_id: t.layout_id as LayoutId })}
+                            onClick={() => setPreviewTpl(t)}
                             whileTap={{ scale: 0.96 }}
-                            className={`relative aspect-[3/4] rounded-xl border-2 overflow-hidden transition ${
+                            className={`relative aspect-[3/4] rounded-lg border-2 overflow-hidden transition ${
                               selected ? 'border-hydrangea-500 ring-2 ring-hydrangea-300' : 'border-hydrangea-100/60'
                             }`}
                           >
@@ -525,12 +527,12 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                             ) : (
                               <div className="absolute inset-0" style={{ background: bg.gradient }} />
                             )}
-                            <div className="absolute bottom-0 left-0 right-0 bg-black/45 text-white text-[10px] py-0.5 text-center truncate px-1">
+                            <div className="absolute bottom-0 left-0 right-0 bg-black/45 text-white text-[8px] py-0.5 text-center truncate px-0.5">
                               {t.name}
                             </div>
                             {selected && (
-                              <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-hydrangea-500 flex items-center justify-center">
-                                <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
+                              <div className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-hydrangea-500 flex items-center justify-center">
+                                <Check className="w-2 h-2 text-white" strokeWidth={3} />
                               </div>
                             )}
                           </motion.button>
@@ -1128,6 +1130,59 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
           </div>
         </div>
       )}
+
+      {/* 템플릿 큰 미리보기 모달 */}
+      {previewTpl && (() => {
+        const tpl = previewTpl;
+        const bg = getBackground(tpl.bg_id);
+        const sampleCard = {
+          ...previewCard,
+          bg_id: tpl.bg_id as BackgroundId,
+          layout_id: tpl.layout_id as LayoutId
+        };
+        return (
+          <div
+            className="fixed inset-0 z-50 bg-black/60 flex flex-col items-center justify-center p-4 overflow-y-auto"
+            onClick={() => setPreviewTpl(null)}
+          >
+            <div
+              className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="px-4 py-3 flex items-center justify-between border-b border-hydrangea-100">
+                <div>
+                  <div className="text-sm font-semibold text-hydrangea-700">{tpl.name}</div>
+                  {bg.imageUrl && <div className="text-[10px] text-hydrangea-400 mt-0.5 truncate">{tpl.bg_id}</div>}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPreviewTpl(null)}
+                  className="text-hydrangea-400 hover:text-hydrangea-700 text-2xl leading-none"
+                  aria-label="Close"
+                >×</button>
+              </div>
+              <div className="p-3 max-h-[70vh] overflow-y-auto bg-hydrangea-50/30">
+                <TemplateCard card={sampleCard as any} recipientName="John" />
+              </div>
+              <div className="p-3 flex gap-2 border-t border-hydrangea-100">
+                <button
+                  type="button"
+                  onClick={() => setPreviewTpl(null)}
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-hydrangea-200 text-hydrangea-700 text-sm font-medium hover:bg-hydrangea-50 transition"
+                >Cancel</button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDraft({ bg_id: tpl.bg_id as BackgroundId, layout_id: tpl.layout_id as LayoutId });
+                    setPreviewTpl(null);
+                  }}
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-hydrangea-500 text-white text-sm font-semibold hover:bg-hydrangea-600 transition"
+                >Use this template</button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </PageContainer>
   );
 }
