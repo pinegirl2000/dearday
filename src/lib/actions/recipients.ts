@@ -7,6 +7,7 @@ import { authOptions } from '@/lib/auth';
 import { isAdminEmail } from '@/lib/admin';
 import { generateRecipientToken } from '@/lib/slug';
 import { sendInvitationEmail } from '@/lib/email/sendInvitation';
+import { COLOR_PALETTES, resolveColorId, type EnvelopeColorId } from '@/components/envelopes/palettes';
 
 interface AuthCheck {
   slug: string;
@@ -148,12 +149,24 @@ export async function sendInvitationsToRecipients(
   const card = await verifyOwner({ slug, ownerToken });
   if (!card) return { ok: false as const, error: '권한이 없습니다.' };
 
-  const { rows: cardRow } = await pool.query<{ slug: string; title: string; greeting_oneliner: string | null }>(
-    'SELECT slug, title, greeting_oneliner FROM dearday_card WHERE id=$1 LIMIT 1',
+  const { rows: cardRow } = await pool.query<{ slug: string; title: string; greeting_oneliner: string | null; envelope_anim: string | null }>(
+    'SELECT slug, title, greeting_oneliner, envelope_anim FROM dearday_card WHERE id=$1 LIMIT 1',
     [card.id]
   );
   const cardData = cardRow[0];
   if (!cardData) return { ok: false as const, error: 'Card not found' };
+
+  // 카드 envelope_anim에서 palette 파싱 — 'type:color' 또는 legacy 'envelope-N'
+  const envColorId = ((): EnvelopeColorId => {
+    const a = cardData.envelope_anim || '';
+    if (a.includes(':')) return resolveColorId(a.split(':')[1]);
+    const legacy: Record<string, string> = {
+      'envelope-1': 'lavender', 'envelope-2': 'beige', 'envelope-3': 'mint',
+      'envelope-4': 'coral', 'envelope-5': 'lightblue', 'envelope-6': 'blackgold'
+    };
+    return resolveColorId(legacy[a] || 'lavender');
+  })();
+  const palette = COLOR_PALETTES[envColorId];
 
   if (!recipientIds || recipientIds.length === 0) {
     return { ok: false as const, error: 'No recipients selected' };
@@ -186,7 +199,20 @@ export async function sendInvitationsToRecipients(
       recipientName: r.name,
       cardTitle: cardData.title,
       greeting: cardData.greeting_oneliner,
-      invitationUrl: url
+      invitationUrl: url,
+      palette: {
+        body: palette.body,
+        bodyTint: palette.bodyTint,
+        bodyMid: palette.bodyMid,
+        bodyDark: palette.bodyDark,
+        flap: palette.flap,
+        flapShadow: palette.flapShadow,
+        ink: palette.ink,
+        goldHighlight: palette.goldHighlight,
+        goldLight: palette.goldLight,
+        gold: palette.gold,
+        goldDeep: palette.goldDeep
+      }
     });
     if (result.ok) {
       sent++;

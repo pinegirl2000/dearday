@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { ClassicEnvelope, EnvelopeBeige, EnvelopeMint, EnvelopeCoral, EnvelopeBlue, EnvelopeBlackGold, SwayEnvelope, NoneEnvelope, COLOR_PALETTES, type EnvelopeColorId } from '@/components/envelopes';
@@ -56,6 +56,20 @@ export default function InvitationView({ card, feed, recipientName, recipientId,
   // 봉투 'none'이면 봉투 단계 건너뛰고 바로 카드 표시
   const [open, setOpen] = useState(card.envelope_anim === 'none');
   const [opening, setOpening] = useState(false);
+  // 봉투 width — 반응형 (모바일에서 답답해 보이지 않도록 좌우 여백 확보)
+  const [envWidth, setEnvWidth] = useState(360);
+  useEffect(() => {
+    const compute = () => {
+      const vw = window.innerWidth;
+      // 좌우 24px씩 여백 + 양쪽 합계 48px → vw - 48이 안전 범위
+      // 데스크톱은 380 cap, 모바일은 vw 기준으로 더 작게 (최대 88%)
+      const w = Math.min(380, Math.round(Math.min(vw - 48, vw * 0.88)));
+      setEnvWidth(Math.max(280, w));
+    };
+    compute();
+    window.addEventListener('resize', compute);
+    return () => window.removeEventListener('resize', compute);
+  }, []);
   // envelope-6 전용: 봉투에서 카드로 같은 화면 내 부드럽게 morph (flip + scale)
   const [transitioning, setTransitioning] = useState(false);
   const theme = getTheme(card.theme);
@@ -184,7 +198,7 @@ export default function InvitationView({ card, feed, recipientName, recipientId,
           <div className="relative">
           <Envelope
             isOpen={opening}
-            width={380}
+            width={envWidth}
             palette={envelopePalette}
             recipientGreeting={formatGreeting(recipientName, card.recipient_template) || undefined}
             onComplete={handleEnvelopeComplete}
@@ -242,7 +256,7 @@ export default function InvitationView({ card, feed, recipientName, recipientId,
             </div>
           </Envelope>
           {!(opening && envParsed.type === 'flip') && card.envelope_anim !== 'none' && envParsed.type !== 'none' && recipientName && recipientName.trim() && (() => {
-            const envHeight = Math.round(380 * 0.75);
+            const envHeight = Math.round(envWidth * 0.75);
             const isFlip = envParsed.type === 'flip';
             return (
               <div style={{

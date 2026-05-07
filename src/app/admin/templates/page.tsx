@@ -58,38 +58,23 @@ export default async function TemplatesAdminPage({ searchParams }: PageProps) {
 
   const configs = Object.fromEntries(await getAllTemplateConfigs());
 
+  const tab = (key: 'template' | 'event' | 'layout', label: string) => (
+    <Link
+      href={`/admin/templates?view=${key}`}
+      className={`px-4 py-2 text-sm font-semibold rounded-lg transition active:scale-95 ${
+        view === key
+          ? 'bg-hydrangea-500 text-white shadow ring-2 ring-hydrangea-300'
+          : 'bg-white text-hydrangea-500 border border-hydrangea-200 hover:bg-hydrangea-50'
+      }`}
+    >
+      {label}
+    </Link>
+  );
   const ViewTabs = (
-    <div className="flex gap-2 mb-4 border-b border-hydrangea-100">
-      <Link
-        href="/admin/templates?view=template"
-        className={`px-3 py-2 text-sm font-medium border-b-2 transition ${
-          view === 'template'
-            ? 'border-hydrangea-500 text-hydrangea-700'
-            : 'border-transparent text-hydrangea-400 hover:text-hydrangea-600'
-        }`}
-      >
-        Template별
-      </Link>
-      <Link
-        href="/admin/templates?view=event"
-        className={`px-3 py-2 text-sm font-medium border-b-2 transition ${
-          view === 'event'
-            ? 'border-hydrangea-500 text-hydrangea-700'
-            : 'border-transparent text-hydrangea-400 hover:text-hydrangea-600'
-        }`}
-      >
-        Event별
-      </Link>
-      <Link
-        href="/admin/templates?view=layout"
-        className={`px-3 py-2 text-sm font-medium border-b-2 transition ${
-          view === 'layout'
-            ? 'border-hydrangea-500 text-hydrangea-700'
-            : 'border-transparent text-hydrangea-400 hover:text-hydrangea-600'
-        }`}
-      >
-        Layout별
-      </Link>
+    <div className="flex gap-2 mb-4">
+      {tab('template', 'Template별')}
+      {tab('event', 'Event별')}
+      {tab('layout', 'Layout별')}
     </div>
   );
 

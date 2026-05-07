@@ -73,6 +73,7 @@ import SendStep from './SendStep';
 import RsvpForm from '@/app/i/[slug]/_components/RsvpForm';
 import { getTheme } from '@/lib/theme';
 import { TEMPLATES, getTemplate, findTemplateByPair, getTemplatesFor, getTemplateLayouts } from '@/lib/templates';
+import { buildSamplePreviewCard } from '@/lib/templates/sampleData';
 import { LAYOUTS, getLayout } from '@/lib/layouts';
 import type { BackgroundId, BaseCard, EnvelopeAnimId, EventType, LayoutId } from '@/types/card';
 
@@ -378,14 +379,22 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
   };
 
   // 요약 라벨
-  const envName = ENVELOPE_ANIMS.find((e) => e.id === draft.envelope_anim)?.name || '-';
+  // 새 (type, color) 형식 우선 — palette label 사용. 'none'/legacy는 ENVELOPE_ANIMS fallback
+  const envParsed = parseEnvelopeAnim(draft.envelope_anim);
+  const envName = (() => {
+    if (envParsed.type === 'none') return 'None';
+    const palette = COLOR_PALETTES[envParsed.color];
+    const animLabel = envParsed.type === 'flip' ? 'Flip' : 'Sway';
+    return palette ? `${palette.label} · ${animLabel}` : (ENVELOPE_ANIMS.find((e) => e.id === draft.envelope_anim)?.name || '-');
+  })();
   const tplMeta = findTemplateByPair(draft.bg_id, draft.layout_id);
   const tplName = tplMeta?.name || bgMeta.name;
   const summaries = {
     1: `${meta.label} · ${tplName}`,
     2: envName,
     3: draft.title || '',
-    4: ''
+    4: '',
+    5: ''
   };
 
   const detailsCanProceed = (() => {
@@ -418,7 +427,8 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
           {([1, 2, 3, 4, 5] as SectionId[]).map((id, idx) => {
             const active = open === id;
             const enabled = isEnabled(id);
-            const completed = id <= maxStepCompleted;
+            // 완료 표시: 사용자가 진행한 step(maxStepCompleted) 또는 isDone(현재 데이터로 충족)
+            const completed = !active && (id <= maxStepCompleted || (id !== 4 && id !== 5 && isDone(id)));
             return (
               <Fragment key={id}>
                 <button
@@ -430,24 +440,18 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                     active
                       ? 'bg-hydrangea-500 text-white shadow ring-2 ring-hydrangea-200'
                       : completed
-                        ? 'bg-hydrangea-500 text-white'
+                        ? 'bg-white text-hydrangea-600 border border-hydrangea-400'
                         : enabled
                           ? 'bg-white text-hydrangea-500 border border-hydrangea-300'
                           : 'bg-white text-hydrangea-300 border border-hydrangea-100 opacity-60'
                   }`}
                 >
-                  {completed && !active ? (
-                    <Check className="w-3.5 h-3.5" strokeWidth={3} />
-                  ) : (
-                    <span>{id}</span>
-                  )}
+                  {completed ? <Check className="w-3.5 h-3.5" strokeWidth={3} /> : <span>{id}</span>}
                 </button>
                 {idx < 4 && (
                   <span
                     aria-hidden="true"
-                    className={`flex-1 max-w-12 h-px mx-1 ${
-                      completed ? 'bg-hydrangea-500' : 'bg-hydrangea-200'
-                    }`}
+                    className="flex-1 max-w-12 h-px mx-1 bg-hydrangea-200"
                   />
                 )}
               </Fragment>
@@ -745,7 +749,16 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
             ? { label: 'SAVE', onClick: handlePublish, disabled: pending }
             : { label: 'NEXT', onClick: () => advance(4), disabled: !detailsCanProceed }}
         >
-          <div className="space-y-4 mt-2">
+          {/* 선택한 템플릿 배경 + 입력 폼이 그 위에 살짝 반투명 카드로 올라감 — 실제 결과물 미리 체감 */}
+          <div className="relative -m-4 mt-0 p-4 rounded-b-2xl overflow-hidden"
+            style={{
+              background: bgMeta.imageUrl
+                ? `url('${bgMeta.imageUrl}') center/cover no-repeat`
+                : (bgMeta.gradient || 'linear-gradient(135deg,#F4ECFA,#E8DFF3)')
+            }}
+          >
+            <div className="absolute inset-0 bg-white/55 backdrop-blur-sm pointer-events-none" />
+            <div className="relative space-y-4 mt-2">
             <Input
               label="Subtitle"
               placeholder={meta.fields.subtitlePlaceholder}
@@ -905,6 +918,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
             {!detailsCanProceed && (
               <p className="text-xs text-hydrangea-400 text-center">All fields marked with * are required</p>
             )}
+            </div>
           </div>
         </SectionShell>
 
@@ -1172,11 +1186,9 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
       {previewTpl && (() => {
         const tpl = previewTpl;
         const bg = getBackground(tpl.bg_id);
-        const sampleCard = {
-          ...previewCard,
-          bg_id: tpl.bg_id as BackgroundId,
-          layout_id: tpl.layout_id as LayoutId
-        };
+        // 템플릿의 기본 layout(admin override 우선 → 코드 default 첫 번째) + 첫 recommendEvent 기준 sample data
+        // — 관리자 페이지와 동일한 미리보기 결과
+        const sampleCard = buildSamplePreviewCard(tpl, undefined, undefined, templateConfigs);
         return (
           <div
             className="fixed inset-0 z-50 bg-black/60 flex flex-col items-center justify-center p-4 overflow-y-auto"
@@ -1199,7 +1211,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                 >×</button>
               </div>
               <div className="p-3 max-h-[70vh] overflow-y-auto bg-hydrangea-50/30">
-                <TemplateCard card={sampleCard as any} recipientName="John" />
+                <TemplateCard card={sampleCard} recipientName="John" />
               </div>
               <div className="p-3 flex gap-2 border-t border-hydrangea-100">
                 <button

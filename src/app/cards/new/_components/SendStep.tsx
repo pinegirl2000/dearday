@@ -76,14 +76,14 @@ export default function SendStep({ slug, ownerToken }: Props) {
     const lines = bulkText.split('\n').map((l) => l.trim()).filter((l) => l.length > 0);
     if (lines.length === 0) { toast.error('비어있습니다'); return; }
     const items: Array<{ name: string; email?: string | null }> = lines.map((l) => {
-      // CSV: "name, email" or just "name"
-      const parts = l.split(',').map((p) => p.trim());
+      // 구분자 "/" — "이름/이메일" 또는 이름만
+      const parts = l.split('/').map((p) => p.trim());
       return { name: parts[0], email: mode === 'email' ? (parts[1] || '') : null };
     });
     if (mode === 'email') {
       const missing = items.filter((it) => !it.email);
       if (missing.length > 0) {
-        toast.error(`이메일 누락 ${missing.length}건. 형식: "이름, 이메일"`);
+        toast.error(`이메일 누락 ${missing.length}건. 형식: "이름/이메일"`);
         return;
       }
     }
@@ -168,7 +168,11 @@ export default function SendStep({ slug, ownerToken }: Props) {
           >
             <LinkIcon className="w-4 h-4 text-hydrangea-500 mb-1" />
             <div className="text-xs font-semibold text-hydrangea-700">Link only</div>
-            <div className="text-[10px] text-hydrangea-400 mt-0.5">개인 링크 생성 후 직접 공유</div>
+            <div className="text-[10px] text-hydrangea-400 mt-0.5 leading-snug">
+              개인 링크 생성 후 메신저를 이용해 직접 링크를 보내는 방식입니다.
+              <span className="inline-flex items-center gap-0.5 mx-0.5"><Copy className="inline w-2.5 h-2.5" /></span>
+              아이콘을 클릭하면 링크가 복사됩니다.
+            </div>
           </button>
           <button
             type="button"
@@ -233,7 +237,7 @@ export default function SendStep({ slug, ownerToken }: Props) {
           <div className="space-y-2">
             <textarea
               placeholder={mode === 'email'
-                ? '한 줄에 한 명씩 — "이름, 이메일" 형식\n예:\nMs. Sarah, sarah@example.com\nMr. Daniel, daniel@example.com'
+                ? '한 줄에 한 명씩 — "이름/이메일" 형식\n예:\nMs. Sarah/sarah@example.com\nMr. Daniel/daniel@example.com'
                 : '한 줄에 한 명씩 (이름만)\n예:\nMs. Sarah\nMr. Daniel'}
               value={bulkText}
               onChange={(e) => setBulkText(e.target.value)}

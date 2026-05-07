@@ -155,8 +155,9 @@ export default function EventBrowser({ configs, eventOrders }: Props) {
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-2">
-        <div>
+      {/* Event + Template 드롭다운 + 순서 변경 버튼을 한 줄로 */}
+      <div className="flex items-end gap-2">
+        <div className="flex-1 min-w-0">
           <label className="block text-[10px] font-semibold text-hydrangea-700 mb-1">Event</label>
           <select
             value={eventId}
@@ -175,7 +176,7 @@ export default function EventBrowser({ configs, eventOrders }: Props) {
             })}
           </select>
         </div>
-        <div>
+        <div className="flex-1 min-w-0">
           <label className="block text-[10px] font-semibold text-hydrangea-700 mb-1">Template</label>
           <select
             value={selectedTpl?.id || ''}
@@ -189,21 +190,18 @@ export default function EventBrowser({ configs, eventOrders }: Props) {
             ))}
           </select>
         </div>
-      </div>
-
-      {templates.length > 1 && (
-        <div className="flex justify-end">
+        {templates.length > 1 && (
           <button
             type="button"
             onClick={() => setReorderMode((v) => !v)}
-            className={`text-[11px] px-3 py-1 rounded-full font-semibold active:scale-95 transition ${
+            className={`flex-shrink-0 text-[11px] px-3 h-[34px] rounded-lg font-semibold active:scale-95 transition whitespace-nowrap ${
               reorderMode ? 'bg-hydrangea-500 text-white' : 'bg-hydrangea-100 text-hydrangea-700'
             }`}
           >
             {reorderMode ? '완료' : '순서 변경'}{pending && reorderMode && ' · 저장 중'}
           </button>
-        </div>
-      )}
+        )}
+      </div>
 
       {reorderMode ? (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -217,6 +215,9 @@ export default function EventBrowser({ configs, eventOrders }: Props) {
         <>
           <TemplateColorRow template={selectedTpl} />
           <div className="bg-hydrangea-50/40 rounded-2xl p-3">
+            <div className="text-[11px] font-semibold text-hydrangea-700 mb-2 px-1">
+              Template name : <span className="text-hydrangea-500">{selectedTpl.name}</span>
+            </div>
             <TemplateCard card={buildPreview(selectedTpl, previewLayoutId, eventId)} />
           </div>
           <TemplateInfoPanel template={selectedTpl} layoutId={previewLayoutId} />

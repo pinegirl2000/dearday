@@ -417,9 +417,12 @@ function BackFace({
           }}
         >
           <defs>
+            {/* 닫힌 flap 그라데이션 — 본체와 자연스럽게 이어지는 밝은 톤 (bodyTint→bodyMid→flap)
+                기존 flap→flapShadow는 V apex 부근이 너무 어두워졌음 */}
             <linearGradient id="bgFlapFront" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={PALETTE.flap} />
-              <stop offset="100%" stopColor={PALETTE.flapShadow} />
+              <stop offset="0%" stopColor={PALETTE.bodyTint} />
+              <stop offset="60%" stopColor={PALETTE.bodyMid} />
+              <stop offset="100%" stopColor={PALETTE.flap} />
             </linearGradient>
           </defs>
           <path d="M 0 0 L 100 0 L 56 90 Q 50 100 44 90 Z" fill="url(#bgFlapFront)" />

@@ -1,0 +1,89 @@
+// 템플릿/레이아웃 미리보기용 sample data — 관리자 + Create wizard 공유
+
+import type { BaseCard, EventType, LayoutId } from '@/types/card';
+import { getTemplateLayouts } from '@/lib/templates';
+
+export const SAMPLE_BY_EVENT: Record<string, Partial<BaseCard>> = {
+  wedding: {
+    title: 'Daniel ♥ Olivia', greeting_oneliner: 'Together with our families',
+    body: 'We invite you to share in\nthe joy of our wedding day.',
+    event_date: '2026-06-14T19:00:00.000Z', event_place: 'The Grand Ballroom, Marina Hotel',
+    contact_name: 'From Daniel & Olivia', contact_phone: '+65-1234-5678', extra_info: 'Reception to follow'
+  },
+  birthday: {
+    title: "Riley's First Birthday", greeting_oneliner: 'A precious first year',
+    body: "Please join us in celebrating\nRiley's first year of life.",
+    event_date: '2026-07-05T11:00:00.000Z', event_place: 'The Lounge function room',
+    contact_name: "Love, Riley's Family", contact_phone: '+65-2222-3333'
+  },
+  baptism: {
+    title: "Avery's Baptism Day", greeting_oneliner: 'A blessed first step',
+    body: "Please join us as we celebrate\nAvery's baptism in the Lord.",
+    event_date: '2026-05-03T10:30:00.000Z', event_place: 'Grace Church, Main Sanctuary',
+    contact_name: 'Love, David & Rachel', contact_phone: '+65-9999-1111'
+  },
+  meeting: {
+    title: 'Spring Gathering', greeting_oneliner: 'See you again',
+    body: "It has been too long.\nLet's gather and catch up.",
+    event_date: '2026-04-12T14:00:00.000Z', event_place: 'Hangang Park, Open Lawn',
+    contact_name: 'From the Hosts', contact_phone: '+65-3333-4444'
+  },
+  opening: {
+    title: 'Round Cafe · Grand Opening', greeting_oneliner: 'A new beginning',
+    body: "We're excited to open our doors\nand share this moment with you.",
+    event_date: '2026-09-20T17:00:00.000Z', event_place: 'Round Cafe, 1 Orchard Lane',
+    contact_name: 'The Round Cafe Team', contact_phone: '+65-7777-8888'
+  },
+  etc: {
+    title: 'A Special Day', greeting_oneliner: 'A precious moment',
+    body: "We'd love for you to share\nthis special moment with us.",
+    event_date: '2026-08-10T18:00:00.000Z', event_place: 'Sample Venue, City',
+    contact_name: 'From the Host', contact_phone: '+65-1000-2000'
+  }
+};
+
+interface TplLite {
+  id: string;
+  bg_id: string;
+  recommendEvents: readonly EventType[] | EventType[];
+}
+
+/** 템플릿 미리보기 카드 — admin/wizard 공유. 템플릿의 첫 recommendEvent로 sample 데이터 결정.
+ *  templateConfigs(admin DB override)가 있으면 그 첫 layout을, 없으면 코드 default의 첫 layout을 사용 */
+export function buildSamplePreviewCard(
+  t: TplLite,
+  ev?: EventType,
+  layoutOverride?: LayoutId,
+  templateConfigs?: Record<string, string[]>
+): BaseCard {
+  const eventId = ev || (t.recommendEvents[0] as EventType) || 'etc';
+  const sample = SAMPLE_BY_EVENT[eventId] || SAMPLE_BY_EVENT.etc;
+  // 1) admin DB override 우선 → 2) 코드 default getTemplateLayouts
+  const dbOverride = templateConfigs?.[t.id];
+  const allowed = (dbOverride && dbOverride.length > 0)
+    ? (dbOverride as LayoutId[])
+    : (getTemplateLayouts(t as any) as LayoutId[]);
+  const defaultLayout = allowed[0];
+  const layoutId = layoutOverride || defaultLayout;
+  return {
+    id: 'preview',
+    slug: 'preview',
+    event_type: eventId,
+    layout_id: layoutId,
+    bg_id: t.bg_id,
+    envelope_anim: 'envelope-1',
+    theme: 'hydrangea',
+    font_family: 'serif',
+    title: sample.title || '',
+    greeting_oneliner: sample.greeting_oneliner ?? null,
+    body: sample.body ?? null,
+    event_date: sample.event_date ?? null,
+    event_place: sample.event_place ?? null,
+    map_url: 'https://maps.google.com',
+    contact_name: sample.contact_name ?? null,
+    contact_phone: sample.contact_phone ?? null,
+    extra_info: sample.extra_info ?? null,
+    rsvp_enabled: false,
+    plan: 'free'
+  } as BaseCard;
+}
