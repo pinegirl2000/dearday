@@ -149,8 +149,11 @@ export async function sendInvitationsToRecipients(
   const card = await verifyOwner({ slug, ownerToken });
   if (!card) return { ok: false as const, error: '권한이 없습니다.' };
 
-  const { rows: cardRow } = await pool.query<{ slug: string; title: string; greeting_oneliner: string | null; envelope_anim: string | null }>(
-    'SELECT slug, title, greeting_oneliner, envelope_anim FROM dearday_card WHERE id=$1 LIMIT 1',
+  const { rows: cardRow } = await pool.query<{
+    slug: string; title: string; greeting_oneliner: string | null;
+    envelope_anim: string | null; contact_name: string | null; event_date: string | null;
+  }>(
+    'SELECT slug, title, greeting_oneliner, envelope_anim, contact_name, event_date FROM dearday_card WHERE id=$1 LIMIT 1',
     [card.id]
   );
   const cardData = cardRow[0];
@@ -199,6 +202,8 @@ export async function sendInvitationsToRecipients(
       recipientName: r.name,
       cardTitle: cardData.title,
       greeting: cardData.greeting_oneliner,
+      senderName: cardData.contact_name,
+      eventDate: cardData.event_date,
       invitationUrl: url,
       palette: {
         body: palette.body,

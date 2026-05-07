@@ -85,6 +85,9 @@ CREATE TABLE IF NOT EXISTS dearday_card (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 카드 상단 이벤트 라벨 사용자 override (마이그레이션 — 기존 테이블에도 추가)
+ALTER TABLE dearday_card ADD COLUMN IF NOT EXISTS event_label TEXT;
+
 -- Card 첨부 이미지
 CREATE TABLE IF NOT EXISTS dearday_card_image (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

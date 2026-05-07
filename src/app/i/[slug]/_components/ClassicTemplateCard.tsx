@@ -29,6 +29,11 @@ interface Props {
   background?: BackgroundMeta;
   /** 카드 정보 박스 바로 아래 들어갈 슬롯 (RSVP 폼 등) */
   rsvpSlot?: React.ReactNode;
+  /** wizard 가이드 오버레이 — 카드 외각 컨테이너에 absolute로 그려짐 */
+  guideOverlay?: React.ReactNode;
+  /** wizard 편집 모드 */
+  editable?: boolean;
+  onFieldEdit?: (key: 'title' | 'greeting_oneliner' | 'body' | 'event_place' | 'contact_name' | 'extra_info' | 'event_label' | 'event_date', value: string) => void;
 }
 
 const COLORS = {
@@ -79,7 +84,25 @@ const BG_PALETTE: Record<string, { title: string; subtitle: string; accent: stri
   'bg-none':  { title: '#5A3D7A', subtitle: '#8B7A9E', accent: '#C9A0DC' }
 };
 
-export default function ClassicTemplateCard({ card, recipientName, background, rsvpSlot }: Props) {
+export default function ClassicTemplateCard({ card, recipientName, background, rsvpSlot, guideOverlay, editable, onFieldEdit }: Props) {
+  const Editable = ({ fieldKey, children, multiline }: { fieldKey: 'title' | 'greeting_oneliner' | 'body' | 'event_place' | 'contact_name' | 'extra_info' | 'event_label'; children: React.ReactNode; multiline?: boolean }) => {
+    if (!editable) return <>{children}</>;
+    return (
+      <span
+        contentEditable
+        suppressContentEditableWarning
+        onBlur={(e) => {
+          const v = (e.currentTarget.innerText || '').trim();
+          onFieldEdit?.(fieldKey, v);
+        }}
+        onKeyDown={(e) => {
+          if (!multiline && e.key === 'Enter') { e.preventDefault(); (e.currentTarget as HTMLSpanElement).blur(); }
+        }}
+        style={{ outline: 'none', cursor: 'text', minWidth: '1ch', display: 'inline-block', borderBottom: '1px dashed rgba(123,94,167,0.35)' }}
+        title="클릭해서 수정"
+      >{children}</span>
+    );
+  };
   const greeting = formatGreeting(recipientName, card.recipient_template);
   const hasBgImage = !!background?.imageUrl;
   const basePalette = BG_PALETTE[card.bg_id] || BG_PALETTE['bg-1'];
@@ -131,9 +154,10 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
           </FadeUp>
         )}
 
-        {/* 앞면: eventLabel + 타이틀 (+ Topdown이 아닐 때 body 포함) */}
+        {/* 앞면: eventLabel(상단 디바이더 바로 아래) + subtitle(작게) + 타이틀 */}
         <FadeUp delay={0.1}>
-          <div style={{ textAlign: 'center', padding: card.layout_id === 'layout-7' ? '0 10px 4px' : '8px 10px 12px' }}>
+          <div style={{ textAlign: 'center', padding: card.layout_id === 'layout-7' ? '0 10px 4px' : '0 10px 12px' }}>
+            {/* eventLabel — 상단 디바이더 바로 아래 (작은 간격) */}
             {(() => {
               const lay = getLayout(card.layout_id);
               if (!lay.fields.eventLabel) return null;
@@ -146,16 +170,31 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
                   letterSpacing: labelField.letterSpacing,
                   fontFamily: labelField.fontFamily,
                   textAlign: labelField.align,
-                  marginBottom: card.layout_id === 'layout-7' ? 6 : 14
+                  marginTop: -4,
+                  marginBottom: 12
                 }}>
                   {getEventLabelText(card.event_type)}
                 </div>
               );
             })()}
+            {/* subtitle (greeting_oneliner) — eventLabel 아래, title 바로 위 (작은 글씨) */}
+            {(card.greeting_oneliner || editable) && (
+              <div style={{
+                fontSize: 13,
+                color: palette.subtitle,
+                fontWeight: 400,
+                letterSpacing: '0.2em',
+                fontFamily: SERIF,
+                marginBottom: 8,
+                lineHeight: 1.5
+              }}>
+                <Editable fieldKey="greeting_oneliner">{applyName(card.greeting_oneliner || (editable ? '클릭해서 부제 입력' : ''), recipientName)}</Editable>
+              </div>
+            )}
             <h1 style={{ fontSize: 24, fontWeight: 500, color: palette.title, letterSpacing: '0.4em', margin: '0 0 8px', lineHeight: 1.3 }}>
-              {applyName(card.title, recipientName)}
+              <Editable fieldKey="title">{applyName(card.title, recipientName)}</Editable>
             </h1>
-            {card.body && card.layout_id !== 'layout-7' && (
+            {(card.body || editable) && card.layout_id !== 'layout-7' && (
               <>
                 <Divider color={palette.title} icon={decoIcon} />
                 <div style={{
@@ -167,12 +206,9 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
                   wordBreak: 'keep-all',
                   overflowWrap: 'break-word'
                 }}>
-                  {applyName(card.body, recipientName).split(/\r?\n/).map((line, i, arr) => (
-                    <span key={i}>
-                      {line}
-                      {i < arr.length - 1 && <br />}
-                    </span>
-                  ))}
+                  <Editable fieldKey="body" multiline>
+                    {applyName(card.body || (editable ? '클릭해서 메시지 입력' : ''), recipientName)}
+                  </Editable>
                 </div>
               </>
             )}
@@ -203,17 +239,49 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
                 alignItems: 'stretch',
                 textAlign: 'left'
               }}>
-                {card.event_date && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: tpl?.colorMain || COLORS.textDark, letterSpacing: '0.06em' }}>
+                {(card.event_date || editable) && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: tpl?.colorMain || COLORS.textDark, letterSpacing: '0.06em', position: 'relative' }}>
                     <CalendarDays size={16} strokeWidth={1.4} style={{ color: tpl?.colorMain || COLORS.primary, flexShrink: 0 }} />
-                    <span style={{ fontWeight: 500 }}>{formatDate(card.event_date)}</span>
+                    <span style={{ fontWeight: 500 }}>{card.event_date ? formatDate(card.event_date) : (editable ? '클릭해서 날짜/시간 입력' : '')}</span>
+                    {editable && (() => {
+                      const cur = card.event_date ? new Date(card.event_date) : null;
+                      const validCur = cur && !isNaN(cur.getTime()) ? cur : null;
+                      const dateStr = validCur ? `${validCur.getFullYear()}-${String(validCur.getMonth()+1).padStart(2,'0')}-${String(validCur.getDate()).padStart(2,'0')}` : '';
+                      const timeStr = validCur ? `${String(validCur.getHours()).padStart(2,'0')}:${String(validCur.getMinutes()).padStart(2,'0')}` : '';
+                      const commit = (date: string, time: string) => {
+                        if (!date) { onFieldEdit?.('event_date', ''); return; }
+                        const [y, mo, d] = date.split('-').map(Number);
+                        if (!y || !mo || !d) return;
+                        const [h, m] = (time || '00:00').split(':').map(Number);
+                        const iso = new Date(y, mo - 1, d, h || 0, m || 0).toISOString();
+                        onFieldEdit?.('event_date', iso);
+                      };
+                      const baseStyle: React.CSSProperties = {
+                        position: 'absolute', top: 0, height: '100%', opacity: 0.001, cursor: 'pointer', zIndex: 5,
+                        border: 'none', background: 'transparent', fontSize: 16
+                      };
+                      return (
+                        <>
+                          {/* Date input — 날짜 텍스트 영역 전체 클릭 가능 */}
+                          <input type="date" data-dearday-date-only value={dateStr}
+                            onChange={(e) => commit(e.target.value, timeStr)}
+                            style={{ ...baseStyle, left: 0, width: '100%' }}
+                            title="클릭해서 날짜 수정" />
+                          {/* Time input — 0 크기, badge 5 클릭으로만 호출 */}
+                          <input type="time" data-dearday-time-only value={timeStr}
+                            onChange={(e) => commit(dateStr, e.target.value)}
+                            style={{ position: 'absolute', left: 0, top: 0, width: 0, height: 0, opacity: 0, pointerEvents: 'none', border: 'none', background: 'transparent' }}
+                            tabIndex={-1} aria-hidden="true" />
+                        </>
+                      );
+                    })()}
                   </div>
                 )}
                 {(card.event_place || card.map_url) && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: tpl?.colorMain || COLORS.textDark, letterSpacing: '0.04em' }}>
                     <MapPin size={15} strokeWidth={1.4} style={{ color: tpl?.colorMain || COLORS.primary, flexShrink: 0 }} />
                     <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap', minWidth: 0 }}>
-                      {card.event_place && <span style={{ fontWeight: 500 }}>{card.event_place}</span>}
+                      {(card.event_place || editable) && <span style={{ fontWeight: 500 }}><Editable fieldKey="event_place">{card.event_place || (editable ? '장소' : '')}</Editable></span>}
                       {card.map_url && isUrl(card.map_url) && (
                         <a href={card.map_url} target="_blank" rel="noreferrer"
                           style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: tpl?.colorMain || COLORS.primary, textDecoration: 'underline', fontSize: 10, opacity: 0.75 }}
@@ -301,6 +369,8 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
         )}
 
       </div>
+      {/* wizard 가이드 오버레이 — 카드 외각에 absolute로 (flow layout 좌표 없이도 표시 가능) */}
+      {guideOverlay}
     </div>
   );
 }

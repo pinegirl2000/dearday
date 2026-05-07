@@ -26,6 +26,8 @@ interface SendArgs {
   greeting?: string | null;
   invitationUrl: string;
   palette?: PaletteColors;
+  senderName?: string | null;   // 호스트 이름 (예: "Sarah")
+  eventDate?: string | null;    // ISO 날짜
 }
 
 export async function sendInvitationEmail(args: SendArgs): Promise<{ ok: true } | { ok: false; error: string }> {
@@ -35,8 +37,14 @@ export async function sendInvitationEmail(args: SendArgs): Promise<{ ok: true } 
   const resend = new Resend(apiKey);
   const { to, recipientName, cardTitle, greeting, invitationUrl } = args;
 
-  const subject = `${recipientName}님께 — ${cardTitle}`;
-  const html = renderInvitationHtml({ recipientName, cardTitle, greeting: greeting || '', invitationUrl, palette: args.palette });
+  const sender = args.senderName?.trim() || '';
+  const subject = sender
+    ? `${sender} sent you an invitation — ${cardTitle}`
+    : `${recipientName}님께 — ${cardTitle}`;
+  const html = renderInvitationHtml({
+    recipientName, cardTitle, greeting: greeting || '', invitationUrl,
+    palette: args.palette, senderName: sender, eventDate: args.eventDate || null
+  });
 
   try {
     const result = await resend.emails.send({
@@ -60,8 +68,22 @@ function renderInvitationHtml(args: {
   greeting: string;
   invitationUrl: string;
   palette?: PaletteColors;
+  senderName?: string;
+  eventDate?: string | null;
 }) {
-  const { recipientName, cardTitle, greeting, invitationUrl } = args;
+  const { recipientName, cardTitle, greeting, invitationUrl, senderName, eventDate } = args;
+  const formatDateLong = (iso?: string | null) => {
+    if (!iso) return '';
+    try {
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return '';
+      // 예: "Saturday, May 30, 2026"
+      return d.toLocaleDateString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+      });
+    } catch { return ''; }
+  };
+  const dateLong = formatDateLong(eventDate);
   // 기본 라벤더 팔레트 (palette 미지정 시)
   const p: PaletteColors = args.palette || {
     body: '#C8B0E2', bodyTint: '#E8DCF3', bodyMid: '#D2B8E5', bodyDark: '#9C82BE',
@@ -122,25 +144,30 @@ function renderInvitationHtml(args: {
     <tr>
       <td align="center">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#FFFFFF;border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.08);">
-          <!-- 봉투 SVG 미리보기 -->
+          <!-- 헤더 메시지: "X sent you an invitation for / Title / Date" -->
           <tr>
-            <td style="padding:32px 24px 16px;text-align:center;background:#FFFFFF;">
-              ${envelopeSvg}
+            <td style="padding:40px 32px 24px;text-align:center;">
+              ${senderName
+                ? `<div style="font-size:14px;color:${p.bodyDark};line-height:1.5;margin-bottom:8px;font-family:Arial,sans-serif;">${safe(senderName)} sent you an invitation for</div>`
+                : `<div style="font-size:11px;letter-spacing:0.32em;color:${p.gold};text-transform:uppercase;margin-bottom:12px;font-family:Arial,sans-serif;">Invitation</div>`}
+              <div style="font-size:24px;font-weight:600;color:${p.ink};line-height:1.3;margin-bottom:8px;">${safe(cardTitle)}</div>
+              ${dateLong ? `<div style="font-size:14px;color:${p.bodyDark};line-height:1.5;font-family:Arial,sans-serif;">${safe(dateLong)}</div>` : ''}
+              ${greeting ? `<div style="font-size:13px;color:${p.bodyDark};line-height:1.6;margin-top:12px;">${safe(greeting)}</div>` : ''}
             </td>
           </tr>
-          <!-- 행사 제목 -->
+          <!-- CTA 버튼 -->
           <tr>
             <td style="padding:8px 32px 24px;text-align:center;">
-              <div style="font-size:11px;letter-spacing:0.32em;color:${p.gold};text-transform:uppercase;margin-bottom:12px;">Invitation</div>
-              <div style="font-size:22px;font-weight:500;color:${p.ink};line-height:1.4;margin-bottom:8px;">${safe(cardTitle)}</div>
-              ${greeting ? `<div style="font-size:14px;color:${p.bodyDark};line-height:1.6;margin-top:8px;">${safe(greeting)}</div>` : ''}
+              <a href="${invitationUrl}" style="display:inline-block;padding:14px 40px;background:${p.gold};color:#FFFFFF;text-decoration:none;font-family:Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:0.05em;border-radius:24px;">Open Invitation</a>
             </td>
           </tr>
-          <!-- CTA -->
+          <!-- 봉투 SVG (CTA 아래) — 클릭 시 invitation으로 이동 -->
           <tr>
-            <td style="padding:8px 32px 32px;text-align:center;">
-              <a href="${invitationUrl}" style="display:inline-block;padding:14px 40px;background:${p.gold};color:#FFFFFF;text-decoration:none;font-family:Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:0.05em;border-radius:24px;">초대장 열기</a>
-              <div style="font-size:11px;color:${p.bodyDark};margin-top:20px;line-height:1.5;">
+            <td style="padding:8px 24px 32px;text-align:center;">
+              <a href="${invitationUrl}" style="display:inline-block;text-decoration:none;">
+                ${envelopeSvg}
+              </a>
+              <div style="font-size:11px;color:${p.bodyDark};margin-top:16px;line-height:1.5;font-family:Arial,sans-serif;">
                 또는 아래 링크를 복사해 브라우저에서 열어주세요:<br />
                 <a href="${invitationUrl}" style="color:${p.gold};text-decoration:underline;word-break:break-all;">${invitationUrl}</a>
               </div>

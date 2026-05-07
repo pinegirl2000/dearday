@@ -17,6 +17,11 @@ interface Props {
   card: BaseCard;
   recipientName?: string;
   rsvpSlot?: React.ReactNode;
+  /** wizard에서 카드 좌표계와 동일하게 번호 가이드 오버레이를 그릴 때 사용 */
+  guideOverlay?: React.ReactNode;
+  /** wizard 편집 모드: contentEditable로 in-place 수정 + onBlur 시 onFieldEdit 호출 */
+  editable?: boolean;
+  onFieldEdit?: (key: 'title' | 'greeting_oneliner' | 'body' | 'event_place' | 'contact_name' | 'extra_info' | 'event_label' | 'event_date', value: string) => void;
 }
 
 function formatDate(iso?: string | null) {
@@ -167,7 +172,26 @@ function FieldText({ field, children, delay = 0 }: { field: TextField; children:
   );
 }
 
-export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
+export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverlay, editable, onFieldEdit }: Props) {
+  // contentEditable wrapper — 편집 모드에서만 활성화
+  const Editable = ({ fieldKey, children, multiline }: { fieldKey: 'title' | 'greeting_oneliner' | 'body' | 'event_place' | 'contact_name' | 'extra_info' | 'event_label'; children: React.ReactNode; multiline?: boolean }) => {
+    if (!editable) return <>{children}</>;
+    return (
+      <span
+        contentEditable
+        suppressContentEditableWarning
+        onBlur={(e) => {
+          const v = (e.currentTarget.innerText || '').trim();
+          onFieldEdit?.(fieldKey, v);
+        }}
+        onKeyDown={(e) => {
+          if (!multiline && e.key === 'Enter') { e.preventDefault(); (e.currentTarget as HTMLSpanElement).blur(); }
+        }}
+        style={{ outline: 'none', cursor: 'text', minWidth: '1ch', display: 'inline-block', borderBottom: '1px dashed rgba(123,94,167,0.35)' }}
+        title="클릭해서 수정"
+      >{children}</span>
+    );
+  };
   const layout = getLayout(card.layout_id);
   const bg = getBackground(card.bg_id);
   const tpl = findTemplateByPair(card.bg_id, card.layout_id);
@@ -176,7 +200,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
     if (layout.id === 'layout-4') {
       return <VintageScriptCard card={card} recipientName={recipientName} background={bg} rsvpSlot={rsvpSlot} />;
     }
-    return <ClassicTemplateCard card={card} recipientName={recipientName} background={bg} rsvpSlot={rsvpSlot} />;
+    return <ClassicTemplateCard card={card} recipientName={recipientName} background={bg} rsvpSlot={rsvpSlot} guideOverlay={guideOverlay} editable={editable} onFieldEdit={onFieldEdit} />;
   }
 
   // 페어링된 템플릿 색상으로 layout 필드 색상 override
@@ -220,9 +244,13 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
       )}
       {f.eventLabel && (
         <FieldText field={f.eventLabel} delay={0.05}>
-          {(layout.id === 'layout-4' || (layout.id === 'layout-3' || layout.id === 'layout-center') || (layout.id === 'layout-5' || layout.id === 'layout-rightbottom') || layout.id === 'layout-6' || layout.id === 'layout-topcenter')
-            ? getEventLabelScript(card.event_type)
-            : getEventLabelText(card.event_type)}
+          <Editable fieldKey="event_label">
+            {card.event_label
+              ? card.event_label
+              : ((layout.id === 'layout-4' || (layout.id === 'layout-3' || layout.id === 'layout-center') || (layout.id === 'layout-5' || layout.id === 'layout-rightbottom') || layout.id === 'layout-6' || layout.id === 'layout-topcenter')
+                  ? getEventLabelScript(card.event_type)
+                  : getEventLabelText(card.event_type))}
+          </Editable>
         </FieldText>
       )}
       {/* Side Text + Baptism: 우측 컬럼의 가로 중앙에 큰 십자가 — 템플릿 sub 색상 */}
@@ -245,8 +273,8 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
           ✝
         </div>
       )}
-      {card.greeting_oneliner && f.subtitle && <FieldText field={f.subtitle} delay={0.1}>{applyName(card.greeting_oneliner, recipientName)}</FieldText>}
-      <FieldText field={f.title} delay={0.2}>{applyName(card.title, recipientName)}</FieldText>
+      {(card.greeting_oneliner || editable) && f.subtitle && <FieldText field={f.subtitle} delay={0.1}><Editable fieldKey="greeting_oneliner">{applyName(card.greeting_oneliner || (editable ? '클릭해서 입력' : ''), recipientName)}</Editable></FieldText>}
+      <FieldText field={f.title} delay={0.2}><Editable fieldKey="title">{applyName(card.title, recipientName)}</Editable></FieldText>
       {/* Side Text + Center Text: 하단 date+place 영역 정보 박스 — 템플릿 sub 색상 톤 (없으면 흰색) */}
       {((layout.id === 'layout-5' || layout.id === 'layout-rightbottom') || layout.id === 'layout-6') && (card.event_date || card.event_place) && f.date && f.place && (() => {
         // sub 색상이 정의된 경우에만 sub 톤 적용. 없으면 순수 흰색 박스 + 중성 그림자.
@@ -351,10 +379,54 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
             ? <ModernSplitDate field={f.date} iso={card.event_date} delay={0.3} />
             : <FieldText field={f.date} delay={0.3}>{formatDate(card.event_date)}</FieldText>
       )}
-      {card.event_place && f.place && (
+      {/* 편집 모드: Date 와 Time 분리 invisible 오버레이 (각각 native date/time picker) */}
+      {editable && f.date && (() => {
+        const cur = card.event_date ? new Date(card.event_date) : null;
+        const validCur = cur && !isNaN(cur.getTime()) ? cur : null;
+        const dateStr = validCur ? `${validCur.getFullYear()}-${String(validCur.getMonth()+1).padStart(2,'0')}-${String(validCur.getDate()).padStart(2,'0')}` : '';
+        const timeStr = validCur ? `${String(validCur.getHours()).padStart(2,'0')}:${String(validCur.getMinutes()).padStart(2,'0')}` : '';
+        const commit = (date: string, time: string) => {
+          if (!date) { onFieldEdit?.('event_date', ''); return; }
+          const [y, mo, d] = date.split('-').map(Number);
+          if (!y || !mo || !d) return;
+          const [h, m] = (time || '00:00').split(':').map(Number);
+          const iso = new Date(y, mo - 1, d, h || 0, m || 0).toISOString();
+          onFieldEdit?.('event_date', iso);
+        };
+        const baseStyle: React.CSSProperties = {
+          position: 'absolute',
+          top: `${f.date.y}%`,
+          height: 56, opacity: 0.001, cursor: 'pointer', zIndex: 40,
+          border: 'none', background: 'transparent', fontSize: 16
+        };
+        return (
+          <>
+            {/* Date input — 날짜 텍스트 영역 전체를 cover. 클릭하면 어디든 date picker. */}
+            <input
+              type="date"
+              data-dearday-date-only
+              value={dateStr}
+              onChange={(e) => commit(e.target.value, timeStr)}
+              style={{ ...baseStyle, left: `${f.date.x}%`, width: `${f.date.w}%` }}
+              title="클릭해서 날짜 수정"
+            />
+            {/* Time input — DOM에 존재하나 0 크기, badge 5 클릭으로만 picker 호출 */}
+            <input
+              type="time"
+              data-dearday-time-only
+              value={timeStr}
+              onChange={(e) => commit(dateStr, e.target.value)}
+              style={{ position: 'absolute', left: `${f.date.x}%`, top: `${f.date.y}%`, width: 0, height: 0, opacity: 0, pointerEvents: 'none', border: 'none', background: 'transparent' }}
+              tabIndex={-1}
+              aria-hidden="true"
+            />
+          </>
+        );
+      })()}
+      {(card.event_place || editable) && f.place && (
         <FieldText field={f.place} delay={0.4}>
           <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <span>{card.event_place}</span>
+            <span><Editable fieldKey="event_place">{card.event_place || (editable ? '클릭해서 장소 입력' : '')}</Editable></span>
             {card.map_url && isUrl(card.map_url) && (
               (layout.id === 'layout-6' || layout.id === 'layout-center') ? (
                 <a href={card.map_url} target="_blank" rel="noreferrer"
@@ -447,7 +519,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
           ✽
         </motion.div>
       )}
-      {card.body && f.body && <FieldText field={f.body} delay={0.65}>{applyName(card.body, recipientName)}</FieldText>}
+      {(card.body || editable) && f.body && <FieldText field={f.body} delay={0.65}><Editable fieldKey="body" multiline>{applyName(card.body || (editable ? '클릭해서 메시지 입력' : ''), recipientName)}</Editable></FieldText>}
       {card.extra_info && f.extra && (
         <FieldText
           field={(layout.id === 'layout-6' || layout.id === 'layout-topcenter') && tplMain ? { ...f.extra, color: tplMain } : f.extra}
@@ -472,6 +544,8 @@ export default function TemplateCard({ card, recipientName, rsvpSlot }: Props) {
           {rsvpSlot}
         </div>
       )}
+      {/* wizard 가이드 오버레이 — 카드 내부 좌표계와 동일하게 번호/포인터 표시 */}
+      {guideOverlay}
     </div>
     {/* Side Text(5) / Center Text(6) — RSVP를 카드 밖 아래에 분리 표시 */}
     {rsvpSlot && ((layout.id === 'layout-5' || layout.id === 'layout-rightbottom') || layout.id === 'layout-6' || layout.id === 'layout-topcenter') && (

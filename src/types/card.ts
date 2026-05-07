@@ -37,6 +37,8 @@ export interface BaseCard {
   greeting_oneliner: string | null;
   /** 받는 분 인사말 템플릿. "$NAME"이 받는 사람 이름으로 치환됨 (예: "$NAME님" → "홍길동님") */
   recipient_template: string | null;
+  /** 카드 상단 이벤트 라벨 override (예: "YOU'RE INVITED" 대신 사용자 지정 텍스트). null이면 event_type 기본값 사용 */
+  event_label: string | null;
   rsvp_enabled: boolean;
   rsvp_deadline: string | null;
   rsvp_max_per_card: 1 | 2 | 3 | 4 | 5;

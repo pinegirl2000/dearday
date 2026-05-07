@@ -9,6 +9,15 @@
 
 * { -webkit-tap-highlight-color: transparent; }
 
+/* PC(데스크톱 마우스) 환경에서 tel: 링크 클릭 비활성화 — 모바일에서만 통화 동작 */
+@media (hover: hover) and (pointer: fine) {
+  a[href^="tel:"] {
+    pointer-events: none !important;
+    cursor: text !important;
+    text-decoration: inherit !important;
+  }
+}
+
 html, body {
   background: rgb(var(--bg));
   color: rgb(var(--fg));

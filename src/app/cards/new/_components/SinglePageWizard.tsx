@@ -153,6 +153,18 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
   const [open, setOpen] = useState<SectionId>((initialOpen as SectionId) || 1);
   // 템플릿 클릭 시 큰 미리보기 모달
   const [previewTpl, setPreviewTpl] = useState<typeof TEMPLATES[number] | null>(null);
+  // 번호 클릭 시 해당 필드 깜빡임 표시
+  const [flashFieldNo, setFlashFieldNo] = useState<number | null>(null);
+  // Phone 편집 모달
+  const [phoneModalOpen, setPhoneModalOpen] = useState(false);
+  // Place + Address 편집 모달
+  const [placeModalOpen, setPlaceModalOpen] = useState(false);
+  // Date + Time 편집 모달
+  const [dateTimeModalOpen, setDateTimeModalOpen] = useState(false);
+  // Extra info 편집 모달
+  const [extraInfoModalOpen, setExtraInfoModalOpen] = useState(false);
+  // Text 편집 모달 (Subtitle/Title/Message 등 텍스트 단일 필드)
+  const [textEditField, setTextEditField] = useState<{ key: 'greeting_oneliner' | 'title' | 'body'; label: string; multiline: boolean } | null>(null);
   // 사용자가 Next 버튼으로 실제로 진행한 최대 단계 — 시각적 완료 표시용
   // edit 모드(initialOpen=4)는 처음부터 4단계까지 다 통과한 것으로 시작
   const [maxStepCompleted, setMaxStepCompleted] = useState<number>(
@@ -749,89 +761,207 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
             ? { label: 'SAVE', onClick: handlePublish, disabled: pending }
             : { label: 'NEXT', onClick: () => advance(4), disabled: !detailsCanProceed }}
         >
-          {/* 선택한 템플릿 배경 + 입력 폼이 그 위에 살짝 반투명 카드로 올라감 — 실제 결과물 미리 체감 */}
-          <div className="relative -m-4 mt-0 p-4 rounded-b-2xl overflow-hidden"
-            style={{
-              background: bgMeta.imageUrl
-                ? `url('${bgMeta.imageUrl}') center/cover no-repeat`
-                : (bgMeta.gradient || 'linear-gradient(135deg,#F4ECFA,#E8DFF3)')
-            }}
-          >
-            <div className="absolute inset-0 bg-white/55 backdrop-blur-sm pointer-events-none" />
-            <div className="relative space-y-4 mt-2">
-            <Input
-              label="Subtitle"
-              placeholder={meta.fields.subtitlePlaceholder}
-              hint="Optional"
-              value={draft.greeting_oneliner || ''}
-              onChange={(e) => setDraft({ greeting_oneliner: e.target.value })}
-            />
-            <Input
-              label={meta.fields.titleLabel}
-              requiredMark
-              placeholder={meta.fields.titlePlaceholder}
-              value={draft.title || ''}
-              onChange={(e) => setDraft({ title: e.target.value })}
-            />
-            <div>
-              <Textarea label="Message" requiredMark
-                labelHint="Centered · Press Enter to break lines · Words won't split"
-                placeholder={meta.fields.bodyPlaceholder}
-                value={draft.body || ''}
-                onChange={(e) => setDraft({ body: e.target.value.slice(0, 200) })}
-                maxLength={200}
-                rows={5}
-              />
-              <p className="text-[11px] text-hydrangea-400 mt-1 text-right tabular-nums">
-                {String((draft.body || '').length).padStart(3, '0')}/200
-              </p>
-            </div>
-            {(() => {
-              const today = new Date();
-              const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
-              const dt = draft.event_date ? new Date(draft.event_date) : null;
-              const dateStr = dt && !isNaN(dt.getTime())
-                ? `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}` : '';
-              const timeStr = dt && !isNaN(dt.getTime())
-                ? `${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}` : '';
-              const update = (date: string, time: string) => {
-                if (!date) { setDraft({ event_date: null }); return; }
-                const [y, mo, d] = date.split('-').map(Number);
-                // 부분 입력(연도 미완성 등) 무시 — 4자리 연도 + 합리적 범위만 commit
-                if (!y || y < 1900 || y > 2999 || !mo || !d) return;
-                const [h, m] = (time || '00:00').split(':').map(Number);
-                const iso = new Date(y, mo - 1, d, h || 0, m || 0).toISOString();
-                // event_date 변경 시 RSVP 마감/만료일도 같이 동기화
-                setDraft({ event_date: iso, rsvp_deadline: iso, expiry_date: iso });
-              };
-              return (
-                <div>
-                  <label className="block text-sm font-medium text-hydrangea-700 mb-1.5">
-                    Date & Time<span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <input type="date" value={dateStr} min={todayStr} onChange={(e) => update(e.target.value, timeStr)}
-                      className="w-full min-h-[56px] px-4 rounded-xl border border-hydrangea-100 bg-white text-hydrangea-700 text-base focus:outline-none focus:ring-2 focus:ring-hydrangea-300 [color-scheme:light]"
-                      style={{ fontSize: '16px' }} />
-                    <input type="time" step={300} value={timeStr} onChange={(e) => update(dateStr, e.target.value)}
-                      className="w-full min-h-[56px] px-4 rounded-xl border border-hydrangea-100 bg-white text-hydrangea-700 text-base focus:outline-none focus:ring-2 focus:ring-hydrangea-300 [color-scheme:light]"
-                      style={{ fontSize: '16px' }} />
-                  </div>
+          {(() => {
+            // 가이드 색상 — 템플릿 메인 컬러(있으면) → 폴백 골드
+            const tplCurrent = findTemplateByPair(draft.bg_id, draft.layout_id);
+            const GUIDE = (tplCurrent?.colorMain) || '#C29545';
+            // 현재 layout 좌표 시스템에 따라 분기
+            //   absolute layout: layout.fields[key].x/y 사용 (정확한 위치)
+            //   flow layout (classic 등): 좌표 없으므로 고정 vertical 분포 사용
+            const curLayout = getLayout(draft.layout_id);
+            const lf = curLayout.fields;
+            const isFlow = curLayout.renderStyle === 'flow';
+            // flow layout용 approximate 위치 (top-to-bottom 순서로 자연스럽게 분포)
+            // Classic layout 구조 — 모든 배지를 카드 좌측 끝에 배치 (텍스트 가리지 않도록)
+            const flowPos: Record<string, { top: string; left: string }> = {
+              greeting_oneliner: { top: '20%', left: '4%' },
+              title: { top: '28%', left: '4%' },
+              body: { top: '46%', left: '4%' },
+              event_date: { top: '60%', left: '4%' },
+              event_place: { top: '68%', left: '4%' },
+              contact_name: { top: '82%', left: '4%' },
+              contact_phone: { top: '88%', left: '4%' },
+              extra_info: { top: '92%', left: '4%' },
+              rsvp_section: { top: '97%', left: '4%' }
+            };
+            // 큰 폰트 필드(title 등)는 텍스트가 field.y 아래로 길게 그려져서 배지가 텍스트 위로 떠 보임 — yOffset으로 보정
+            const mapToField: Array<{ key: keyof typeof draft | 'event_time_only' | 'rsvp_section'; label: string; field?: { x: number; y: number; align?: string; w?: number; fontSize?: number }; yOffset?: number }> = [
+              { key: 'greeting_oneliner', label: 'Subtitle', field: lf.subtitle as any },
+              { key: 'title', label: 'Title', field: lf.title as any, yOffset: 4 },
+              { key: 'body', label: 'Message', field: lf.body as any, yOffset: 4 },
+              { key: 'event_date', label: 'Date & Time', field: lf.date as any },
+              { key: 'event_place', label: 'Place', field: lf.place as any },
+              { key: 'contact_name', label: 'Host', field: lf.place as any },
+              { key: 'contact_phone', label: 'Phone', field: lf.place as any },
+              { key: 'extra_info', label: 'Extra info', field: lf.extra as any },
+              { key: 'rsvp_section', label: 'RSVP', field: (lf.extra || lf.place) as any }
+            ];
+            const seen = new Map<string, number>();
+            const fieldsOrder = mapToField
+              .map((m, idx) => {
+                let pos: { top: string; left: string };
+                if (isFlow) {
+                  pos = flowPos[m.key as string];
+                  if (!pos) return null;
+                } else {
+                  if (!m.field) return null;
+                  // RSVP는 카드 맨 하단에 고정
+                  if (m.key === 'rsvp_section') {
+                    pos = { top: '97%', left: '6%' };
+                  } else {
+                    const k = `${m.field.x}-${m.field.y}`;
+                    const stackIdx = seen.get(k) || 0;
+                    seen.set(k, stackIdx + 1);
+                    // 텍스트가 center-align인 경우 → 컨테이너 안쪽 좌측에 배치 (실제 텍스트 옆)
+                    // left-align인 경우 → 컨테이너 좌측 바깥
+                    const fieldAny = m.field as any;
+                    const isCentered = fieldAny.align === 'center';
+                    const isWide = (fieldAny.w || 0) >= 70; // wide center 컨테이너는 텍스트가 가운데 모임
+                    const leftPct = isCentered && isWide
+                      ? Math.max(2, m.field.x + (m.field.w || 80) * 0.18)
+                      : Math.max(2, m.field.x - 5);
+                    pos = {
+                      top: `${m.field.y + stackIdx * 4 + (m.yOffset || 0)}%`,
+                      left: `${leftPct}%`
+                    };
+                  }
+                }
+                return { key: m.key as string, no: idx + 1, label: m.label, pos };
+              })
+              .filter(Boolean) as Array<{ key: string; no: number; label: string; pos: { top: string; left: string } }>;
+            const isEmpty = (key: string) => {
+              if (key === 'rsvp_section') return false; // RSVP는 항상 'filled' 취급 (next-empty 후보 제외)
+              const v = (draft as any)[key];
+              return !v || (typeof v === 'string' && !v.trim());
+            };
+            const nextEmptyNo = fieldsOrder.find((f) => isEmpty(f.key))?.no;
+            return (
+          <div className="space-y-4 mt-2">
+            {/* 입력/수정 가이드 — 모드에 따라 문구 다르게 (Create=입력만, Edit=수정 가능) */}
+            <div className="rounded-xl bg-hydrangea-50 border border-hydrangea-200 px-4 py-3">
+              <div className="flex items-start gap-2">
+                <span className="text-base flex-shrink-0">✨</span>
+                <div className="text-[12px] text-hydrangea-700 leading-relaxed">
+                  {isEditMode
+                    ? <>아래 미리보기에 표시된 <span className="font-semibold">번호 ①②③…</span>를 클릭하면 해당 항목을 수정할 수 있습니다.</>
+                    : <>아래 미리보기에 표시된 <span className="font-semibold">번호 ①②③…</span>를 클릭하면 해당 항목을 입력할 수 있습니다.</>
+                  }
                 </div>
-              );
-            })()}
-            <Input label="Place" requiredMark placeholder={meta.fields.placePlaceholder} value={draft.event_place || ''}
-              onChange={(e) => setDraft({ event_place: e.target.value })} />
-            <Input label="Address" placeholder="Street address or map link" value={draft.map_url || ''}
-              onChange={(e) => setDraft({ map_url: e.target.value })} />
-            <Input label="Host" placeholder="e.g. Jane Doe" value={draft.contact_name || ''}
-              onChange={(e) => setDraft({ contact_name: e.target.value })} />
-            <PhoneInput label="Phone" value={draft.contact_phone || ''}
-              onChange={(phone) => setDraft({ contact_phone: phone })} />
-            <Textarea label="Additional info (optional)" placeholder={meta.fields.memoPlaceholder} value={draft.extra_info || ''}
-              onChange={(e) => setDraft({ extra_info: e.target.value })} rows={3} />
+              </div>
+            </div>
+            {/* 선택한 템플릿 미리보기 + 번호 가이드 오버레이 (카드 내부 좌표계 사용) */}
+            <div className="rounded-2xl overflow-hidden border border-hydrangea-100">
+              <TemplateCard
+                card={previewCard}
+                recipientName="John"
+                editable
+                onFieldEdit={(key, value) => {
+                  // contentEditable 결과를 draft에 즉시 반영
+                  if (key === 'event_date') {
+                    // 날짜 변경 시 RSVP 마감/만료일도 동기화 (입력 폼과 동일 동작)
+                    const iso = value || null;
+                    setDraft({ event_date: iso, rsvp_deadline: iso, expiry_date: iso });
+                    return;
+                  }
+                  setDraft({ [key]: value } as any);
+                }}
+                guideOverlay={
+                  <div className="absolute inset-0" style={{ zIndex: 50, pointerEvents: 'none' }}>
+                    {/* 깜빡 highlight — 클릭한 번호의 필드 위치에 강조 박스 표시 (2초 후 fade out) */}
+                    {flashFieldNo !== null && (() => {
+                      const target = fieldsOrder.find((f) => f.no === flashFieldNo);
+                      if (!target) return null;
+                      return (
+                        <div
+                          className="absolute animate-pulse"
+                          style={{
+                            top: target.pos.top,
+                            left: '0%',
+                            right: '0%',
+                            height: 36,
+                            transform: 'translateY(-4px)',
+                            background: `${GUIDE}40`,
+                            border: `2px dashed ${GUIDE}`,
+                            borderRadius: 6,
+                            pointerEvents: 'none'
+                          }}
+                        />
+                      );
+                    })()}
+                    {fieldsOrder.map((fld) => {
+                      const active = nextEmptyNo === fld.no;
+                      const isFlashing = flashFieldNo === fld.no;
+                      return (
+                        <div
+                          key={fld.no}
+                          className="absolute"
+                          style={{ top: fld.pos.top, left: fld.pos.left, transform: 'translateY(-50%)', pointerEvents: 'auto' }}
+                        >
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setFlashFieldNo((cur) => (cur === fld.no ? null : fld.no));
+                                // RSVP — 폼 RSVP 영역으로 스크롤
+                                if (fld.key === 'rsvp_section') {
+                                  const el = document.getElementById('dearday-rsvp-section');
+                                  el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                  return;
+                                }
+                                // Date/Time/Phone/Place 필드 — 각 input/모달 열기
+                                if (fld.key === 'contact_phone') {
+                                  setPhoneModalOpen(true);
+                                  return;
+                                }
+                                if (fld.key === 'event_place') {
+                                  setPlaceModalOpen(true);
+                                  return;
+                                }
+                                if (fld.key === 'event_date') {
+                                  setDateTimeModalOpen(true);
+                                  return;
+                                }
+                                if (fld.key === 'extra_info') {
+                                  setExtraInfoModalOpen(true);
+                                  return;
+                                }
+                                // Subtitle/Title/Message — 텍스트 모달
+                                if (fld.key === 'greeting_oneliner' || fld.key === 'title' || fld.key === 'body') {
+                                  setTextEditField({
+                                    key: fld.key,
+                                    label: fld.label,
+                                    multiline: fld.key === 'body'
+                                  });
+                                  return;
+                                }
+                              }}
+                              style={{
+                                background: (active || isFlashing) ? GUIDE : 'rgba(255,255,255,0.95)',
+                                color: (active || isFlashing) ? '#FFFFFF' : GUIDE,
+                                borderColor: GUIDE
+                              }}
+                              className={`flex items-center rounded-full border-2 shadow-md cursor-pointer transition active:scale-95 ${(active || isFlashing) ? 'animate-pulse' : ''}`}
+                              title={`${fld.label}`}
+                            >
+                              {/* 번호 + 라벨이 하나의 pill로 결합. flashing/active 시 라벨까지 노출 */}
+                              <span className="w-5 h-5 flex items-center justify-center text-[10px] font-bold flex-shrink-0">{fld.no}</span>
+                              {(isFlashing || active) && (
+                                <span className="text-[10px] font-semibold pr-2 pl-0.5 whitespace-nowrap">{fld.label}</span>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                }
+              />
+            </div>
+            <div className="text-[11px] text-hydrangea-500 text-center -mt-2 font-medium">
+              ↑ 미리보기에 표시된 번호 순서대로 입력하세요 — {nextEmptyNo ? `현재 ${fieldsOrder.find((f) => f.no === nextEmptyNo)?.label} (${nextEmptyNo})` : '모든 필수 항목 완료'}
+            </div>
 
-            <div className="pt-3 border-t border-hydrangea-100/60">
+            <div id="dearday-rsvp-section" className="pt-3 border-t border-hydrangea-100/60 scroll-mt-24">
               <h4 className="text-xs font-semibold text-hydrangea-700 mb-2">RSVP options</h4>
               <div className="space-y-2">
                 <div className="flex items-center justify-between p-3 rounded-xl bg-white border border-hydrangea-100/60">
@@ -918,8 +1048,9 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
             {!detailsCanProceed && (
               <p className="text-xs text-hydrangea-400 text-center">All fields marked with * are required</p>
             )}
-            </div>
           </div>
+            );
+          })()}
         </SectionShell>
 
         {/* 4. 레이아웃 / 발행 */}
@@ -1232,6 +1363,214 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
           </div>
         );
       })()}
+
+      {/* Date + Time 편집 모달 — badge 4 클릭 시 열림 */}
+      {dateTimeModalOpen && (() => {
+        const today = new Date();
+        const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+        const dt = draft.event_date ? new Date(draft.event_date) : null;
+        const dateStr = dt && !isNaN(dt.getTime())
+          ? `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}` : '';
+        const timeStr = dt && !isNaN(dt.getTime())
+          ? `${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}` : '';
+        const update = (date: string, time: string) => {
+          if (!date) { setDraft({ event_date: null }); return; }
+          const [y, mo, d] = date.split('-').map(Number);
+          if (!y || y < 1900 || y > 2999 || !mo || !d) return;
+          const [h, m] = (time || '00:00').split(':').map(Number);
+          const iso = new Date(y, mo - 1, d, h || 0, m || 0).toISOString();
+          setDraft({ event_date: iso, rsvp_deadline: iso, expiry_date: iso });
+        };
+        return (
+          <div
+            className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-4"
+            onClick={() => setDateTimeModalOpen(false)}
+          >
+            <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+              <div className="px-4 py-3 flex items-center justify-between border-b border-hydrangea-100">
+                <div className="text-sm font-semibold text-hydrangea-700">날짜 & 시간 입력</div>
+                <button type="button" onClick={() => setDateTimeModalOpen(false)}
+                  className="text-hydrangea-400 hover:text-hydrangea-700 text-2xl leading-none" aria-label="Close">×</button>
+              </div>
+              <div className="p-4 space-y-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-xs font-medium text-hydrangea-700 mb-1">Date</label>
+                    <input type="date" value={dateStr} min={todayStr} onChange={(e) => update(e.target.value, timeStr)}
+                      className="w-full min-h-[48px] px-3 rounded-xl border border-hydrangea-200 bg-white text-hydrangea-700 text-base focus:outline-none focus:ring-2 focus:ring-hydrangea-300 [color-scheme:light]"
+                      style={{ fontSize: '16px' }} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-hydrangea-700 mb-1">Time</label>
+                    <input type="time" step={300} value={timeStr} onChange={(e) => update(dateStr, e.target.value)}
+                      className="w-full min-h-[48px] px-3 rounded-xl border border-hydrangea-200 bg-white text-hydrangea-700 text-base focus:outline-none focus:ring-2 focus:ring-hydrangea-300 [color-scheme:light]"
+                      style={{ fontSize: '16px' }} />
+                  </div>
+                </div>
+                <p className="text-[11px] text-hydrangea-400">날짜와 시간을 함께 지정하세요. RSVP 마감일과 만료일도 자동으로 동기화됩니다.</p>
+              </div>
+              <div className="p-3 flex border-t border-hydrangea-100">
+                <button type="button" onClick={() => setDateTimeModalOpen(false)}
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-hydrangea-500 text-white text-sm font-semibold hover:bg-hydrangea-600 transition"
+                >완료</button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Place + Address 편집 모달 — badge 6 클릭 시 열림 */}
+      {placeModalOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-4"
+          onClick={() => setPlaceModalOpen(false)}
+        >
+          <div
+            className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-4 py-3 flex items-center justify-between border-b border-hydrangea-100">
+              <div className="text-sm font-semibold text-hydrangea-700">장소 입력</div>
+              <button type="button" onClick={() => setPlaceModalOpen(false)}
+                className="text-hydrangea-400 hover:text-hydrangea-700 text-2xl leading-none" aria-label="Close">×</button>
+            </div>
+            <div className="p-4 space-y-3">
+              <Input
+                label="Place name"
+                placeholder="예: 우리집, Marina Hotel"
+                value={draft.event_place || ''}
+                onChange={(e) => setDraft({ event_place: e.target.value })}
+              />
+              <Input
+                label="Address"
+                placeholder="도로명 주소 또는 지도 링크"
+                value={draft.map_url || ''}
+                onChange={(e) => setDraft({ map_url: e.target.value })}
+              />
+              <p className="text-[11px] text-hydrangea-400 leading-relaxed">
+                장소 이름과 주소(또는 Google Maps 링크)를 입력하세요. 주소는 카드에서 클릭 시 지도로 연결됩니다.
+              </p>
+            </div>
+            <div className="p-3 flex border-t border-hydrangea-100">
+              <button type="button" onClick={() => setPlaceModalOpen(false)}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-hydrangea-500 text-white text-sm font-semibold hover:bg-hydrangea-600 transition"
+              >완료</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 텍스트 편집 모달 — badge 1/2/3 (Subtitle/Title/Message) 클릭 시 열림 */}
+      {textEditField && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-4"
+          onClick={() => setTextEditField(null)}
+        >
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="px-4 py-3 flex items-center justify-between border-b border-hydrangea-100">
+              <div className="text-sm font-semibold text-hydrangea-700">{textEditField.label}</div>
+              <button type="button" onClick={() => setTextEditField(null)}
+                className="text-hydrangea-400 hover:text-hydrangea-700 text-2xl leading-none" aria-label="Close">×</button>
+            </div>
+            <div className="p-4 space-y-2">
+              {textEditField.multiline ? (
+                <Textarea
+                  label={textEditField.label}
+                  placeholder={textEditField.key === 'body' ? meta.fields.bodyPlaceholder : ''}
+                  value={(draft[textEditField.key] as string) || ''}
+                  onChange={(e) => setDraft({ [textEditField.key]: e.target.value.slice(0, 200) } as any)}
+                  maxLength={200}
+                  rows={5}
+                />
+              ) : (
+                <Input
+                  label={textEditField.label}
+                  placeholder={textEditField.key === 'title' ? meta.fields.titlePlaceholder
+                    : textEditField.key === 'greeting_oneliner' ? meta.fields.subtitlePlaceholder : ''}
+                  value={(draft[textEditField.key] as string) || ''}
+                  onChange={(e) => setDraft({ [textEditField.key]: e.target.value } as any)}
+                />
+              )}
+              {textEditField.multiline && (
+                <p className="text-[11px] text-hydrangea-400 text-right tabular-nums">
+                  {String(((draft[textEditField.key] as string) || '').length).padStart(3, '0')}/200
+                </p>
+              )}
+            </div>
+            <div className="p-3 flex border-t border-hydrangea-100">
+              <button type="button" onClick={() => setTextEditField(null)}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-hydrangea-500 text-white text-sm font-semibold hover:bg-hydrangea-600 transition"
+              >완료</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Extra info 편집 모달 — badge 8 클릭 시 열림 */}
+      {extraInfoModalOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-4"
+          onClick={() => setExtraInfoModalOpen(false)}
+        >
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="px-4 py-3 flex items-center justify-between border-b border-hydrangea-100">
+              <div className="text-sm font-semibold text-hydrangea-700">추가 정보 입력</div>
+              <button type="button" onClick={() => setExtraInfoModalOpen(false)}
+                className="text-hydrangea-400 hover:text-hydrangea-700 text-2xl leading-none" aria-label="Close">×</button>
+            </div>
+            <div className="p-4 space-y-2">
+              <Textarea
+                label="Additional info (optional)"
+                placeholder={meta.fields.memoPlaceholder}
+                value={draft.extra_info || ''}
+                onChange={(e) => setDraft({ extra_info: e.target.value })}
+                rows={4}
+              />
+              <p className="text-[11px] text-hydrangea-400 leading-relaxed">
+                드레스 코드, 주차 안내, 특별 요청 등 카드 하단에 표시할 추가 안내사항을 입력하세요.
+              </p>
+            </div>
+            <div className="p-3 flex border-t border-hydrangea-100">
+              <button type="button" onClick={() => setExtraInfoModalOpen(false)}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-hydrangea-500 text-white text-sm font-semibold hover:bg-hydrangea-600 transition"
+              >완료</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Phone 편집 모달 — badge 7 클릭 시 열림 */}
+      {phoneModalOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-4"
+          onClick={() => setPhoneModalOpen(false)}
+        >
+          <div
+            className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-4 py-3 flex items-center justify-between border-b border-hydrangea-100">
+              <div className="text-sm font-semibold text-hydrangea-700">전화번호 입력</div>
+              <button type="button" onClick={() => setPhoneModalOpen(false)}
+                className="text-hydrangea-400 hover:text-hydrangea-700 text-2xl leading-none" aria-label="Close">×</button>
+            </div>
+            <div className="p-4">
+              <PhoneInput
+                value={draft.contact_phone || ''}
+                onChange={(phone) => setDraft({ contact_phone: phone })}
+              />
+              <p className="text-[11px] text-hydrangea-400 mt-2 leading-relaxed">
+                지역 번호를 선택하고 숫자를 입력하면 자동으로 <code className="bg-hydrangea-50 px-1 rounded">0000-0000</code> 형식으로 포맷됩니다.
+              </p>
+            </div>
+            <div className="p-3 flex border-t border-hydrangea-100">
+              <button type="button" onClick={() => setPhoneModalOpen(false)}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-hydrangea-500 text-white text-sm font-semibold hover:bg-hydrangea-600 transition"
+              >완료</button>
+            </div>
+          </div>
+        </div>
+      )}
     </PageContainer>
   );
 }

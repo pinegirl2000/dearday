@@ -176,14 +176,17 @@ export default function SendStep({ slug, ownerToken }: Props) {
           </button>
           <button
             type="button"
-            onClick={() => setMode('email')}
-            className={`relative px-3 py-3 rounded-xl border-2 text-left transition active:scale-95 ${
-              mode === 'email' ? 'border-hydrangea-500 bg-hydrangea-50' : 'border-hydrangea-100 bg-white'
-            }`}
+            disabled
+            aria-disabled="true"
+            className="relative px-3 py-3 rounded-xl border-2 text-left transition border-hydrangea-100 bg-hydrangea-50/40 opacity-60 cursor-not-allowed"
+            title="준비중"
           >
-            <Mail className="w-4 h-4 text-hydrangea-500 mb-1" />
-            <div className="text-xs font-semibold text-hydrangea-700">Email</div>
-            <div className="text-[10px] text-hydrangea-400 mt-0.5">DearDay에서 직접 이메일 발송</div>
+            <Mail className="w-4 h-4 text-hydrangea-300 mb-1" />
+            <div className="text-xs font-semibold text-hydrangea-400 flex items-center gap-1.5">
+              Email
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-hydrangea-200 text-hydrangea-600">준비중</span>
+            </div>
+            <div className="text-[10px] text-hydrangea-300 mt-0.5">DearDay에서 직접 이메일 발송</div>
           </button>
         </div>
       </div>
@@ -310,12 +313,12 @@ export default function SendStep({ slug, ownerToken }: Props) {
                 >
                   {copiedId === r.id ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
                 </button>
-                {r.delivery_method === 'email' && r.email && r.sent_status !== 'sent' && (
+                {r.delivery_method === 'email' && r.email && (
                   <button
                     type="button"
                     onClick={() => handleSendOne(r.id)}
                     disabled={pending && sendingId === r.id}
-                    title="이메일 발송"
+                    title={r.sent_status === 'sent' ? '재발송' : '이메일 발송'}
                     className="p-1.5 rounded-md text-hydrangea-500 hover:bg-hydrangea-50 disabled:opacity-50"
                   >
                     <Send className="w-3.5 h-3.5" />
