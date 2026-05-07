@@ -15,8 +15,8 @@ interface FlipEnvelopeProps extends EnvelopeProps {
   palette?: EnvelopePalette;
 }
 
-// 모듈 레벨 default (palette prop 없을 때 fallback) — blackgold
-const PALETTE: EnvelopePalette = COLOR_PALETTES.blackgold;
+// 모듈 레벨 default (palette prop 없을 때 fallback) — midnight
+const PALETTE: EnvelopePalette = COLOR_PALETTES.midnight;
 
 const DEFAULT_GREETING = '받는 분께';
 

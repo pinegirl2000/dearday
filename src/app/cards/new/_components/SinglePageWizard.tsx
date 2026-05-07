@@ -63,7 +63,7 @@ function buildEnvelopeAnim(type: EnvelopeAnimType, color: EnvelopeColorId): stri
     const m: Record<string, string> = { lavender: 'envelope-1', beige: 'envelope-2', mint: 'envelope-3', coral: 'envelope-4', lightblue: 'envelope-5' };
     if (m[color]) return m[color];
   }
-  if (type === 'flip' && color === 'blackgold') return 'envelope-6';
+  if (type === 'flip' && (color as string) === 'blackgold') return 'envelope-6';
   // 새 조합 — type:color 형식
   return `${type}:${color}`;
 }
