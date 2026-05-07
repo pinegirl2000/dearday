@@ -10,12 +10,22 @@ interface Props {
 export async function generateMetadata({ params }: Props) {
   const card = await getCardBySlug(params.slug);
   if (!card) return { title: '초대장' };
+  const description = card.greeting_oneliner || '소중한 날에 초대합니다';
   return {
-    title: `${card.title} · DearDay`,
-    description: card.greeting_oneliner || '소중한 날에 초대합니다',
+    title: card.title,
+    description,
     openGraph: {
       title: card.title,
-      description: card.greeting_oneliner || '소중한 날에 초대합니다'
+      description,
+      type: 'website',
+      siteName: 'DearDay',
+      images: [{ url: '/api/og', width: 1200, height: 630 }]
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: card.title,
+      description,
+      images: ['/api/og']
     }
   };
 }

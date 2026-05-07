@@ -105,6 +105,14 @@ CREATE TABLE IF NOT EXISTS dearday_recipient (
   UNIQUE(card_id, num)
 );
 
+-- email 발송 관련 컬럼 (마이그레이션 — 기존 테이블에도 추가)
+ALTER TABLE dearday_recipient ADD COLUMN IF NOT EXISTS email TEXT;
+ALTER TABLE dearday_recipient ADD COLUMN IF NOT EXISTS delivery_method TEXT DEFAULT 'link';
+ALTER TABLE dearday_recipient ADD COLUMN IF NOT EXISTS sent_at TIMESTAMPTZ;
+ALTER TABLE dearday_recipient ADD COLUMN IF NOT EXISTS sent_status TEXT DEFAULT 'pending';
+-- delivery_method: 'link' (링크만) | 'email' (이메일 발송)
+-- sent_status: 'pending' | 'sent' | 'failed'
+
 -- RSVP 응답
 CREATE TABLE IF NOT EXISTS dearday_rsvp (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

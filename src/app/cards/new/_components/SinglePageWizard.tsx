@@ -69,13 +69,14 @@ function buildEnvelopeAnim(type: EnvelopeAnimType, color: EnvelopeColorId): stri
 }
 import { publishCard, updateCard } from '@/lib/actions/publishCard';
 import TemplateCard from '@/app/i/[slug]/_components/TemplateCard';
+import SendStep from './SendStep';
 import RsvpForm from '@/app/i/[slug]/_components/RsvpForm';
 import { getTheme } from '@/lib/theme';
 import { TEMPLATES, getTemplate, findTemplateByPair, getTemplatesFor, getTemplateLayouts } from '@/lib/templates';
 import { LAYOUTS, getLayout } from '@/lib/layouts';
 import type { BackgroundId, BaseCard, EnvelopeAnimId, EventType, LayoutId } from '@/types/card';
 
-type SectionId = 1 | 2 | 3 | 4;
+type SectionId = 1 | 2 | 3 | 4 | 5;
 
 interface SectionShellProps {
   id: SectionId;
@@ -160,6 +161,15 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
   // Section 4 미리보기는 봉투 단계 건너뛰고 항상 카드 펼친 상태로 시작
   const [envelopeOpen, setEnvelopeOpen] = useState(true);
   const [envelopeOpening, setEnvelopeOpening] = useState(false);
+  // 발행된 카드 정보 (Step 5 활성화용). edit 모드면 editingSlug + localStorage 토큰 사용
+  const [publishedSlug, setPublishedSlug] = useState<string | null>(editingSlug || null);
+  const [publishedOwnerToken, setPublishedOwnerToken] = useState<string | null>(null);
+  useEffect(() => {
+    if (publishedSlug && !publishedOwnerToken && typeof window !== 'undefined') {
+      const t = localStorage.getItem(`dearday:owner:${publishedSlug}`);
+      if (t) setPublishedOwnerToken(t);
+    }
+  }, [publishedSlug, publishedOwnerToken]);
 
   const [hydrated, setHydrated] = useState(!!skipRehydrate);
   const [savedSnapshot, setSavedSnapshot] = useState<string | null>(null);
@@ -284,8 +294,11 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
   };
 
   // 섹션 활성화: 이전 섹션이 모두 완료되어야 클릭 가능
+  // step 5는 카드가 발행된 상태(publishedSlug)이거나 edit 모드일 때만 활성화
   const isEnabled = (id: SectionId): boolean => {
+    if (id === 5) return !!publishedSlug;
     for (let i = 1 as SectionId; i < id; i = (i + 1) as SectionId) {
+      if (i === 4) continue; // step 4는 publish action — done 여부로 판단 안 함
       if (!isDone(i)) return false;
     }
     return true;
@@ -341,8 +354,10 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
         const res = await updateCard(editingSlug, draft);
         if (!res.ok) { toast.error(res.error || 'Update failed'); return; }
         toast.success('Saved!');
-        reset();
-        router.push(`/cards/${editingSlug}/manage`);
+        // Edit 모드: 발행된 카드이므로 step 5(초대장 보내기)로 진행
+        setPublishedSlug(editingSlug);
+        setOpen(5);
+        setMaxStepCompleted((m) => Math.max(m, 4));
         return;
       }
       const res = await publishCard(draft);
@@ -352,10 +367,13 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
       }
       if (res.slug && res.ownerToken) {
         localStorage.setItem(`dearday:owner:${res.slug}`, res.ownerToken);
+        setPublishedSlug(res.slug);
+        setPublishedOwnerToken(res.ownerToken);
       }
       toast.success('Invitation published!');
-      reset();
-      router.push(`/cards/${res.slug}/manage`);
+      // Step 5(초대장 보내기)로 진행 — 발행된 카드의 recipient 등록/이메일 발송
+      setOpen(5);
+      setMaxStepCompleted((m) => Math.max(m, 4));
     });
   };
 
@@ -386,7 +404,8 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
     1: 'Event & Template',
     2: 'Envelope',
     3: 'Details',
-    4: 'Layout, Preview & Publish'
+    4: 'Layout, Publish',
+    5: 'Send Invitation'
   };
 
   return (
@@ -396,7 +415,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
       {/* 상단 단계 표시 (sticky) — 작은 점/숫자 + 가는 connector. 현재 단계 라벨은 아래 SectionShell에 노출 */}
       <div className="sticky top-0 z-20 bg-white/95 backdrop-blur border-b border-hydrangea-100/70 px-4 py-3">
         <div className="flex items-center justify-center gap-0">
-          {([1, 2, 3, 4] as SectionId[]).map((id, idx) => {
+          {([1, 2, 3, 4, 5] as SectionId[]).map((id, idx) => {
             const active = open === id;
             const enabled = isEnabled(id);
             const completed = id <= maxStepCompleted;
@@ -423,7 +442,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                     <span>{id}</span>
                   )}
                 </button>
-                {idx < 3 && (
+                {idx < 4 && (
                   <span
                     aria-hidden="true"
                     className={`flex-1 max-w-12 h-px mx-1 ${
@@ -889,12 +908,12 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
           </div>
         </SectionShell>
 
-        {/* 4. 레이아웃 / 미리보기 / 발행 */}
+        {/* 4. 레이아웃 / 발행 */}
         <SectionShell
           id={4}
-          title="Layout, Preview & Publish"
+          title="Layout, Publish"
           open={open === 4}
-          done={false}
+          done={!!publishedSlug}
           enabled={isEnabled(4)}
           onToggle={() => setOpen(4)}
           headerAction={isEditMode
@@ -1111,6 +1130,24 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
               </p>
             )}
           </div>
+        </SectionShell>
+
+        {/* 5. 초대장 보내기 — 수신자 등록 + 이메일/링크 발송 */}
+        <SectionShell
+          id={5}
+          title="Send Invitation"
+          open={open === 5}
+          done={false}
+          enabled={isEnabled(5)}
+          onToggle={() => setOpen(5)}
+        >
+          {publishedSlug ? (
+            <SendStep slug={publishedSlug} ownerToken={publishedOwnerToken} />
+          ) : (
+            <div className="text-center py-8 text-sm text-hydrangea-400">
+              먼저 4단계에서 초대장을 발행해 주세요.
+            </div>
+          )}
         </SectionShell>
       </div>
 

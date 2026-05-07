@@ -17,10 +17,27 @@ export async function generateMetadata({ params }: Props) {
     [card.id, params.num]
   );
   const recipientName = rows[0]?.name;
-  const title = recipientName ? `${recipientName}님께 · ${card.title}` : card.title;
+  // 메신저 공유 시 행사 제목이 카드 미리보기에 노출되도록 — recipient명은 description으로
+  const title = card.title;
+  const description = recipientName
+    ? `${recipientName}님께 — ${card.greeting_oneliner || '소중한 날에 초대합니다'}`
+    : (card.greeting_oneliner || '소중한 날에 초대합니다');
   return {
-    title: `${title} · DearDay`,
-    description: card.greeting_oneliner || '소중한 날에 초대합니다'
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      siteName: 'DearDay',
+      images: [{ url: '/api/og', width: 1200, height: 630 }]
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: ['/api/og']
+    }
   };
 }
 
