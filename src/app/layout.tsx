@@ -41,7 +41,8 @@ const greatVibes = Great_Vibes({
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
-  weight: ['400', '500', '600'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-cormorant',
   display: 'swap'
 });
 
@@ -52,8 +53,23 @@ const sacramento = Sacramento({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://dearday.sg'),
   title: 'DearDay — Invite the dearest day',
-  description: 'Wedding · Birthday · Opening — invite anyone to your most precious moments'
+  description: 'Beautiful digital invitations for weddings, birthdays, baptisms & gatherings. Real-time RSVP, mobile-first, made for Singapore.',
+  openGraph: {
+    title: 'DearDay — Invite the dearest day',
+    description: 'Beautiful digital invitations for weddings, birthdays, baptisms & gatherings.',
+    url: 'https://dearday.sg',
+    siteName: 'DearDay',
+    images: [{ url: '/api/og', width: 1200, height: 630 }],
+    type: 'website'
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'DearDay — Invite the dearest day',
+    description: 'Beautiful digital invitations for your most precious moments.',
+    images: ['/api/og']
+  }
 };
 
 export const viewport: Viewport = {
@@ -70,7 +86,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const session = await getServerSession(authOptions);
 
   return (
-    <html lang={locale} className={`${notoSerif.variable} ${notoSans.variable}`}>
+    <html lang={locale} className={`${notoSerif.variable} ${notoSans.variable} ${cormorant.variable}`}>
       <head>
         <Script
           id="adsense-script"

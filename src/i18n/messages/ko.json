@@ -28,7 +28,16 @@
     "feature2Desc": "Hydrangea · Modern · Vintage · Minimal",
     "feature3Title": "RSVP & 답신 피드",
     "feature3Desc": "실시간 응답 + 한줄 인사",
-    "footer": "made with"
+    "footer": "made with",
+    "whyTitle": "왜 DearDay인가요",
+    "why1Title": "📲 모바일 우선",
+    "why1Desc": "카카오톡·왓츠앱 공유 최적화. 종이 청첩장 없이 모바일에서 끝.",
+    "why2Title": "📊 실시간 RSVP",
+    "why2Desc": "참석·인원수·식사 응답을 실시간 집계, 관리 화면에서 한눈에.",
+    "why3Title": "🇸🇬 싱가폴 친화",
+    "why3Desc": "+65 전화번호, SGD 결제, 현지 venue 예시 — 처음부터 싱가폴에 맞춤.",
+    "demoTitle": "30초 미리보기",
+    "demoDesc": "이벤트를 골라보세요 — 가입 없이 디자인을 확인합니다."
   },
   "EventTypes": {
     "wedding": "결혼식",

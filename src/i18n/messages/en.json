@@ -28,7 +28,16 @@
     "feature2Desc": "Hydrangea · Modern · Vintage · Minimal",
     "feature3Title": "RSVP & Feed",
     "feature3Desc": "Real-time replies + one-line greetings",
-    "footer": "made with"
+    "footer": "made with",
+    "whyTitle": "Why DearDay",
+    "why1Title": "📲 Mobile-first",
+    "why1Desc": "Built for KakaoTalk & WhatsApp sharing. No paper, no fuss — everything on phones.",
+    "why2Title": "📊 Real-time RSVP",
+    "why2Desc": "Track attendance, head counts and meal preferences live — all in one manage screen.",
+    "why3Title": "🇸🇬 Made for Singapore",
+    "why3Desc": "+65 phone format, SGD-friendly, local venue examples — built for Singapore from day one.",
+    "demoTitle": "30-second preview",
+    "demoDesc": "Pick an event — see your design instantly, no sign-up required."
   },
   "EventTypes": {
     "wedding": "Wedding",

@@ -28,6 +28,7 @@ const ENVELOPE_PALETTE: Record<string, { primary: string; soft: string; deep: st
   'envelope-3': { primary: '#82B095', soft: '#DFEDDF', deep: '#476956' },  // 민트
   'envelope-4': { primary: '#C68676', soft: '#F8DCD2', deep: '#8E5A4D' },  // 코랄
   'envelope-5': { primary: '#8FB5D0', soft: '#DCEBF5', deep: '#5A7B96' },  // 연파랑
+  'envelope-6': { primary: '#D4AF37', soft: '#F4E5A8', deep: '#7A5C12' },  // Black & Gold (gold accent)
   'none':       { primary: '#7B5EA7', soft: '#E8DFF3', deep: '#5A3D7A' }
 };
 

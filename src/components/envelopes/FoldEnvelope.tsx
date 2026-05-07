@@ -10,6 +10,12 @@ export interface EnvelopeProps {
   sealColor?: string;
   children?: ReactNode;
   width?: number;
+  /** 일부 봉투(예: Black & Gold)에서 앞면에 타이핑되는 받는 분 인사말 */
+  recipientGreeting?: string;
+  /** 봉투 안에 옆으로 누워서 들어갈 카드 미리보기 노드 (envelope-6 등에서 사용) */
+  cardPreview?: React.ReactNode;
+  /** envelope-6: 봉투 sequence(회전→열림→감상→꺼내기) 완료 후 호출. 부모는 카드 화면으로 전환. */
+  onComplete?: () => void;
 }
 
 export default function FoldEnvelope({

@@ -2,7 +2,10 @@ export type EventType = 'wedding' | 'birthday' | 'opening' | 'baptism' | 'meetin
 export type ThemeId = 'hydrangea' | 'modern' | 'vintage' | 'minimal';
 export type BackgroundId = 'bg-none' | 'bg-1' | 'bg-2' | 'bg-3' | 'bg-4' | 'bg-cream' | 'bg-img-1' | 'bg-img-2' | 'bg-img-3' | 'bg-img-4' | 'bg-img-6' | 'bg-img-7' | 'bg-img-8' | 'bg-img-9' | 'bg-img-10' | 'bg-img-11' | 'bg-img-12' | 'bg-img-13' | 'bg-img-14' | 'bg-img-15' | 'bg-img-16' | 'bg-img-17' | 'bg-img-18' | 'bg-img-19';
 export type LayoutId = 'layout-classic' | 'layout-3' | 'layout-4' | 'layout-5' | 'layout-6' | 'layout-7' | 'layout-topcenter' | 'layout-rightbottom' | 'layout-center';
-export type EnvelopeAnimId = 'envelope-1' | 'envelope-2' | 'envelope-3' | 'envelope-4' | 'envelope-5' | 'none';
+// envelope_anim: 기존 enum + 새 형식 'type:color' (예: 'sway:lavender', 'flip:beige')
+export type EnvelopeAnimId =
+  | 'envelope-1' | 'envelope-2' | 'envelope-3' | 'envelope-4' | 'envelope-5' | 'envelope-6' | 'none'
+  | string; // 새 (type, color) 조합 — 'sway:lavender' 등
 export type Plan = 'free' | 'paid';
 
 export interface CardImage {
