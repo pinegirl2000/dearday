@@ -229,7 +229,7 @@ export default function ManageClient({ slug, cardTitle }: Props) {
                 if (at === -1) return 1;
                 if (bt === -1) return -1;
                 return bt - at;
-              }).map((r) => {
+              }).map((r, idx) => {
                 const link = `${origin}/i/${slug}/${r.num}`;
                 const copied = copiedNum === r.num;
                 const expanded = expandedNames === r.id;
@@ -247,17 +247,17 @@ export default function ManageClient({ slug, cardTitle }: Props) {
                     className="border-b border-hydrangea-100/60 last:border-b-0"
                   >
                     <div className="grid grid-cols-[32px_80px_1fr_56px_56px_24px] items-center gap-2 px-3 py-2.5 text-sm">
-                      <span className="text-[10px] font-semibold text-hydrangea-500 bg-hydrangea-100 px-1.5 py-0.5 rounded text-center">{r.num}</span>
+                      <span className="text-[11px] font-semibold text-hydrangea-500 bg-hydrangea-100 px-1.5 py-0.5 rounded text-center">{idx + 1}</span>
                       <span className="font-medium text-hydrangea-700 truncate">{r.name}</span>
                       <div className="min-w-0 flex flex-col gap-0.5">
                         <button
                           onClick={() => copyLink(r.num)}
-                          className={`min-w-0 flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-mono text-left transition ${
+                          className={`min-w-0 flex items-center gap-1.5 px-2.5 py-2 rounded text-[11px] font-mono text-left transition min-h-[40px] ${
                             copied ? 'bg-green-50 text-green-700' : 'text-hydrangea-500 hover:bg-hydrangea-50 active:scale-95'
                           }`}
                           title={copied ? 'Copied!' : 'Copy link'}
                         >
-                          {copied ? <Check className="w-3 h-3 flex-shrink-0" /> : <Copy className="w-3 h-3 flex-shrink-0" />}
+                          {copied ? <Check className="w-4 h-4 flex-shrink-0" /> : <Copy className="w-4 h-4 flex-shrink-0" />}
                           <span className="truncate">{link}</span>
                         </button>
                         {hasOneliner && (

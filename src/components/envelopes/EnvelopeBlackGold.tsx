@@ -1,9 +1,80 @@
 'use client';
 
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
 import type { EnvelopeProps } from './FoldEnvelope';
 import { COLOR_PALETTES, type EnvelopePalette } from './palettes';
+
+// 꽃잎 파티클 — flap 열릴 때 봉투 안에서 폭발하듯 펼쳐짐
+interface PetalSpec {
+  id: number;
+  angle: number;
+  distance: number;
+  size: number;
+  rotate: number;
+  duration: number;
+  delay: number;
+  color: string;
+  shape: 'petal' | 'circle' | 'leaf';
+}
+
+function generatePetals(count: number, colors: readonly string[]): PetalSpec[] {
+  return Array.from({ length: count }, (_, i) => {
+    const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.4;
+    return {
+      id: i,
+      angle,
+      distance: 90 + Math.random() * 180,
+      size: 7 + Math.random() * 13,
+      rotate: Math.random() * 720 - 360,
+      duration: 1.4 + Math.random() * 0.9,
+      delay: Math.random() * 0.2,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      shape: (['petal', 'circle', 'leaf'] as const)[Math.floor(Math.random() * 3)]
+    };
+  });
+}
+
+function Petal({ spec }: { spec: PetalSpec }) {
+  const dx = Math.cos(spec.angle) * spec.distance;
+  const dy = Math.sin(spec.angle) * spec.distance - Math.random() * 60;
+  const radius =
+    spec.shape === 'circle' ? '50%' :
+    spec.shape === 'petal' ? '50% 0 50% 0' :
+    '0 100% 0 100%';
+  return (
+    <motion.div
+      initial={{ x: 0, y: 0, opacity: 0, rotate: 0, scale: 0.4 }}
+      animate={{
+        x: dx,
+        y: dy,
+        opacity: [0, 1, 1, 0],
+        rotate: spec.rotate,
+        scale: [0.4, 1, 0.85]
+      }}
+      transition={{
+        duration: spec.duration,
+        delay: spec.delay,
+        ease: [0.16, 0.7, 0.3, 1] as const,
+        opacity: { duration: spec.duration, times: [0, 0.15, 0.7, 1], ease: 'linear' },
+        scale: { duration: spec.duration, times: [0, 0.4, 1], ease: 'easeOut' }
+      }}
+      style={{
+        position: 'absolute',
+        left: '50%',
+        top: '50%',
+        width: spec.size,
+        height: spec.size,
+        background: spec.color,
+        borderRadius: radius,
+        marginLeft: -spec.size / 2,
+        marginTop: -spec.size / 2,
+        pointerEvents: 'none',
+        boxShadow: `0 1px 3px ${spec.color}88`
+      }}
+    />
+  );
+}
 
 // Flip 봉투 — 색상 팔레트 prop을 받는 generic 버전.
 // 시퀀스:
@@ -43,15 +114,27 @@ export default function EnvelopeBlackGold({
   const onCompleteRef = useRef(onComplete);
   useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
 
+  // 꽃잎 파티클 — flap 열림 시점에 50개 폭발
+  const [particles, setParticles] = useState<PetalSpec[] | null>(null);
+
   // isOpen=true → Y회전 → flap 열림 + 카드 슬라이드 업 → 3초 감상 → onComplete
   useEffect(() => {
     if (!isOpen) return;
     setPhase('flipping');
-    const t1 = setTimeout(() => setPhase('opening'), 1300 * D);
-    // opening: flap rise 완료(2.0s) + 1.0s 감상 = 3.0s
-    const t2 = setTimeout(() => onCompleteRef.current?.(), (1300 + 2000 + 1000) * D);
+    const t1 = setTimeout(() => {
+      setPhase('opening');
+      // flap이 막 열리기 시작하는 순간(delay 0.4s 직전) 꽃잎 폭발
+      if (!prefersReducedMotion) {
+        setTimeout(() => {
+          setParticles(generatePetals(50, palette.petals));
+          setTimeout(() => setParticles(null), 2800);
+        }, 400 * D);
+      }
+    }, 1300 * D);
+    // opening: flap rise 완료(2.0s) + 0.5s 감상 = 2.5s
+    const t2 = setTimeout(() => onCompleteRef.current?.(), (1300 + 2000 + 500) * D);
     return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, [isOpen, D]);
+  }, [isOpen, D, prefersReducedMotion, palette.petals]);
 
   // 회전각: front=0, flipping=180, opening=180
   const rotateY = phase === 'front' ? 0 : 180;
@@ -62,6 +145,13 @@ export default function EnvelopeBlackGold({
       style={{ width, height: height + 30, perspective: 1600 }}
       aria-live="polite"
     >
+      {/* 꽃잎 파티클 burst — 봉투 중앙에서 사방으로 펼쳐짐 (z 위에 떠 있도록 zIndex 높게) */}
+      <div style={{ position: 'absolute', left: '50%', top: '50%', width: 0, height: 0, zIndex: 30, pointerEvents: 'none' }}>
+        <AnimatePresence>
+          {particles && particles.map((p) => <Petal key={p.id} spec={p} />)}
+        </AnimatePresence>
+      </div>
+
       {/* Y축 회전 컨테이너 — 앞면(0°) / 뒷면(180°) 전환 */}
       <motion.div
         style={{

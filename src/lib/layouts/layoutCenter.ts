@@ -19,7 +19,7 @@ export const LAYOUT_CENTER: LayoutMeta = {
     title: {
       x: 10, y: 25.5, w: 80, align: 'center',
       fontSize: 22, fontWeight: 600, color: '#1A2A3A',
-      letterSpacing: '0.06em', lineHeight: 1.2,
+      letterSpacing: '0.18em', lineHeight: 1.2,
       fontFamily: "'Cormorant Garamond', 'Noto Serif KR', serif"
     },
     body: {

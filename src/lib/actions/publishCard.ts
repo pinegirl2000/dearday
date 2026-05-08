@@ -1,6 +1,7 @@
 'use server';
 
 import { pool } from '@/lib/db';
+import { revalidatePath } from 'next/cache';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { isAdminEmail } from '@/lib/admin';
@@ -197,6 +198,10 @@ export async function updateCard(slug: string, draft: CardDraft): Promise<Update
     );
 
     if (result.rowCount === 0) return { ok: false, error: '카드를 찾을 수 없습니다.' };
+    // 공개 초청장 페이지(/i/[slug] 및 /i/[slug]/[num]) 캐시 무효화 — 수정 즉시 반영되도록
+    revalidatePath(`/i/${slug}`, 'layout');
+    revalidatePath(`/cards/${slug}/edit`);
+    revalidatePath(`/cards/${slug}/manage`);
     return { ok: true, slug };
   } catch (e: any) {
     console.error('updateCard error:', e);
