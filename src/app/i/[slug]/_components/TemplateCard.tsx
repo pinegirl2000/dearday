@@ -7,7 +7,7 @@ import { Phone, MapPin } from 'lucide-react';
 // 첫 측정 누락 시 opacity:0에 갇혀 영구히 안 보이는 사고가 났음.
 import { getLayout, formatGreeting, applyName, type TextField } from '@/lib/layouts';
 import { getBackground } from '@/lib/backgrounds';
-import { getEventLabelText, getEventLabelScript } from '@/lib/eventType';
+import { getEventLabelText, getEventLabelScript, getEventTypeMeta } from '@/lib/eventType';
 import { findTemplateByPair } from '@/lib/templates';
 import type { BaseCard } from '@/types/card';
 import ClassicTemplateCard from './ClassicTemplateCard';
@@ -19,9 +19,13 @@ interface Props {
   rsvpSlot?: React.ReactNode;
   /** wizard에서 카드 좌표계와 동일하게 번호 가이드 오버레이를 그릴 때 사용 */
   guideOverlay?: React.ReactNode;
-  /** wizard 편집 모드: contentEditable로 in-place 수정 + onBlur 시 onFieldEdit 호출 */
+  /** wizard 편집 모드 */
   editable?: boolean;
   onFieldEdit?: (key: 'title' | 'greeting_oneliner' | 'body' | 'event_place' | 'contact_name' | 'extra_info' | 'event_label' | 'event_date', value: string) => void;
+  /** 편집 모드에서 텍스트 클릭 시 호출 (모달 열기 트리거) */
+  onFieldClick?: (key: 'title' | 'greeting_oneliner' | 'body' | 'event_place' | 'contact_name' | 'extra_info' | 'event_label') => void;
+  /** 현재 강조(flashing) 중인 필드 — 이 필드만 점선 표시, 나머지는 plain */
+  highlightedField?: string | null;
 }
 
 function formatDate(iso?: string | null) {
@@ -172,22 +176,27 @@ function FieldText({ field, children, delay = 0 }: { field: TextField; children:
   );
 }
 
-export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverlay, editable, onFieldEdit }: Props) {
-  // contentEditable wrapper — 편집 모드에서만 활성화
-  const Editable = ({ fieldKey, children, multiline }: { fieldKey: 'title' | 'greeting_oneliner' | 'body' | 'event_place' | 'contact_name' | 'extra_info' | 'event_label'; children: React.ReactNode; multiline?: boolean }) => {
+export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverlay, editable, onFieldEdit, onFieldClick, highlightedField }: Props) {
+  // 편집 모드: 텍스트 클릭 시 모달 트리거. highlightedField만 점선 박스로 텍스트 영역 표시.
+  const Editable = ({ fieldKey, children }: { fieldKey: 'title' | 'greeting_oneliner' | 'body' | 'event_place' | 'contact_name' | 'extra_info' | 'event_label'; children: React.ReactNode; multiline?: boolean }) => {
     if (!editable) return <>{children}</>;
+    const isHighlighted = highlightedField === fieldKey;
     return (
       <span
-        contentEditable
-        suppressContentEditableWarning
-        onBlur={(e) => {
-          const v = (e.currentTarget.innerText || '').trim();
-          onFieldEdit?.(fieldKey, v);
+        role="button"
+        tabIndex={0}
+        onClick={(e) => { e.stopPropagation(); onFieldClick?.(fieldKey); }}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onFieldClick?.(fieldKey); } }}
+        style={{
+          cursor: 'pointer',
+          display: 'inline-block',
+          padding: isHighlighted ? '2px 6px' : 0,
+          margin: isHighlighted ? '-2px -6px' : 0,
+          borderRadius: isHighlighted ? 6 : 0,
+          border: isHighlighted ? '2px dashed rgba(123,94,167,0.55)' : 'none',
+          background: isHighlighted ? 'rgba(123,94,167,0.06)' : 'transparent',
+          transition: 'all 0.15s'
         }}
-        onKeyDown={(e) => {
-          if (!multiline && e.key === 'Enter') { e.preventDefault(); (e.currentTarget as HTMLSpanElement).blur(); }
-        }}
-        style={{ outline: 'none', cursor: 'text', minWidth: '1ch', display: 'inline-block', borderBottom: '1px dashed rgba(123,94,167,0.35)' }}
         title="클릭해서 수정"
       >{children}</span>
     );
@@ -198,9 +207,12 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
 
   if (layout.renderStyle === 'flow') {
     if (layout.id === 'layout-4') {
-      return <VintageScriptCard card={card} recipientName={recipientName} background={bg} rsvpSlot={rsvpSlot} />;
+      return <VintageScriptCard
+        card={card} recipientName={recipientName} background={bg} rsvpSlot={rsvpSlot}
+        guideOverlay={guideOverlay} editable={editable} onFieldEdit={onFieldEdit} onFieldClick={onFieldClick} highlightedField={highlightedField}
+      />;
     }
-    return <ClassicTemplateCard card={card} recipientName={recipientName} background={bg} rsvpSlot={rsvpSlot} guideOverlay={guideOverlay} editable={editable} onFieldEdit={onFieldEdit} />;
+    return <ClassicTemplateCard card={card} recipientName={recipientName} background={bg} rsvpSlot={rsvpSlot} guideOverlay={guideOverlay} editable={editable} onFieldEdit={onFieldEdit} onFieldClick={onFieldClick} highlightedField={highlightedField} />;
   }
 
   // 페어링된 템플릿 색상으로 layout 필드 색상 override
@@ -273,7 +285,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
           ✝
         </div>
       )}
-      {(card.greeting_oneliner || editable) && f.subtitle && <FieldText field={f.subtitle} delay={0.1}><Editable fieldKey="greeting_oneliner">{applyName(card.greeting_oneliner || (editable ? '클릭해서 입력' : ''), recipientName)}</Editable></FieldText>}
+      {(card.greeting_oneliner || editable) && f.subtitle && <FieldText field={f.subtitle} delay={0.1}><Editable fieldKey="greeting_oneliner">{applyName(card.greeting_oneliner || '', recipientName)}</Editable></FieldText>}
       <FieldText field={f.title} delay={0.2}><Editable fieldKey="title">{applyName(card.title, recipientName)}</Editable></FieldText>
       {/* Side Text + Center Text: 하단 date+place 영역 정보 박스 — 템플릿 sub 색상 톤 (없으면 흰색) */}
       {((layout.id === 'layout-5' || layout.id === 'layout-rightbottom') || layout.id === 'layout-6') && (card.event_date || card.event_place) && f.date && f.place && (() => {
@@ -325,7 +337,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
         );
       })()}
       {/* Side Text 전용: 박스 아래 호스트 이름 + 전화 (extra 위) */}
-      {(layout.id === 'layout-5' || layout.id === 'layout-rightbottom') && (card.contact_name || card.contact_phone) && (
+      {(layout.id === 'layout-5' || layout.id === 'layout-rightbottom') && (card.contact_name || card.contact_phone || editable) && (
         <div
           style={{
             position: 'absolute',
@@ -337,16 +349,29 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
             display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'center'
           }}
         >
-          {card.contact_name && (
+          {(card.contact_name || editable) && (
             <p style={{ fontSize: 12, letterSpacing: '0.1em', margin: 0 }}>
-              — {applyName(card.contact_name, recipientName)} —
+              <Editable fieldKey="contact_name">{applyName(card.contact_name || '', recipientName)}</Editable>
             </p>
           )}
-          {card.contact_phone && (
-            <a href={`tel:${card.contact_phone}`} style={{ color: 'inherit', textDecoration: 'none', fontSize: 11 }}>
-              {card.contact_phone}
-            </a>
-          )}
+          {(card.contact_phone || editable) && (() => {
+            const isPhoneHi = highlightedField === 'contact_phone';
+            return (
+              <p style={{
+                margin: 0, fontSize: 11, display: 'inline-block',
+                padding: isPhoneHi ? '2px 6px' : 0,
+                borderRadius: isPhoneHi ? 6 : 0,
+                border: isPhoneHi ? '2px dashed rgba(123,94,167,0.55)' : 'none',
+                background: isPhoneHi ? 'rgba(123,94,167,0.06)' : 'transparent',
+                transition: 'all 0.15s'
+              }}>
+                {card.contact_phone
+                  ? <a href={`tel:${card.contact_phone}`} style={{ color: 'inherit', textDecoration: 'none' }}>{card.contact_phone}</a>
+                  : <span style={{ opacity: 0.5 }}>전화번호</span>
+                }
+              </p>
+            );
+          })()}
         </div>
       )}
       {/* Vintage Script 전용: 날짜/장소 영역을 감싸는 반투명 흰색 정보 박스 */}
@@ -426,7 +451,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
       {(card.event_place || editable) && f.place && (
         <FieldText field={f.place} delay={0.4}>
           <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <span><Editable fieldKey="event_place">{card.event_place || (editable ? '클릭해서 장소 입력' : '')}</Editable></span>
+            <span><Editable fieldKey="event_place">{card.event_place || ''}</Editable></span>
             {card.map_url && isUrl(card.map_url) && (
               (layout.id === 'layout-6' || layout.id === 'layout-center') ? (
                 <a href={card.map_url} target="_blank" rel="noreferrer"
@@ -445,7 +470,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
         </FieldText>
       )}
       {/* 전화/호스트는 place 아래 인라인 배치. layout-5는 별도 처리(위에서 처리)되므로 제외 */}
-      {layout.id !== 'layout-5' && layout.id !== 'layout-rightbottom' && (card.contact_phone || card.contact_name) && f.place && (
+      {layout.id !== 'layout-5' && layout.id !== 'layout-rightbottom' && (card.contact_phone || card.contact_name || editable) && f.place && (
         <div
           style={{
             position: 'absolute',
@@ -473,28 +498,45 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
           }}
         >
           {layout.id === 'layout-center' ? (
-            // 한 줄 포맷: — name / phone —
             <span>
-              {card.contact_name && <>— {applyName(card.contact_name, recipientName)}</>}
+              {(card.contact_name || editable) && <Editable fieldKey="contact_name">{applyName(card.contact_name || '', recipientName)}</Editable>}
               {card.contact_name && card.contact_phone && <> / </>}
-              {card.contact_phone && (
-                <a href={`tel:${card.contact_phone}`} style={{ color: f.place.color, textDecoration: 'none' }}>
-                  {card.contact_phone}
-                </a>
-              )}
-              {(card.contact_name || card.contact_phone) && <> —</>}
+              {(card.contact_phone || editable) && (() => {
+                const isPhoneHi = highlightedField === 'contact_phone';
+                return (
+                  <span style={{
+                    display: 'inline-block',
+                    padding: isPhoneHi ? '1px 5px' : 0,
+                    borderRadius: isPhoneHi ? 5 : 0,
+                    border: isPhoneHi ? '2px dashed rgba(123,94,167,0.55)' : 'none',
+                    background: isPhoneHi ? 'rgba(123,94,167,0.06)' : 'transparent'
+                  }}>
+                    {card.contact_phone
+                      ? <a href={`tel:${card.contact_phone}`} style={{ color: f.place.color, textDecoration: 'none' }}>{card.contact_phone}</a>
+                      : <span style={{ opacity: 0.5 }}>전화번호</span>}
+                  </span>
+                );
+              })()}
             </span>
           ) : (
             <>
-              {card.contact_name && <span>— {applyName(card.contact_name, recipientName)} —</span>}
-              {card.contact_phone && (
-                <a
-                  href={`tel:${card.contact_phone}`}
-                  style={{ color: f.place.color, textDecoration: 'none' }}
-                >
-                  {card.contact_phone}
-                </a>
-              )}
+              {(card.contact_name || editable) && <span><Editable fieldKey="contact_name">{applyName(card.contact_name || '', recipientName)}</Editable></span>}
+              {(card.contact_phone || editable) && (() => {
+                const isPhoneHi = highlightedField === 'contact_phone';
+                return (
+                  <span style={{
+                    display: 'inline-block',
+                    padding: isPhoneHi ? '1px 5px' : 0,
+                    borderRadius: isPhoneHi ? 5 : 0,
+                    border: isPhoneHi ? '2px dashed rgba(123,94,167,0.55)' : 'none',
+                    background: isPhoneHi ? 'rgba(123,94,167,0.06)' : 'transparent'
+                  }}>
+                    {card.contact_phone
+                      ? <a href={`tel:${card.contact_phone}`} style={{ color: f.place.color, textDecoration: 'none' }}>{card.contact_phone}</a>
+                      : <span style={{ opacity: 0.5 }}>전화번호</span>}
+                  </span>
+                );
+              })()}
             </>
           )}
         </div>
@@ -519,13 +561,13 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
           ✽
         </motion.div>
       )}
-      {(card.body || editable) && f.body && <FieldText field={f.body} delay={0.65}><Editable fieldKey="body" multiline>{applyName(card.body || (editable ? '클릭해서 메시지 입력' : ''), recipientName)}</Editable></FieldText>}
-      {card.extra_info && f.extra && (
+      {(card.body || editable) && f.body && <FieldText field={f.body} delay={0.65}><Editable fieldKey="body" multiline>{applyName(card.body || '', recipientName)}</Editable></FieldText>}
+      {(card.extra_info || editable) && f.extra && (
         <FieldText
           field={(layout.id === 'layout-6' || layout.id === 'layout-topcenter') && tplMain ? { ...f.extra, color: tplMain } : f.extra}
           delay={0.75}
         >
-          {applyName(card.extra_info, recipientName)}
+          <Editable fieldKey="extra_info" multiline>{applyName(card.extra_info || '', recipientName)}</Editable>
         </FieldText>
       )}
       {/* RSVP — Compact(layout-4) / Editorial(layout-3)은 카드 안 오버레이.

@@ -88,6 +88,25 @@ CREATE TABLE IF NOT EXISTS dearday_card (
 -- 카드 상단 이벤트 라벨 사용자 override (마이그레이션 — 기존 테이블에도 추가)
 ALTER TABLE dearday_card ADD COLUMN IF NOT EXISTS event_label TEXT;
 
+-- 이벤트 타입별 sample data — 사용자가 detail 진입 시 선택 가능 (admin 관리 가능)
+CREATE TABLE IF NOT EXISTS dearday_sample_data (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_type TEXT NOT NULL,             -- 'wedding', 'birthday', 'baptism', 'meeting', 'opening', 'etc'
+  label TEXT NOT NULL,                  -- admin/user UI에 노출되는 sample 이름 (예: "1st Birthday", "Sweet 16")
+  title TEXT,
+  greeting_oneliner TEXT,               -- subtitle
+  body TEXT,
+  event_place TEXT,
+  map_url TEXT,                         -- address
+  contact_name TEXT,                    -- host name
+  contact_phone TEXT,                   -- host contact
+  extra_info TEXT,
+  sort_order INT DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_dearday_sample_event ON dearday_sample_data(event_type, sort_order);
+
 -- Card 첨부 이미지
 CREATE TABLE IF NOT EXISTS dearday_card_image (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

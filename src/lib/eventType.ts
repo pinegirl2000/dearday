@@ -46,10 +46,10 @@ export const EVENT_TYPES: EventTypeMeta[] = [
     recommendBackgrounds: ['bg-1', 'bg-2', 'bg-none', 'bg-3', 'bg-4'],
     fields: {
       titleLabel: 'Main title',
-      titlePlaceholder: 'e.g. Join us for a night of drinks, dancing, and celebration in honor of [Name].',
+      titlePlaceholder: "e.g. Avery's Birthday Party",
       subtitlePlaceholder: 'e.g. Cheers to [Age] Years!',
       placePlaceholder: 'e.g. Skyline Rooftop Lounge, 123 Sunset Blvd, Los Angeles, CA',
-      bodyPlaceholder: 'e.g. Join us for a night of drinks, dancing, and celebration in honor of [Name].',
+      bodyPlaceholder: "e.g. Come share laughter, joy, and cake as we celebrate [Name]'s special day.",
       memoPlaceholder: 'e.g. No gifts, please. Your presence is the only present we need!'
     }
   },

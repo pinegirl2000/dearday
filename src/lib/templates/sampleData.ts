@@ -11,10 +11,10 @@ export const SAMPLE_BY_EVENT: Record<string, Partial<BaseCard>> = {
     contact_name: 'From Daniel & Olivia', contact_phone: '+65-1234-5678', extra_info: 'Reception to follow'
   },
   birthday: {
-    title: "Riley's First Birthday", greeting_oneliner: 'A precious first year',
-    body: "Please join us in celebrating\nRiley's first year of life.",
+    title: "Avery's Birthday Party", greeting_oneliner: 'Cheers to another year!',
+    body: "Come share laughter, joy, and cake as we celebrate Avery's special day.",
     event_date: '2026-07-05T11:00:00.000Z', event_place: 'The Lounge function room',
-    contact_name: "Love, Riley's Family", contact_phone: '+65-2222-3333'
+    contact_name: "Love, Avery's Family", contact_phone: '+65-2222-3333'
   },
   baptism: {
     title: "Avery's Baptism Day", greeting_oneliner: 'A blessed first step',

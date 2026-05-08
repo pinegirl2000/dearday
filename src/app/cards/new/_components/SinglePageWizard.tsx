@@ -70,10 +70,13 @@ function buildEnvelopeAnim(type: EnvelopeAnimType, color: EnvelopeColorId): stri
 import { publishCard, updateCard } from '@/lib/actions/publishCard';
 import TemplateCard from '@/app/i/[slug]/_components/TemplateCard';
 import SendStep from './SendStep';
+import { DayPicker } from 'react-day-picker';
+import 'react-day-picker/dist/style.css';
 import RsvpForm from '@/app/i/[slug]/_components/RsvpForm';
 import { getTheme } from '@/lib/theme';
 import { TEMPLATES, getTemplate, findTemplateByPair, getTemplatesFor, getTemplateLayouts } from '@/lib/templates';
-import { buildSamplePreviewCard } from '@/lib/templates/sampleData';
+import { buildSamplePreviewCard, SAMPLE_BY_EVENT } from '@/lib/templates/sampleData';
+import { listSamplesByEventType, type SampleData } from '@/lib/actions/sampleData';
 import { LAYOUTS, getLayout } from '@/lib/layouts';
 import type { BackgroundId, BaseCard, EnvelopeAnimId, EventType, LayoutId } from '@/types/card';
 
@@ -163,8 +166,13 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
   const [dateTimeModalOpen, setDateTimeModalOpen] = useState(false);
   // Extra info 편집 모달
   const [extraInfoModalOpen, setExtraInfoModalOpen] = useState(false);
-  // Text 편집 모달 (Subtitle/Title/Message 등 텍스트 단일 필드)
-  const [textEditField, setTextEditField] = useState<{ key: 'greeting_oneliner' | 'title' | 'body'; label: string; multiline: boolean } | null>(null);
+  // Text 편집 모달 (Subtitle/Title/Message/Host 등 텍스트 단일 필드)
+  const [textEditField, setTextEditField] = useState<{ key: 'greeting_oneliner' | 'title' | 'body' | 'contact_name' | 'event_label'; label: string; multiline: boolean } | null>(null);
+  // Sample picker (이벤트별 DB sample 다중 선택)
+  const [availableSamples, setAvailableSamples] = useState<SampleData[]>([]);
+  const [samplePickerOpen, setSamplePickerOpen] = useState(false);
+  // 자동 채우기는 한 번만 — 같은 event_type에 대해 반복 prompt 방지
+  const sampleAutoFilledFor = useRef<string | null>(null);
   // 사용자가 Next 버튼으로 실제로 진행한 최대 단계 — 시각적 완료 표시용
   // edit 모드(initialOpen=4)는 처음부터 4단계까지 다 통과한 것으로 시작
   const [maxStepCompleted, setMaxStepCompleted] = useState<number>(
@@ -234,7 +242,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
 
   // max per group이 1이면 collect_names 자동 해제
   useEffect(() => {
-    if ((draft.rsvp_max_per_card || 4) === 1 && draft.rsvp_collect_names) {
+    if ((draft.rsvp_max_per_card || 1) === 1 && draft.rsvp_collect_names) {
       setDraft({ rsvp_collect_names: false });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -329,16 +337,56 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
     }
   };
 
-  // 섹션 3 진입 시 placeholder 자동 채우기
+  // 섹션 3 진입 시 sample data 자동 채우기 — DB에서 이벤트별 samples 로드
+  // - 1개면 자동 채우기, 2개 이상이면 picker 모달 띄움 (사용자 선택)
+  // - event_type이 바뀌었거나, 이전 fill 기록이 다르면 새로 prompt
+  // - 단, edit 모드(기존 카드 수정)는 항상 skip
   useEffect(() => {
-    if (open === 3 && !draft.body && !draft.title && draft.event_type) {
-      setDraft({
-        body: meta.fields.bodyPlaceholder,
-        theme: meta.recommendTheme as any
-      });
-    }
+    if (open !== 3) return;
+    if (isEditMode) return;
+    if (!draft.event_type) return;
+    if (sampleAutoFilledFor.current === draft.event_type) return;
+    sampleAutoFilledFor.current = draft.event_type;
+
+    listSamplesByEventType(draft.event_type).then((samples) => {
+      if (!samples || samples.length === 0) {
+        // DB에 samples 없으면 폴백: SAMPLE_BY_EVENT 하드코딩 사용
+        const sample = SAMPLE_BY_EVENT[draft.event_type as string] || SAMPLE_BY_EVENT.etc;
+        setDraft({
+          title: sample.title || meta.fields.titlePlaceholder,
+          greeting_oneliner: sample.greeting_oneliner ?? null,
+          body: sample.body || meta.fields.bodyPlaceholder,
+          event_place: sample.event_place ?? null,
+          contact_name: sample.contact_name ?? null,
+          contact_phone: sample.contact_phone ?? null,
+          extra_info: sample.extra_info ?? null,
+          theme: meta.recommendTheme as any
+        });
+        return;
+      }
+      setAvailableSamples(samples);
+      // 첫 sample 자동 적용 (modal popup 안 띄움 — 상단 toggle로 변경 가능)
+      applySample(samples[0]);
+    }).catch((e) => {
+      console.error('[SampleData] load failed:', e);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, draft.event_type]);
+
+  // sample 하나를 draft에 적용
+  const applySample = (s: SampleData) => {
+    setDraft({
+      title: s.title || '',
+      greeting_oneliner: s.greeting_oneliner,
+      body: s.body || '',
+      event_place: s.event_place,
+      map_url: s.map_url,
+      contact_name: s.contact_name,
+      contact_phone: s.contact_phone,
+      extra_info: s.extra_info,
+      theme: meta.recommendTheme as any
+    });
+  };
 
   // 미리보기용 카드 객체
   const previewCard = {
@@ -424,8 +472,8 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
   const SECTION_LABELS: Record<SectionId, string> = {
     1: 'Event & Template',
     2: 'Envelope',
-    3: 'Details',
-    4: 'Layout, Publish',
+    3: 'Layout & Details',
+    4: 'Publish',
     5: 'Send Invitation'
   };
 
@@ -751,7 +799,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
         {/* 3. 정보 입력 + RSVP */}
         <SectionShell
           id={3}
-          title="Details"
+          title="Layout & Details"
           summary={summaries[3]}
           open={open === 3}
           done={isDone(3) && open !== 3}
@@ -772,8 +820,8 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
             const lf = curLayout.fields;
             const isFlow = curLayout.renderStyle === 'flow';
             // flow layout용 approximate 위치 (top-to-bottom 순서로 자연스럽게 분포)
-            // Classic layout 구조 — 모든 배지를 카드 좌측 끝에 배치 (텍스트 가리지 않도록)
-            const flowPos: Record<string, { top: string; left: string }> = {
+            // Flow 레이아웃별 배지 위치 — 텍스트 라인에 맞춤
+            const flowPosClassic: Record<string, { top: string; left: string }> = {
               greeting_oneliner: { top: '20%', left: '4%' },
               title: { top: '28%', left: '4%' },
               body: { top: '46%', left: '4%' },
@@ -784,6 +832,19 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
               extra_info: { top: '92%', left: '4%' },
               rsvp_section: { top: '97%', left: '4%' }
             };
+            // Compact (layout-4) — body/date/place 위치를 위로 올림
+            const flowPosCompact: Record<string, { top: string; left: string }> = {
+              greeting_oneliner: { top: '18%', left: '4%' },
+              title: { top: '26%', left: '4%' },
+              body: { top: '38%', left: '4%' },
+              event_date: { top: '54%', left: '4%' },
+              event_place: { top: '63%', left: '4%' },
+              contact_name: { top: '78%', left: '4%' },
+              contact_phone: { top: '84%', left: '4%' },
+              extra_info: { top: '90%', left: '4%' },
+              rsvp_section: { top: '96%', left: '4%' }
+            };
+            const flowPos = curLayout.id === 'layout-4' ? flowPosCompact : flowPosClassic;
             // 큰 폰트 필드(title 등)는 텍스트가 field.y 아래로 길게 그려져서 배지가 텍스트 위로 떠 보임 — yOffset으로 보정
             const mapToField: Array<{ key: keyof typeof draft | 'event_time_only' | 'rsvp_section'; label: string; field?: { x: number; y: number; align?: string; w?: number; fontSize?: number }; yOffset?: number }> = [
               { key: 'greeting_oneliner', label: 'Subtitle', field: lf.subtitle as any },
@@ -794,7 +855,10 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
               { key: 'contact_name', label: 'Host', field: lf.place as any },
               { key: 'contact_phone', label: 'Phone', field: lf.place as any },
               { key: 'extra_info', label: 'Extra info', field: lf.extra as any },
-              { key: 'rsvp_section', label: 'RSVP', field: (lf.extra || lf.place) as any }
+              // RSVP는 enabled일 때만 노출
+              ...(draft.rsvp_enabled
+                ? [{ key: 'rsvp_section' as any, label: 'RSVP', field: (lf.extra || lf.place) as any }]
+                : [])
             ];
             const seen = new Map<string, number>();
             const fieldsOrder = mapToField
@@ -837,15 +901,99 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
             const nextEmptyNo = fieldsOrder.find((f) => isEmpty(f.key))?.no;
             return (
           <div className="space-y-4 mt-2">
+            {/* Sample 선택 — 상단 토글로 최대 3개 노출. 클릭 시 해당 sample data로 draft 적용 */}
+            {availableSamples.length > 0 && (() => {
+              const samplesToShow = availableSamples.slice(0, 3);
+              return (
+                <div>
+                  <h4 className="text-xs font-semibold text-hydrangea-700 mb-2">📝 Sample — 시작할 예시 선택</h4>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {samplesToShow.map((s) => {
+                      const selected = draft.title === s.title && draft.body === s.body;
+                      return (
+                        <button
+                          key={s.id}
+                          type="button"
+                          onClick={() => applySample(s)}
+                          className={`relative px-2 py-2 rounded-xl border text-center transition active:scale-95 ${
+                            selected ? 'border-hydrangea-500 bg-hydrangea-50' : 'border-hydrangea-100/60 bg-white'
+                          }`}
+                        >
+                          <div className="text-[10px] font-semibold text-hydrangea-700 truncate">{s.label}</div>
+                          {selected && (
+                            <div className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-hydrangea-500 flex items-center justify-center">
+                              <Check className="w-2 h-2 text-white" strokeWidth={3} />
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Layout 선택 — 현재 템플릿이 허용하는 layout 목록에서 고르기 (tpl 없으면 draft.layout_id 단일 표시) */}
+            {(() => {
+              const tpl = findTemplateByPair(draft.bg_id, draft.layout_id) || TEMPLATES.find((t) => t.bg_id === draft.bg_id);
+              const dbOverride = tpl ? templateConfigs?.[tpl.id] : undefined;
+              let allowed: LayoutId[];
+              if (dbOverride && dbOverride.length > 0) allowed = dbOverride as LayoutId[];
+              else if (tpl) allowed = getTemplateLayouts(tpl);
+              else if (draft.layout_id) allowed = [draft.layout_id as LayoutId];
+              else allowed = ['layout-classic'] as LayoutId[];
+              const SHORT_DESC: Record<string, string> = {
+                'layout-classic': 'Top-down flow',
+                'layout-7': 'Top-down + center',
+                'layout-3': 'Topcenter2',
+                'layout-center': 'Center',
+                'layout-4': 'Compact boxed',
+                'layout-5': 'Rightside text',
+                'layout-rightbottom': 'Rightbottom text',
+                'layout-6': 'Centerdown',
+                'layout-topcenter': 'Topcenter1'
+              };
+              const layoutsToShow = allowed.slice(0, 3);
+              return (
+                <div>
+                  <h4 className="text-xs font-semibold text-hydrangea-700 mb-2">📐 Layout — pick one</h4>
+                  {/* 항상 grid-cols-3 — 1개여도 1/3 가로 차지 */}
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {layoutsToShow.map((lid) => {
+                      const lay = getLayout(lid);
+                      const selected = draft.layout_id === lid;
+                      return (
+                        <motion.button
+                          key={lid}
+                          onClick={() => setDraft({ layout_id: lid as LayoutId })}
+                          whileTap={{ scale: 0.96 }}
+                          className={`relative px-2 py-2 rounded-xl border text-center transition ${
+                            selected ? 'border-hydrangea-500 bg-hydrangea-50' : 'border-hydrangea-100/60 bg-white'
+                          }`}
+                        >
+                          <div className="text-xs font-semibold text-hydrangea-700 truncate">{lay.name}</div>
+                          <div className="text-[10px] text-hydrangea-400 mt-0.5 truncate">
+                            {SHORT_DESC[lid] || ''}
+                          </div>
+                          {selected && (
+                            <div className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-hydrangea-500 flex items-center justify-center">
+                              <Check className="w-2 h-2 text-white" strokeWidth={3} />
+                            </div>
+                          )}
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* 입력/수정 가이드 — 모드에 따라 문구 다르게 (Create=입력만, Edit=수정 가능) */}
             <div className="rounded-xl bg-hydrangea-50 border border-hydrangea-200 px-4 py-3">
               <div className="flex items-start gap-2">
                 <span className="text-base flex-shrink-0">✨</span>
                 <div className="text-[12px] text-hydrangea-700 leading-relaxed">
-                  {isEditMode
-                    ? <>아래 미리보기에 표시된 <span className="font-semibold">번호 ①②③…</span>를 클릭하면 해당 항목을 수정할 수 있습니다.</>
-                    : <>아래 미리보기에 표시된 <span className="font-semibold">번호 ①②③…</span>를 클릭하면 해당 항목을 입력할 수 있습니다.</>
-                  }
+                  아래 미리보기에 표시된 <span className="font-semibold">번호 ①②③…</span>를 클릭하면 해당 항목의 위치를 확인할 수 있고, <span className="font-semibold">텍스트를 클릭</span>하면 내용 {isEditMode ? '수정' : '변경'}이 가능합니다.
                 </div>
               </div>
             </div>
@@ -854,40 +1002,46 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
               <TemplateCard
                 card={previewCard}
                 recipientName="John"
+                rsvpSlot={draft.rsvp_enabled ? (
+                  <div style={{ pointerEvents: 'none', opacity: 0.95 }} aria-disabled>
+                    <RsvpForm card={previewCard} theme={getTheme(previewCard.theme)} compact />
+                  </div>
+                ) : null}
                 editable
+                highlightedField={flashFieldNo ? (fieldsOrder.find((f) => f.no === flashFieldNo)?.key as string) : null}
                 onFieldEdit={(key, value) => {
-                  // contentEditable 결과를 draft에 즉시 반영
                   if (key === 'event_date') {
-                    // 날짜 변경 시 RSVP 마감/만료일도 동기화 (입력 폼과 동일 동작)
                     const iso = value || null;
                     setDraft({ event_date: iso, rsvp_deadline: iso, expiry_date: iso });
                     return;
                   }
                   setDraft({ [key]: value } as any);
                 }}
+                onFieldClick={(key) => {
+                  // 텍스트 클릭 시 해당 필드의 모달 열기 (빈 값 그대로 → 사용자가 입력하지 않으면 비워둠)
+                  if (key === 'event_place') {
+                    setPlaceModalOpen(true);
+                    return;
+                  }
+                  if (key === 'extra_info') {
+                    setExtraInfoModalOpen(true);
+                    return;
+                  }
+                  if (key === 'greeting_oneliner' || key === 'title' || key === 'body' || key === 'contact_name' || key === 'event_label') {
+                    const labelMap: Record<string, string> = {
+                      greeting_oneliner: 'Subtitle', title: 'Title', body: 'Message',
+                      contact_name: 'Host', event_label: 'Event label'
+                    };
+                    setTextEditField({
+                      key: key as any,
+                      label: labelMap[key] || key,
+                      multiline: key === 'body'
+                    });
+                  }
+                }}
                 guideOverlay={
                   <div className="absolute inset-0" style={{ zIndex: 50, pointerEvents: 'none' }}>
-                    {/* 깜빡 highlight — 클릭한 번호의 필드 위치에 강조 박스 표시 (2초 후 fade out) */}
-                    {flashFieldNo !== null && (() => {
-                      const target = fieldsOrder.find((f) => f.no === flashFieldNo);
-                      if (!target) return null;
-                      return (
-                        <div
-                          className="absolute animate-pulse"
-                          style={{
-                            top: target.pos.top,
-                            left: '0%',
-                            right: '0%',
-                            height: 36,
-                            transform: 'translateY(-4px)',
-                            background: `${GUIDE}40`,
-                            border: `2px dashed ${GUIDE}`,
-                            borderRadius: 6,
-                            pointerEvents: 'none'
-                          }}
-                        />
-                      );
-                    })()}
+                    {/* 위치 기반 highlight 박스 제거 — 대신 Editable 컴포넌트가 highlightedField에 따라 텍스트 정확한 영역에 dashed 박스 표시 */}
                     {fieldsOrder.map((fld) => {
                       const active = nextEmptyNo === fld.no;
                       const isFlashing = flashFieldNo === fld.no;
@@ -901,38 +1055,12 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                             <button
                               type="button"
                               onClick={() => {
+                                // 번호 배지 클릭 = 해당 텍스트 영역 highlight (모달 X)
                                 setFlashFieldNo((cur) => (cur === fld.no ? null : fld.no));
-                                // RSVP — 폼 RSVP 영역으로 스크롤
+                                // RSVP만 예외 — 폼 RSVP 영역으로 스크롤
                                 if (fld.key === 'rsvp_section') {
                                   const el = document.getElementById('dearday-rsvp-section');
                                   el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                  return;
-                                }
-                                // Date/Time/Phone/Place 필드 — 각 input/모달 열기
-                                if (fld.key === 'contact_phone') {
-                                  setPhoneModalOpen(true);
-                                  return;
-                                }
-                                if (fld.key === 'event_place') {
-                                  setPlaceModalOpen(true);
-                                  return;
-                                }
-                                if (fld.key === 'event_date') {
-                                  setDateTimeModalOpen(true);
-                                  return;
-                                }
-                                if (fld.key === 'extra_info') {
-                                  setExtraInfoModalOpen(true);
-                                  return;
-                                }
-                                // Subtitle/Title/Message — 텍스트 모달
-                                if (fld.key === 'greeting_oneliner' || fld.key === 'title' || fld.key === 'body') {
-                                  setTextEditField({
-                                    key: fld.key,
-                                    label: fld.label,
-                                    multiline: fld.key === 'body'
-                                  });
-                                  return;
                                 }
                               }}
                               style={{
@@ -957,9 +1085,6 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                 }
               />
             </div>
-            <div className="text-[11px] text-hydrangea-500 text-center -mt-2 font-medium">
-              ↑ 미리보기에 표시된 번호 순서대로 입력하세요 — {nextEmptyNo ? `현재 ${fieldsOrder.find((f) => f.no === nextEmptyNo)?.label} (${nextEmptyNo})` : '모든 필수 항목 완료'}
-            </div>
 
             <div id="dearday-rsvp-section" className="pt-3 border-t border-hydrangea-100/60 scroll-mt-24">
               <h4 className="text-xs font-semibold text-hydrangea-700 mb-2">RSVP options</h4>
@@ -982,21 +1107,21 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                       </div>
                       <div className="flex items-center gap-2">
                         <button type="button" onClick={() => {
-                          const cur = (draft.rsvp_max_per_card || 4) as number;
+                          const cur = (draft.rsvp_max_per_card || 1) as number;
                           setDraft({ rsvp_max_per_card: Math.max(1, cur - 1) as 1 | 2 | 3 | 4 | 5 });
                         }} className="w-7 h-7 rounded-full bg-hydrangea-100 flex items-center justify-center">
                           <Minus className="w-3.5 h-3.5 text-hydrangea-700" />
                         </button>
-                        <span className="font-bold text-hydrangea-700 w-5 text-center">{draft.rsvp_max_per_card || 4}</span>
+                        <span className="font-bold text-hydrangea-700 w-5 text-center">{draft.rsvp_max_per_card || 1}</span>
                         <button type="button" onClick={() => {
-                          const cur = (draft.rsvp_max_per_card || 4) as number;
+                          const cur = (draft.rsvp_max_per_card || 1) as number;
                           setDraft({ rsvp_max_per_card: Math.min(5, cur + 1) as 1 | 2 | 3 | 4 | 5 });
                         }} className="w-7 h-7 rounded-full bg-hydrangea-100 flex items-center justify-center">
                           <Plus className="w-3.5 h-3.5 text-hydrangea-700" />
                         </button>
                       </div>
                     </div>
-                    {(draft.rsvp_max_per_card || 4) > 1 && (
+                    {(draft.rsvp_max_per_card || 1) > 1 && (
                       <div className="flex items-center justify-between p-3 rounded-xl bg-white border border-hydrangea-100/60">
                         <div className="text-sm text-hydrangea-700">Collect attendee names</div>
                         <button type="button" onClick={() => setDraft({ rsvp_collect_names: !draft.rsvp_collect_names })}
@@ -1017,8 +1142,8 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                       const minStr = toLocalInput(now.toISOString());
                       const maxStr = draft.event_date ? toLocalInput(draft.event_date) : undefined;
                       return (
-                        <Input label="RSVP deadline (optional)" type="datetime-local"
-                          hint={maxStr ? 'Must be before the event start time' : undefined}
+                        <Input label="RSVP deadline" type="datetime-local"
+                          hint={maxStr ? 'Must be before the event start time. 이 날짜 후에는 카드를 받은 사용자가 RSVP를 할 수 없습니다.' : undefined}
                           min={minStr}
                           max={maxStr}
                           value={toLocalInput(draft.rsvp_deadline)}
@@ -1056,7 +1181,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
         {/* 4. 레이아웃 / 발행 */}
         <SectionShell
           id={4}
-          title="Layout, Publish"
+          title="Publish"
           open={open === 4}
           done={!!publishedSlug}
           enabled={isEnabled(4)}
@@ -1066,61 +1191,6 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
             : { label: 'PUBLISH', onClick: handlePublish, disabled: pending }}
         >
           <div className="space-y-4 mt-2">
-            {/* 선택한 템플릿이 여러 layout 허용 시 → 사용자가 고르고 미리볼 수 있게 */}
-            {(() => {
-              const tpl = findTemplateByPair(draft.bg_id, draft.layout_id) || TEMPLATES.find((t) => t.bg_id === draft.bg_id);
-              if (!tpl) return null;
-              // DB override가 있으면 우선, 없으면 코드 default
-              const dbOverride = templateConfigs?.[tpl.id];
-              const allowed = (dbOverride && dbOverride.length > 0
-                ? dbOverride as LayoutId[]
-                : getTemplateLayouts(tpl));
-              if (allowed.length <= 1) return null;
-              // 짧은 라벨용 매핑 (description은 너무 김)
-              const SHORT_DESC: Record<string, string> = {
-                'layout-classic': 'Top-down flow',
-                'layout-7': 'Top-down + center',
-                'layout-3': 'Topcenter2',
-                'layout-center': 'Center',
-                'layout-4': 'Compact boxed',
-                'layout-5': 'Rightside text',
-                'layout-rightbottom': 'Rightbottom text',
-                'layout-6': 'Centerdown',
-                'layout-topcenter': 'Topcenter1'
-              };
-              return (
-                <div>
-                  <h4 className="text-xs font-semibold text-hydrangea-700 mb-2">📐 Layout — pick one to preview</h4>
-                  <div className="flex gap-1.5 overflow-x-auto pb-1">
-                    {allowed.map((lid) => {
-                      const lay = getLayout(lid);
-                      const selected = draft.layout_id === lid;
-                      return (
-                        <motion.button
-                          key={lid}
-                          onClick={() => setDraft({ layout_id: lid as LayoutId })}
-                          whileTap={{ scale: 0.96 }}
-                          className={`relative flex-1 min-w-0 px-2 py-2 rounded-xl border text-center transition ${
-                            selected ? 'border-hydrangea-500 bg-hydrangea-50' : 'border-hydrangea-100/60 bg-white'
-                          }`}
-                        >
-                          <div className="text-xs font-semibold text-hydrangea-700 truncate">{lay.name}</div>
-                          <div className="text-[10px] text-hydrangea-400 mt-0.5 truncate">
-                            {SHORT_DESC[lid] || lay.renderStyle}
-                          </div>
-                          {selected && (
-                            <div className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-hydrangea-500 flex items-center justify-center">
-                              <Check className="w-2 h-2 text-white" strokeWidth={3} />
-                            </div>
-                          )}
-                        </motion.button>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })()}
-
             {/* 봉투 → 클릭하면 초대장 카드 표시 (실제 동작 미리보기) */}
             {(() => {
               const Env = ENVELOPE_MAP[(draft.envelope_anim as keyof typeof ENVELOPE_MAP) || 'envelope-1'];
@@ -1317,9 +1387,9 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
       {previewTpl && (() => {
         const tpl = previewTpl;
         const bg = getBackground(tpl.bg_id);
-        // 템플릿의 기본 layout(admin override 우선 → 코드 default 첫 번째) + 첫 recommendEvent 기준 sample data
-        // — 관리자 페이지와 동일한 미리보기 결과
-        const sampleCard = buildSamplePreviewCard(tpl, undefined, undefined, templateConfigs);
+        // 템플릿의 기본 layout(admin override 우선) + 사용자가 선택한 event_type 기준 sample data
+        // (선택한 event가 없으면 템플릿의 첫 recommendEvents 사용)
+        const sampleCard = buildSamplePreviewCard(tpl, draft.event_type as any, undefined, templateConfigs);
         return (
           <div
             className="fixed inset-0 z-50 bg-black/60 flex flex-col items-center justify-center p-4 overflow-y-auto"
@@ -1332,7 +1402,6 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
               <div className="px-4 py-3 flex items-center justify-between border-b border-hydrangea-100">
                 <div>
                   <div className="text-sm font-semibold text-hydrangea-700">{tpl.name}</div>
-                  {bg.imageUrl && <div className="text-[10px] text-hydrangea-400 mt-0.5 truncate">{tpl.bg_id}</div>}
                 </div>
                 <button
                   type="button"
@@ -1364,21 +1433,20 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
         );
       })()}
 
-      {/* Date + Time 편집 모달 — badge 4 클릭 시 열림 */}
+      {/* Date + Time 편집 모달 — calendar(DayPicker) + time picker 통합 UX */}
       {dateTimeModalOpen && (() => {
         const today = new Date();
-        const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
         const dt = draft.event_date ? new Date(draft.event_date) : null;
-        const dateStr = dt && !isNaN(dt.getTime())
-          ? `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}` : '';
-        const timeStr = dt && !isNaN(dt.getTime())
-          ? `${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}` : '';
-        const update = (date: string, time: string) => {
-          if (!date) { setDraft({ event_date: null }); return; }
-          const [y, mo, d] = date.split('-').map(Number);
-          if (!y || y < 1900 || y > 2999 || !mo || !d) return;
-          const [h, m] = (time || '00:00').split(':').map(Number);
-          const iso = new Date(y, mo - 1, d, h || 0, m || 0).toISOString();
+        const validDt = dt && !isNaN(dt.getTime()) ? dt : undefined;
+        const timeStr = validDt
+          ? `${String(validDt.getHours()).padStart(2,'0')}:${String(validDt.getMinutes()).padStart(2,'0')}`
+          : '';
+        const commit = (newDate: Date | undefined, newTime: string) => {
+          if (!newDate) { setDraft({ event_date: null }); return; }
+          const [h, m] = (newTime || '11:00').split(':').map(Number);
+          const d = new Date(newDate);
+          d.setHours(h || 0, m || 0, 0, 0);
+          const iso = d.toISOString();
           setDraft({ event_date: iso, rsvp_deadline: iso, expiry_date: iso });
         };
         return (
@@ -1386,28 +1454,40 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
             className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-4"
             onClick={() => setDateTimeModalOpen(false)}
           >
-            <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
               <div className="px-4 py-3 flex items-center justify-between border-b border-hydrangea-100">
-                <div className="text-sm font-semibold text-hydrangea-700">날짜 & 시간 입력</div>
+                <div className="text-sm font-semibold text-hydrangea-700">날짜 & 시간</div>
                 <button type="button" onClick={() => setDateTimeModalOpen(false)}
                   className="text-hydrangea-400 hover:text-hydrangea-700 text-2xl leading-none" aria-label="Close">×</button>
               </div>
-              <div className="p-4 space-y-3">
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-xs font-medium text-hydrangea-700 mb-1">Date</label>
-                    <input type="date" value={dateStr} min={todayStr} onChange={(e) => update(e.target.value, timeStr)}
-                      className="w-full min-h-[48px] px-3 rounded-xl border border-hydrangea-200 bg-white text-hydrangea-700 text-base focus:outline-none focus:ring-2 focus:ring-hydrangea-300 [color-scheme:light]"
-                      style={{ fontSize: '16px' }} />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-hydrangea-700 mb-1">Time</label>
-                    <input type="time" step={300} value={timeStr} onChange={(e) => update(dateStr, e.target.value)}
-                      className="w-full min-h-[48px] px-3 rounded-xl border border-hydrangea-200 bg-white text-hydrangea-700 text-base focus:outline-none focus:ring-2 focus:ring-hydrangea-300 [color-scheme:light]"
-                      style={{ fontSize: '16px' }} />
-                  </div>
-                </div>
-                <p className="text-[11px] text-hydrangea-400">날짜와 시간을 함께 지정하세요. RSVP 마감일과 만료일도 자동으로 동기화됩니다.</p>
+              <div className="px-2 pt-2 flex justify-center">
+                <DayPicker
+                  mode="single"
+                  selected={validDt}
+                  onSelect={(d) => commit(d, timeStr || '11:00')}
+                  disabled={{ before: today }}
+                  showOutsideDays
+                  className="dearday-daypicker"
+                  styles={{
+                    caption: { color: '#5A3D7A', fontWeight: 600, padding: '4px 0 8px' },
+                    head_cell: { color: '#A990CC', fontSize: 11, fontWeight: 600 },
+                    day: { color: '#3A2E55' },
+                    day_selected: { background: '#7B5EA7', color: '#fff', fontWeight: 700 },
+                    day_today: { color: '#7B5EA7', fontWeight: 700 }
+                  }}
+                />
+              </div>
+              <div className="px-4 pb-3 pt-1">
+                <label className="block text-xs font-medium text-hydrangea-700 mb-1.5">시간</label>
+                <input
+                  type="time"
+                  step={300}
+                  value={timeStr}
+                  onChange={(e) => commit(validDt, e.target.value)}
+                  className="w-full min-h-[48px] px-3 rounded-xl border border-hydrangea-200 bg-white text-hydrangea-700 text-base focus:outline-none focus:ring-2 focus:ring-hydrangea-300 [color-scheme:light]"
+                  style={{ fontSize: '16px' }}
+                />
+                <p className="text-[11px] text-hydrangea-400 mt-2">RSVP 마감일과 만료일도 자동으로 동기화됩니다.</p>
               </div>
               <div className="p-3 flex border-t border-hydrangea-100">
                 <button type="button" onClick={() => setDateTimeModalOpen(false)}
@@ -1486,7 +1566,8 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                 <Input
                   label={textEditField.label}
                   placeholder={textEditField.key === 'title' ? meta.fields.titlePlaceholder
-                    : textEditField.key === 'greeting_oneliner' ? meta.fields.subtitlePlaceholder : ''}
+                    : textEditField.key === 'greeting_oneliner' ? meta.fields.subtitlePlaceholder
+                    : textEditField.key === 'contact_name' ? '예: Jane Doe / 홍길동' : ''}
                   value={(draft[textEditField.key] as string) || ''}
                   onChange={(e) => setDraft({ [textEditField.key]: e.target.value } as any)}
                 />

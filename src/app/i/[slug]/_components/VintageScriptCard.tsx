@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { MapPin } from 'lucide-react';
 import { applyName } from '@/lib/layouts';
-import { getEventLabelScript } from '@/lib/eventType';
+import { getEventLabelScript, getEventTypeMeta } from '@/lib/eventType';
 import { findTemplateByPair } from '@/lib/templates';
 import type { BackgroundMeta } from '@/lib/backgrounds';
 import type { BaseCard } from '@/types/card';
@@ -13,9 +13,13 @@ interface Props {
   recipientName?: string;
   background?: BackgroundMeta;
   rsvpSlot?: React.ReactNode;
+  guideOverlay?: React.ReactNode;
+  editable?: boolean;
+  onFieldEdit?: (key: 'title' | 'greeting_oneliner' | 'body' | 'event_place' | 'contact_name' | 'extra_info' | 'event_label' | 'event_date', value: string) => void;
+  onFieldClick?: (key: 'title' | 'greeting_oneliner' | 'body' | 'event_place' | 'contact_name' | 'extra_info' | 'event_label') => void;
+  highlightedField?: string | null;
 }
 
-// 'Wedding Party' 라벨은 Playfair Display Italic Bold — 모던 청첩장 스타일
 const SCRIPT = "'Playfair Display', 'Cormorant Garamond', 'Noto Serif KR', serif";
 const SERIF_BOLD = "'Playfair Display', 'Cormorant Garamond', 'Noto Serif KR', serif";
 const SERIF = "'Cormorant Garamond', 'Noto Serif KR', serif";
@@ -44,12 +48,8 @@ function SplitDate({ iso, color }: { iso: string; color: string }) {
     .replace(':00', '').toUpperCase();
   return (
     <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 14,
-      color,
-      fontFamily: SERIF
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      gap: 14, color, fontFamily: SERIF
     }}>
       <span style={{ flex: 1, fontSize: 16, fontWeight: 500, letterSpacing: '0.18em', textAlign: 'right' }}>{weekday}</span>
       <span style={{ width: 1, height: 50, background: color, opacity: 0.55 }} />
@@ -68,136 +68,206 @@ function isUrl(s?: string | null): s is string {
   return /^https?:\/\//i.test(s);
 }
 
-export default function VintageScriptCard({ card, recipientName, background, rsvpSlot }: Props) {
+export default function VintageScriptCard({
+  card, recipientName, background, rsvpSlot,
+  guideOverlay, editable, onFieldEdit, onFieldClick, highlightedField
+}: Props) {
   const tpl = findTemplateByPair(card.bg_id, card.layout_id);
   const main = tpl?.colorMain || '#1A2A3A';
   const sub = tpl?.colorSub || main;
   const hasBgImage = !!background?.imageUrl;
+  const evMeta = getEventTypeMeta(card.event_type);
+  const ph = evMeta.fields;
+
+  // 편집 모드: 텍스트 클릭 시 모달 트리거. highlightedField만 점선 박스.
+  const Editable = ({ fieldKey, children }: { fieldKey: 'title' | 'greeting_oneliner' | 'body' | 'event_place' | 'contact_name' | 'extra_info' | 'event_label'; children: React.ReactNode }) => {
+    if (!editable) return <>{children}</>;
+    const isHighlighted = highlightedField === fieldKey;
+    return (
+      <span
+        role="button"
+        tabIndex={0}
+        onClick={(e) => { e.stopPropagation(); onFieldClick?.(fieldKey); }}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onFieldClick?.(fieldKey); } }}
+        style={{
+          cursor: 'pointer', display: 'inline-block',
+          padding: isHighlighted ? '2px 6px' : 0,
+          margin: isHighlighted ? '-2px -6px' : 0,
+          borderRadius: isHighlighted ? 6 : 0,
+          border: isHighlighted ? '2px dashed rgba(123,94,167,0.55)' : 'none',
+          background: isHighlighted ? 'rgba(123,94,167,0.06)' : 'transparent',
+          transition: 'all 0.15s'
+        }}
+        title="클릭해서 수정"
+      >{children}</span>
+    );
+  };
+
+  const isDateHi = highlightedField === 'event_date';
+  const isPhoneHi = highlightedField === 'contact_phone';
 
   return (
     <div
       style={{
-        position: 'relative',
-        width: '100%',
-        maxWidth: 440,
-        margin: '0 auto',
+        position: 'relative', width: '100%', maxWidth: 440, margin: '0 auto',
         background: hasBgImage ? '#fff' : (background?.gradient || '#F4ECFA'),
-        borderRadius: 24,
-        overflow: 'hidden',
+        borderRadius: 24, overflow: 'hidden',
         boxShadow: '0 20px 50px rgba(123,94,167,0.18)',
-        fontFamily: SERIF,
-        color: main
+        fontFamily: SERIF, color: main
       }}
     >
       {hasBgImage && (
         <img
-          src={background!.imageUrl}
-          alt=""
-          style={{
-            position: 'absolute', inset: 0, width: '100%', height: '100%',
-            objectFit: 'cover', zIndex: 0, pointerEvents: 'none'
-          }}
+          src={background!.imageUrl} alt=""
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, pointerEvents: 'none' }}
         />
       )}
-      <div style={{ position: 'relative', padding: '32px 24px 32px', zIndex: 1, textAlign: 'center' }}>
-        {/* subtitle(greeting_oneliner)은 vintage 레이아웃에서도 노출 안 함 —
-            Wedding Party 스크립트가 충분한 컨텍스트 제공 */}
-
-        {/* 1. Wedding Party 스크립트 — 이벤트별 자동 */}
+      <div style={{ position: 'relative', padding: '32px 24px 60px', zIndex: 1, textAlign: 'center' }}>
+        {/* 1. Wedding Party 스크립트 — 이벤트별 자동 (event_label 편집 가능) */}
         <FadeUp delay={0.1}>
           <div style={{
-            fontFamily: SCRIPT,
-            fontSize: 14, fontWeight: 700, color: main,
-            letterSpacing: '0.6em',
-            lineHeight: 1.1, marginTop: 28, marginBottom: 18
+            fontFamily: SCRIPT, fontSize: 14, fontWeight: 700, color: main,
+            letterSpacing: '0.6em', lineHeight: 1.1, marginTop: 28, marginBottom: 18
           }}>
-            {getEventLabelScript(card.event_type)}
+            <Editable fieldKey="event_label">
+              {card.event_label || getEventLabelScript(card.event_type)}
+            </Editable>
           </div>
         </FadeUp>
 
-        {/* 3. 메인 이름 */}
+        {/* 2. Subtitle (greeting_oneliner) — main 색상 + 가독성 확보 (opacity 제거) */}
+        {(card.greeting_oneliner || editable) && (
+          <FadeUp delay={0.12}>
+            <div style={{
+              fontFamily: SERIF, fontSize: 14, color: main, fontWeight: 500,
+              letterSpacing: '0.18em', lineHeight: 1.5, marginBottom: 14
+            }}>
+              <Editable fieldKey="greeting_oneliner">
+                {applyName(card.greeting_oneliner || '', recipientName)}
+              </Editable>
+            </div>
+          </FadeUp>
+        )}
+
+        {/* 3. 메인 이름 (title) */}
         <FadeUp delay={0.15}>
           <h1 style={{
-            fontFamily: SERIF_BOLD,
-            fontSize: 30, fontWeight: 700, color: main,
-            letterSpacing: '0.06em', lineHeight: 1.2,
-            margin: 0, marginBottom: 18,
-            whiteSpace: 'pre-wrap',
-            wordBreak: 'keep-all'
+            fontFamily: SERIF_BOLD, fontSize: 30, fontWeight: 700, color: main,
+            letterSpacing: '0.06em', lineHeight: 1.2, margin: 0, marginBottom: 18,
+            whiteSpace: 'pre-wrap', wordBreak: 'keep-all'
           }}>
-            {applyName(card.title, recipientName).split('♥').map((part, i, arr) => (
-              <span key={i}>
-                {part}
-                {i < arr.length - 1 && (
-                  <span style={{ fontSize: '0.55em', verticalAlign: '0.15em', margin: '0 0.05em' }}>♥</span>
-                )}
-              </span>
-            ))}
+            <Editable fieldKey="title">
+              {applyName(card.title, recipientName).split('♥').map((part, i, arr) => (
+                <span key={i}>
+                  {part}
+                  {i < arr.length - 1 && (
+                    <span style={{ fontSize: '0.55em', verticalAlign: '0.15em', margin: '0 0.05em' }}>♥</span>
+                  )}
+                </span>
+              ))}
+            </Editable>
           </h1>
         </FadeUp>
 
         {/* 4. Divider */}
-        {card.body && (
+        {(card.body || editable) && (
           <FadeUp delay={0.2}>
             <div style={{ color: main, opacity: 0.6, fontSize: 18, margin: '8px 0 14px' }}>✽</div>
           </FadeUp>
         )}
 
-        {/* 5. 본문 */}
-        {card.body && (
+        {/* 5. 본문 (body) — 줄바꿈 보존 */}
+        {(card.body || editable) && (
           <FadeUp delay={0.22}>
             <div style={{
               fontSize: 13, color: main, lineHeight: 1.8,
               letterSpacing: '0.02em', margin: '0 auto 22px',
               maxWidth: 320, padding: '0 8px',
-              textAlign: 'center', wordBreak: 'keep-all', overflowWrap: 'break-word'
+              textAlign: 'center', wordBreak: 'keep-all', overflowWrap: 'break-word',
+              whiteSpace: 'pre-wrap'
             }}>
-              {applyName(card.body, recipientName).split(/\r?\n/).map((line, i, arr) => (
-                <span key={i}>
-                  {line}
-                  {i < arr.length - 1 && <br />}
-                </span>
-              ))}
+              <Editable fieldKey="body">
+                {applyName(card.body || '', recipientName)}
+              </Editable>
             </div>
           </FadeUp>
         )}
 
         {/* 6. 정보 박스 (반투명 흰색) — date + place */}
-        {(card.event_date || card.event_place || card.map_url) && (
+        {(card.event_date || card.event_place || card.map_url || editable) && (
           <FadeUp delay={0.3}>
             <div style={{
-              maxWidth: 280, margin: '0 auto 18px',
-              padding: '16px 18px',
+              maxWidth: 280, margin: '0 auto 18px', padding: '16px 18px',
               background: 'linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.35) 100%)',
-              backdropFilter: 'blur(8px)',
-              WebkitBackdropFilter: 'blur(8px)',
+              backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
               border: '1px solid rgba(255,255,255,0.7)',
               borderRadius: 14,
               boxShadow: '0 8px 22px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9)',
-              display: 'flex', flexDirection: 'column', gap: 12
+              display: 'flex', flexDirection: 'column', gap: 12, position: 'relative'
             }}>
-              {card.event_date && <SplitDate iso={card.event_date} color={main} />}
-              {(card.event_place || card.map_url) && (
+              {/* Date 영역 */}
+              {(card.event_date || editable) && (
                 <div style={{
-                  display: 'inline-flex',
-                  alignItems: 'baseline',
-                  justifyContent: 'center',
-                  gap: 8,
-                  flexWrap: 'wrap',
-                  fontSize: 12, color: main,
-                  letterSpacing: '0.16em',
-                  fontFamily: SERIF
+                  position: 'relative',
+                  padding: isDateHi ? '4px 8px' : 0,
+                  margin: isDateHi ? '-4px -8px' : 0,
+                  borderRadius: isDateHi ? 6 : 0,
+                  border: isDateHi ? '2px dashed rgba(123,94,167,0.55)' : 'none',
+                  background: isDateHi ? 'rgba(123,94,167,0.06)' : 'transparent',
+                  transition: 'all 0.15s'
                 }}>
-                  {card.event_place && <span>{card.event_place}</span>}
+                  {card.event_date
+                    ? <SplitDate iso={card.event_date} color={main} />
+                    : (editable && <div style={{ fontSize: 13, color: main, opacity: 0.6, padding: '12px 0' }}>클릭해서 날짜/시간 입력</div>)
+                  }
+                  {/* 편집 모드: invisible date/time inputs */}
+                  {editable && (() => {
+                    const cur = card.event_date ? new Date(card.event_date) : null;
+                    const validCur = cur && !isNaN(cur.getTime()) ? cur : null;
+                    const dateStr = validCur ? `${validCur.getFullYear()}-${String(validCur.getMonth()+1).padStart(2,'0')}-${String(validCur.getDate()).padStart(2,'0')}` : '';
+                    const timeStr = validCur ? `${String(validCur.getHours()).padStart(2,'0')}:${String(validCur.getMinutes()).padStart(2,'0')}` : '';
+                    const commit = (date: string, time: string) => {
+                      if (!date) { onFieldEdit?.('event_date', ''); return; }
+                      const [y, mo, d] = date.split('-').map(Number);
+                      if (!y || !mo || !d) return;
+                      const [h, m] = (time || '00:00').split(':').map(Number);
+                      const iso = new Date(y, mo - 1, d, h || 0, m || 0).toISOString();
+                      onFieldEdit?.('event_date', iso);
+                    };
+                    const baseStyle: React.CSSProperties = {
+                      position: 'absolute', top: 0, height: '100%', opacity: 0.001, cursor: 'pointer', zIndex: 5,
+                      border: 'none', background: 'transparent', fontSize: 16
+                    };
+                    return (
+                      <>
+                        <input type="date" data-dearday-date-only value={dateStr}
+                          onChange={(e) => commit(e.target.value, timeStr)}
+                          style={{ ...baseStyle, left: 0, width: '100%' }}
+                          title="클릭해서 날짜 수정" />
+                        <input type="time" data-dearday-time-only value={timeStr}
+                          onChange={(e) => commit(dateStr, e.target.value)}
+                          style={{ position: 'absolute', left: 0, top: 0, width: 0, height: 0, opacity: 0, pointerEvents: 'none', border: 'none', background: 'transparent' }}
+                          tabIndex={-1} aria-hidden="true" />
+                      </>
+                    );
+                  })()}
+                </div>
+              )}
+
+              {/* Place + map */}
+              {(card.event_place || card.map_url || editable) && (
+                <div style={{
+                  display: 'inline-flex', alignItems: 'baseline', justifyContent: 'center',
+                  gap: 8, flexWrap: 'wrap', fontSize: 12, color: main,
+                  letterSpacing: '0.16em', fontFamily: SERIF
+                }}>
+                  {(card.event_place || editable) && (
+                    <span><Editable fieldKey="event_place">{card.event_place || ''}</Editable></span>
+                  )}
                   {card.map_url && isUrl(card.map_url) && (
-                    <a
-                      href={card.map_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      title="View map"
-                      aria-label="View map"
-                      style={{ color: main, display: 'inline-flex', alignItems: 'center', opacity: 0.75 }}
-                    >
+                    <a href={card.map_url} target="_blank" rel="noreferrer"
+                      title="View map" aria-label="View map"
+                      style={{ color: main, display: 'inline-flex', alignItems: 'center', opacity: 0.75 }}>
                       <MapPin size={13} strokeWidth={1.6} />
                     </a>
                   )}
@@ -215,37 +285,49 @@ export default function VintageScriptCard({ card, recipientName, background, rsv
         )}
 
         {/* 8. 호스트 (위) → 전화번호 (아래) */}
-        {(card.contact_phone || card.contact_name) && (
+        {(card.contact_phone || card.contact_name || editable) && (
           <div style={{ margin: '14px 0 8px', display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center', fontFamily: SERIF }}>
-            {card.contact_name && (
+            {(card.contact_name || editable) && (
               <p style={{ fontSize: 11, color: main, letterSpacing: '0.12em', margin: 0 }}>
-                — {applyName(card.contact_name, recipientName)} —
+                <Editable fieldKey="contact_name">{applyName(card.contact_name || (editable ? '호스트 이름' : ''), recipientName)}</Editable>
               </p>
             )}
-            {card.contact_phone && (
-              <a href={`tel:${card.contact_phone}`}
-                style={{ color: main, textDecoration: 'none', fontSize: 12 }}
-              >
-                {card.contact_phone}
-              </a>
+            {(card.contact_phone || editable) && (
+              <p style={{
+                margin: 0, fontSize: 12, display: 'inline-block',
+                padding: isPhoneHi ? '2px 6px' : 0,
+                borderRadius: isPhoneHi ? 6 : 0,
+                border: isPhoneHi ? '2px dashed rgba(123,94,167,0.55)' : 'none',
+                background: isPhoneHi ? 'rgba(123,94,167,0.06)' : 'transparent',
+                transition: 'all 0.15s'
+              }}>
+                {card.contact_phone
+                  ? <a href={`tel:${card.contact_phone}`} style={{ color: main, textDecoration: 'none' }}>{card.contact_phone}</a>
+                  : <span style={{ color: main, opacity: 0.6 }}>전화번호 (클릭해서 입력)</span>
+                }
+              </p>
             )}
           </div>
         )}
 
         {/* 9. extra (Reception to follow 같은 안내) */}
-        {card.extra_info && (
+        {(card.extra_info || editable) && (
           <FadeUp delay={0.45}>
             <p style={{
               marginTop: 14, marginBottom: 0,
-              fontSize: 11, color: sub, opacity: 0.85,
+              fontSize: 12, color: main, fontWeight: 500,
               lineHeight: 1.6, letterSpacing: '0.05em',
-              fontFamily: SERIF
+              fontFamily: SERIF, whiteSpace: 'pre-wrap'
             }}>
-              {applyName(card.extra_info, recipientName)}
+              <Editable fieldKey="extra_info">
+                {applyName(card.extra_info || '', recipientName)}
+              </Editable>
             </p>
           </FadeUp>
         )}
       </div>
+      {/* wizard 가이드 오버레이 — 카드 외각에 absolute */}
+      {guideOverlay}
     </div>
   );
 }
