@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useState, useEffect, useRef, useTransition } from 'react';
+import { Fragment, useState, useEffect, useLayoutEffect, useRef, useTransition } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
@@ -28,6 +28,21 @@ const ENVELOPE_MAP = {
 
 // 새 (type, color) 모델 → 봉투 렌더 함수 (모든 sway는 SwayEnvelope, flip은 EnvelopeBlackGold)
 type EnvelopeAnimType = 'none' | 'sway' | 'flip';
+
+// 봉투 위 받는분 이름의 색상 — 각 봉투 톤에 어울리는 saturated/coordinated tone
+const ENVELOPE_NAME_COLOR: Record<EnvelopeColorId, string> = {
+  pearl:     '#7A5A1F',  // gold cream → deep warm gold
+  lavender:  '#5A3D7A',  // lavender → deep purple
+  champagne: '#7A5E2E',  // beige → warm bronze
+  sage:      '#3D5C3F',  // sage → deep forest green
+  blush:     '#9C5040',  // rose-gold → deep terracotta
+  rose:      '#9C2F5C',  // pink → deep berry rose
+  powder:    '#2E5478',  // sky blue → deep ocean blue
+  midnight:  '#F5EDD2',  // dark navy → cream/gold
+  cobalt:    '#FBF7EC',  // dark blue → ivory cream
+  aubergine: '#E0DAE6',  // dark purple → soft pearl
+  onyx:      '#F0DC78'   // black → bright gold
+};
 function renderEnvelope(type: EnvelopeAnimType, color: EnvelopeColorId, props: { width?: number; isOpen?: boolean; children?: React.ReactNode; recipientGreeting?: string; cardPreview?: React.ReactNode; onComplete?: () => void }) {
   if (type === 'none') return <NoneEnvelope {...props} isOpen={!!props.isOpen} />;
   const palette = COLOR_PALETTES[color];
@@ -158,6 +173,41 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
   const [previewTpl, setPreviewTpl] = useState<typeof TEMPLATES[number] | null>(null);
   // 번호 클릭 시 해당 필드 깜빡임 표시
   const [flashFieldNo, setFlashFieldNo] = useState<number | null>(null);
+  // 카드 미리보기 컨테이너 ref + 측정된 필드 위치 (DOM 기반 자동 정렬)
+  const previewWrapRef = useRef<HTMLDivElement | null>(null);
+  const [measuredPos, setMeasuredPos] = useState<Map<string, { top: number; left: number; height: number }>>(new Map());
+  // 카드 내 data-field-key 요소들의 위치를 측정 (top/left/height — % 단위)
+  useLayoutEffect(() => {
+    const wrap = previewWrapRef.current;
+    if (!wrap) return;
+    // 카드의 실제 그려지는 inner container 찾기 (rounded-3xl 클래스 가진 div)
+    const card = wrap.querySelector('.rounded-3xl, .rounded-2xl') as HTMLElement | null;
+    const target = card || wrap;
+    const rect = target.getBoundingClientRect();
+    if (rect.height === 0) return;
+    const newMap = new Map<string, { top: number; left: number; height: number }>();
+    const els = target.querySelectorAll<HTMLElement>('[data-field-key]');
+    els.forEach((el) => {
+      const key = el.getAttribute('data-field-key');
+      if (!key) return;
+      const r = el.getBoundingClientRect();
+      const topPct = ((r.top + r.height / 2) - rect.top) / rect.height * 100;
+      const leftPct = (r.left - rect.left) / rect.width * 100;
+      newMap.set(key, { top: topPct, left: Math.max(2, leftPct - 6), height: r.height / rect.height * 100 });
+    });
+    // 깊은 비교 — 동일하면 setState 안 함 (무한 루프 방지)
+    let changed = newMap.size !== measuredPos.size;
+    if (!changed) {
+      for (const [k, v] of newMap) {
+        const old = measuredPos.get(k);
+        if (!old || Math.abs(old.top - v.top) > 0.5 || Math.abs(old.left - v.left) > 0.5) {
+          changed = true; break;
+        }
+      }
+    }
+    if (changed) setMeasuredPos(newMap);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  });
   // Phone 편집 모달
   const [phoneModalOpen, setPhoneModalOpen] = useState(false);
   // Place + Address 편집 모달
@@ -760,6 +810,9 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                             const greetingPreview = tpl.replace(/\$NAME/g, previewName);
                             const envHeight = Math.round(260 * 0.75);
                             const isFlip = current.type === 'flip';
+                            // 봉투 톤에 맞는 텍스트 색상 — 각 봉투 색상별로 coordinated tone
+                            const isDark = ['midnight', 'cobalt', 'aubergine', 'onyx'].includes(current.color);
+                            const inkColor = ENVELOPE_NAME_COLOR[current.color] || '#5A3D7A';
                             return (
                               <div style={{
                                 position: 'absolute',
@@ -768,13 +821,13 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                                 transform: 'translate(-50%, -50%)',
                                 width: '85%',
                                 textAlign: 'center',
-                                color: '#5A3D7A',
+                                color: inkColor,
                                 fontFamily: "'Cormorant Garamond', 'Playfair Display', 'Noto Serif KR', serif",
                                 fontSize: 16,
                                 fontWeight: 500,
                                 fontVariant: 'small-caps',
                                 letterSpacing: '0.12em',
-                                textShadow: '0 1px 2px rgba(255,255,255,0.4)',
+                                textShadow: isDark ? '0 1px 3px rgba(0,0,0,0.6)' : '0 1px 2px rgba(255,255,255,0.4)',
                                 pointerEvents: 'none',
                                 zIndex: 10
                               }}>
@@ -864,14 +917,23 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
             const fieldsOrder = mapToField
               .map((m, idx) => {
                 let pos: { top: string; left: string };
+                // 1순위: DOM 측정 결과 사용 (자동 정렬, 컨텐츠에 따라 따라감)
+                const measured = measuredPos.get(m.key as string);
+                if (measured) {
+                  pos = { top: `${measured.top}%`, left: `${measured.left}%` };
+                } else
                 if (isFlow) {
                   pos = flowPos[m.key as string];
                   if (!pos) return null;
                 } else {
                   if (!m.field) return null;
-                  // RSVP는 카드 맨 하단에 고정
+                  // RSVP는 직전 항목(extra_info → place) 바로 아래에 배치
                   if (m.key === 'rsvp_section') {
-                    pos = { top: '97%', left: '6%' };
+                    const extraField = lf.extra as any;
+                    const placeField = lf.place as any;
+                    const refField = extraField || placeField;
+                    const refY = refField ? refField.y + 8 : 90;
+                    pos = { top: `${Math.min(refY, 95)}%`, left: '6%' };
                   } else {
                     const k = `${m.field.x}-${m.field.y}`;
                     const stackIdx = seen.get(k) || 0;
@@ -993,20 +1055,34 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
               <div className="flex items-start gap-2">
                 <span className="text-base flex-shrink-0">✨</span>
                 <div className="text-[12px] text-hydrangea-700 leading-relaxed">
-                  아래 미리보기에 표시된 <span className="font-semibold">번호 ①②③…</span>를 클릭하면 해당 항목의 위치를 확인할 수 있고, <span className="font-semibold">텍스트를 클릭</span>하면 내용 {isEditMode ? '수정' : '변경'}이 가능합니다.
+                  아래 템플릿 위의 <span className="font-semibold">텍스트를 수정</span>해서 나만의 초청장을 만들어보세요. <span className="font-semibold">동그라미 번호</span>를 클릭하면 해당 항목의 위치를 확인할 수 있고, <span className="font-semibold">텍스트를 클릭</span>하여 내용 {isEditMode ? '수정' : '변경'}할 수 있습니다.
                 </div>
               </div>
             </div>
             {/* 선택한 템플릿 미리보기 + 번호 가이드 오버레이 (카드 내부 좌표계 사용) */}
-            <div className="rounded-2xl overflow-hidden border border-hydrangea-100">
+            <div ref={previewWrapRef} className="rounded-2xl overflow-hidden border border-hydrangea-100">
               <TemplateCard
                 card={previewCard}
                 recipientName="John"
-                rsvpSlot={draft.rsvp_enabled ? (
-                  <div style={{ pointerEvents: 'none', opacity: 0.95 }} aria-disabled>
-                    <RsvpForm card={previewCard} theme={getTheme(previewCard.theme)} compact />
-                  </div>
-                ) : null}
+                rsvpSlot={draft.rsvp_enabled ? (() => {
+                  const isRsvpHighlighted = fieldsOrder.find((f) => f.no === flashFieldNo)?.key === 'rsvp_section';
+                  return (
+                    <div
+                      style={{
+                        pointerEvents: 'none',
+                        opacity: 0.95,
+                        padding: isRsvpHighlighted ? '6px' : 0,
+                        border: isRsvpHighlighted ? '2px dashed rgba(123,94,167,0.55)' : '2px dashed transparent',
+                        background: isRsvpHighlighted ? 'rgba(123,94,167,0.06)' : 'transparent',
+                        borderRadius: 12,
+                        transition: 'all 0.15s'
+                      }}
+                      aria-disabled
+                    >
+                      <RsvpForm card={previewCard} theme={getTheme(previewCard.theme)} compact />
+                    </div>
+                  );
+                })() : null}
                 editable
                 highlightedField={flashFieldNo ? (fieldsOrder.find((f) => f.no === flashFieldNo)?.key as string) : null}
                 onFieldEdit={(key, value) => {
@@ -1018,7 +1094,15 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                   setDraft({ [key]: value } as any);
                 }}
                 onFieldClick={(key) => {
-                  // 텍스트 클릭 시 해당 필드의 모달 열기 (빈 값 그대로 → 사용자가 입력하지 않으면 비워둠)
+                  // 텍스트 클릭 시 해당 필드의 모달 열기
+                  if (key === 'event_date') {
+                    setDateTimeModalOpen(true);
+                    return;
+                  }
+                  if (key === 'contact_phone') {
+                    setPhoneModalOpen(true);
+                    return;
+                  }
                   if (key === 'event_place') {
                     setPlaceModalOpen(true);
                     return;
@@ -1035,7 +1119,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                     setTextEditField({
                       key: key as any,
                       label: labelMap[key] || key,
-                      multiline: key === 'body'
+                      multiline: key === 'body' || key === 'title'
                     });
                   }
                 }}
@@ -1265,15 +1349,12 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                           const previewName = 'Ms. Avery';
                           const tpl = (draft.recipient_template?.trim()) || '$NAME';
                           const greetingPreview = tpl.replace(/\$NAME/g, previewName);
-                          const ENVELOPE_DEEP: Record<string, string> = {
-                            'envelope-1': '#5A3D7A',
-                            'envelope-2': '#6E5A3D',
-                            'envelope-3': '#476956',
-                            'envelope-4': '#8E5A4D'
-                          };
-                          const deep = ENVELOPE_DEEP[draft.envelope_anim || 'envelope-1'] || '#5A3D7A';
+                          const parsedEnv = parseEnvelopeAnim(draft.envelope_anim);
+                          const envColor = parsedEnv.color;
+                          const isDark = ['midnight', 'cobalt', 'aubergine', 'onyx'].includes(envColor);
+                          const inkColor = ENVELOPE_NAME_COLOR[envColor] || '#5A3D7A';
                           const envHeight = Math.round(280 * 0.75);
-                          const isFlip = parseEnvelopeAnim(draft.envelope_anim).type === 'flip';
+                          const isFlip = parsedEnv.type === 'flip';
                           return (
                             <div style={{
                               position: 'absolute',
@@ -1282,13 +1363,13 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                               transform: 'translate(-50%, -50%)',
                               width: '85%',
                               textAlign: 'center',
-                              color: deep,
+                              color: inkColor,
                               fontFamily: "'Cormorant Garamond', 'Playfair Display', 'Noto Serif KR', serif",
                               fontSize: 16,
                               fontWeight: 500,
                               fontVariant: 'small-caps',
                               letterSpacing: '0.12em',
-                              textShadow: '0 1px 2px rgba(255,255,255,0.4)',
+                              textShadow: isDark ? '0 1px 3px rgba(0,0,0,0.6)' : '0 1px 2px rgba(255,255,255,0.4)',
                               pointerEvents: 'none',
                               zIndex: 10
                             }}>
@@ -1422,7 +1503,13 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                 <button
                   type="button"
                   onClick={() => {
-                    setDraft({ bg_id: tpl.bg_id as BackgroundId, layout_id: tpl.layout_id as LayoutId });
+                    // admin DB override 우선 → 코드 default(getTemplateLayouts) → tpl.layout_id 순으로 fallback
+                    const dbOverride = templateConfigs?.[tpl.id];
+                    const allowed = (dbOverride && dbOverride.length > 0)
+                      ? (dbOverride as LayoutId[])
+                      : (getTemplateLayouts(tpl) as LayoutId[]);
+                    const resolvedLayout = (allowed[0] || tpl.layout_id) as LayoutId;
+                    setDraft({ bg_id: tpl.bg_id as BackgroundId, layout_id: resolvedLayout });
                     setPreviewTpl(null);
                   }}
                   className="flex-1 px-4 py-2.5 rounded-xl bg-hydrangea-500 text-white text-sm font-semibold hover:bg-hydrangea-600 transition"
@@ -1553,29 +1640,36 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                 className="text-hydrangea-400 hover:text-hydrangea-700 text-2xl leading-none" aria-label="Close">×</button>
             </div>
             <div className="p-4 space-y-2">
-              {textEditField.multiline ? (
-                <Textarea
-                  label={textEditField.label}
-                  placeholder={textEditField.key === 'body' ? meta.fields.bodyPlaceholder : ''}
-                  value={(draft[textEditField.key] as string) || ''}
-                  onChange={(e) => setDraft({ [textEditField.key]: e.target.value.slice(0, 200) } as any)}
-                  maxLength={200}
-                  rows={5}
-                />
-              ) : (
+              {textEditField.multiline ? (() => {
+                // title은 max 80자 / 3줄, body는 max 200자 / 5줄
+                const isTitle = textEditField.key === 'title';
+                const maxLen = isTitle ? 80 : 200;
+                const rows = isTitle ? 3 : 5;
+                const ph = isTitle ? meta.fields.titlePlaceholder
+                  : textEditField.key === 'body' ? meta.fields.bodyPlaceholder : '';
+                return (
+                  <>
+                    <Textarea
+                      label={textEditField.label}
+                      placeholder={ph}
+                      value={(draft[textEditField.key] as string) || ''}
+                      onChange={(e) => setDraft({ [textEditField.key]: e.target.value.slice(0, maxLen) } as any)}
+                      maxLength={maxLen}
+                      rows={rows}
+                    />
+                    <p className="text-[11px] text-hydrangea-400 text-right tabular-nums">
+                      {String(((draft[textEditField.key] as string) || '').length).padStart(3, '0')}/{maxLen}
+                    </p>
+                  </>
+                );
+              })() : (
                 <Input
                   label={textEditField.label}
-                  placeholder={textEditField.key === 'title' ? meta.fields.titlePlaceholder
-                    : textEditField.key === 'greeting_oneliner' ? meta.fields.subtitlePlaceholder
+                  placeholder={textEditField.key === 'greeting_oneliner' ? meta.fields.subtitlePlaceholder
                     : textEditField.key === 'contact_name' ? '예: Jane Doe / 홍길동' : ''}
                   value={(draft[textEditField.key] as string) || ''}
                   onChange={(e) => setDraft({ [textEditField.key]: e.target.value } as any)}
                 />
-              )}
-              {textEditField.multiline && (
-                <p className="text-[11px] text-hydrangea-400 text-right tabular-nums">
-                  {String(((draft[textEditField.key] as string) || '').length).padStart(3, '0')}/200
-                </p>
               )}
             </div>
             <div className="p-3 flex border-t border-hydrangea-100">

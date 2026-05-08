@@ -16,7 +16,7 @@ interface Props {
   guideOverlay?: React.ReactNode;
   editable?: boolean;
   onFieldEdit?: (key: 'title' | 'greeting_oneliner' | 'body' | 'event_place' | 'contact_name' | 'extra_info' | 'event_label' | 'event_date', value: string) => void;
-  onFieldClick?: (key: 'title' | 'greeting_oneliner' | 'body' | 'event_place' | 'contact_name' | 'extra_info' | 'event_label') => void;
+  onFieldClick?: (key: 'title' | 'greeting_oneliner' | 'body' | 'event_place' | 'contact_name' | 'extra_info' | 'event_label' | 'event_date' | 'contact_phone') => void;
   highlightedField?: string | null;
 }
 
@@ -87,6 +87,7 @@ export default function VintageScriptCard({
       <span
         role="button"
         tabIndex={0}
+        data-field-key={fieldKey}
         onClick={(e) => { e.stopPropagation(); onFieldClick?.(fieldKey); }}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onFieldClick?.(fieldKey); } }}
         style={{
@@ -123,16 +124,25 @@ export default function VintageScriptCard({
         />
       )}
       <div style={{ position: 'relative', padding: '32px 24px 60px', zIndex: 1, textAlign: 'center' }}>
-        {/* 1. Wedding Party 스크립트 — 이벤트별 자동 (event_label 편집 가능) */}
+        {/* 1. 상단 라벨 — baptism은 십자가 아이콘, 그 외는 event_label 텍스트 */}
         <FadeUp delay={0.1}>
-          <div style={{
-            fontFamily: SCRIPT, fontSize: 14, fontWeight: 700, color: main,
-            letterSpacing: '0.6em', lineHeight: 1.1, marginTop: 28, marginBottom: 18
-          }}>
-            <Editable fieldKey="event_label">
-              {card.event_label || getEventLabelScript(card.event_type)}
-            </Editable>
-          </div>
+          {card.event_type === 'baptism' && !card.event_label ? (
+            <div style={{
+              color: main, fontFamily: 'serif',
+              fontSize: 36, lineHeight: 1, marginTop: 28, marginBottom: 18, opacity: 0.9
+            }} aria-label="cross">
+              ✝
+            </div>
+          ) : (
+            <div style={{
+              fontFamily: SCRIPT, fontSize: 14, fontWeight: 700, color: main,
+              letterSpacing: '0.6em', lineHeight: 1.1, marginTop: 28, marginBottom: 18
+            }}>
+              <Editable fieldKey="event_label">
+                {card.event_label || getEventLabelScript(card.event_type)}
+              </Editable>
+            </div>
+          )}
         </FadeUp>
 
         {/* 2. Subtitle (greeting_oneliner) — main 색상 + 가독성 확보 (opacity 제거) */}
@@ -205,52 +215,27 @@ export default function VintageScriptCard({
               boxShadow: '0 8px 22px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9)',
               display: 'flex', flexDirection: 'column', gap: 12, position: 'relative'
             }}>
-              {/* Date 영역 */}
+              {/* Date 영역 — 편집 모드에서 클릭 시 modal 트리거 */}
               {(card.event_date || editable) && (
-                <div style={{
-                  position: 'relative',
-                  padding: isDateHi ? '4px 8px' : 0,
-                  margin: isDateHi ? '-4px -8px' : 0,
-                  borderRadius: isDateHi ? 6 : 0,
-                  border: isDateHi ? '2px dashed rgba(123,94,167,0.55)' : 'none',
-                  background: isDateHi ? 'rgba(123,94,167,0.06)' : 'transparent',
-                  transition: 'all 0.15s'
-                }}>
+                <div
+                  data-field-key={editable ? 'event_date' : undefined}
+                  onClick={editable ? (e) => { e.stopPropagation(); onFieldClick?.('event_date'); } : undefined}
+                  role={editable ? 'button' : undefined}
+                  tabIndex={editable ? 0 : undefined}
+                  style={{
+                    position: 'relative',
+                    cursor: editable ? 'pointer' : 'default',
+                    padding: isDateHi ? '4px 8px' : 0,
+                    margin: isDateHi ? '-4px -8px' : 0,
+                    borderRadius: isDateHi ? 6 : 0,
+                    border: isDateHi ? '2px dashed rgba(123,94,167,0.55)' : 'none',
+                    background: isDateHi ? 'rgba(123,94,167,0.06)' : 'transparent',
+                    transition: 'all 0.15s'
+                  }}>
                   {card.event_date
                     ? <SplitDate iso={card.event_date} color={main} />
                     : (editable && <div style={{ fontSize: 13, color: main, opacity: 0.6, padding: '12px 0' }}>클릭해서 날짜/시간 입력</div>)
                   }
-                  {/* 편집 모드: invisible date/time inputs */}
-                  {editable && (() => {
-                    const cur = card.event_date ? new Date(card.event_date) : null;
-                    const validCur = cur && !isNaN(cur.getTime()) ? cur : null;
-                    const dateStr = validCur ? `${validCur.getFullYear()}-${String(validCur.getMonth()+1).padStart(2,'0')}-${String(validCur.getDate()).padStart(2,'0')}` : '';
-                    const timeStr = validCur ? `${String(validCur.getHours()).padStart(2,'0')}:${String(validCur.getMinutes()).padStart(2,'0')}` : '';
-                    const commit = (date: string, time: string) => {
-                      if (!date) { onFieldEdit?.('event_date', ''); return; }
-                      const [y, mo, d] = date.split('-').map(Number);
-                      if (!y || !mo || !d) return;
-                      const [h, m] = (time || '00:00').split(':').map(Number);
-                      const iso = new Date(y, mo - 1, d, h || 0, m || 0).toISOString();
-                      onFieldEdit?.('event_date', iso);
-                    };
-                    const baseStyle: React.CSSProperties = {
-                      position: 'absolute', top: 0, height: '100%', opacity: 0.001, cursor: 'pointer', zIndex: 5,
-                      border: 'none', background: 'transparent', fontSize: 16
-                    };
-                    return (
-                      <>
-                        <input type="date" data-dearday-date-only value={dateStr}
-                          onChange={(e) => commit(e.target.value, timeStr)}
-                          style={{ ...baseStyle, left: 0, width: '100%' }}
-                          title="클릭해서 날짜 수정" />
-                        <input type="time" data-dearday-time-only value={timeStr}
-                          onChange={(e) => commit(dateStr, e.target.value)}
-                          style={{ position: 'absolute', left: 0, top: 0, width: 0, height: 0, opacity: 0, pointerEvents: 'none', border: 'none', background: 'transparent' }}
-                          tabIndex={-1} aria-hidden="true" />
-                      </>
-                    );
-                  })()}
                 </div>
               )}
 
@@ -302,7 +287,9 @@ export default function VintageScriptCard({
                 transition: 'all 0.15s'
               }}>
                 {card.contact_phone
-                  ? <a href={`tel:${card.contact_phone}`} style={{ color: main, textDecoration: 'none' }}>{card.contact_phone}</a>
+                  ? (editable
+                      ? <span style={{ color: main }}>{card.contact_phone}</span>
+                      : <a href={`tel:${card.contact_phone}`} style={{ color: main, textDecoration: 'none' }}>{card.contact_phone}</a>)
                   : <span style={{ color: main, opacity: 0.6 }}>전화번호 (클릭해서 입력)</span>
                 }
               </p>

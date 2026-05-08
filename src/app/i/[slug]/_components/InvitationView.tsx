@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { ClassicEnvelope, EnvelopeBeige, EnvelopeMint, EnvelopeCoral, EnvelopeBlue, EnvelopeBlackGold, SwayEnvelope, NoneEnvelope, COLOR_PALETTES, type EnvelopeColorId } from '@/components/envelopes';
@@ -72,6 +72,9 @@ export default function InvitationView({ card, feed, recipientName, recipientId,
   }, []);
   // envelope-6 전용: 봉투에서 카드로 같은 화면 내 부드럽게 morph (flip + scale)
   const [transitioning, setTransitioning] = useState(false);
+  const envelopeWrapRef = useRef<HTMLDivElement | null>(null);
+  // 카드 morph 시작 위치 — 봉투 중심을 뷰포트 중심으로부터의 y offset으로 기록
+  const [morphStartY, setMorphStartY] = useState(0);
   const theme = getTheme(card.theme);
   const meta = getEventTypeMeta(card.event_type);
   const envParsed = parseEnvAnim(card.envelope_anim);
@@ -100,8 +103,22 @@ export default function InvitationView({ card, feed, recipientName, recipientId,
     'envelope-6': '#D4AF37',
     'none':       '#5A3D7A'
   };
-  // 새 (type, color) 조합용 fallback — palette.accent 사용
-  const buttonBg = BUTTON_COLOR[card.envelope_anim] || envelopePalette?.accent || '#A990CC';
+  // 새 (type, color) 조합용 — 각 봉투 색상별로 흰 텍스트와 충분한 대비를 갖는 saturated tone
+  const ENVELOPE_BUTTON_BY_COLOR: Record<string, string> = {
+    pearl:     '#A8862E',  // gold cream → deep warm gold (accent #F5F0E2가 너무 옅어 darker)
+    lavender:  '#A990CC',
+    champagne: '#9C8B6E',
+    sage:      '#7E9279',
+    blush:     '#C9907A',
+    rose:      '#C97796',
+    powder:    '#8FB5D0',
+    midnight:  '#D4AF37',
+    cobalt:    '#3D5A9C',  // accent #E8DBB8가 너무 옅어 봉투 본체 색
+    aubergine: '#75587E',  // accent #C0B6CC가 너무 옅어 봉투 본체 색
+    onyx:      '#DCB748'
+  };
+  const newColorButton = envParsed.type !== 'none' ? ENVELOPE_BUTTON_BY_COLOR[envParsed.color] : undefined;
+  const buttonBg = BUTTON_COLOR[card.envelope_anim] || newColorButton || envelopePalette?.accent || '#A990CC';
   const envelopeDeep = ENVELOPE_DEEP[card.envelope_anim] || envelopePalette?.ink || envelopePalette?.bodyDark || '#5A3D7A';
 
   // 편지지 내용 — 선택한 레이아웃의 폰트/색상 적용
@@ -124,6 +141,17 @@ export default function InvitationView({ card, feed, recipientName, recipientId,
     if (envParsed.type === 'none') {
       setOpen(true);
     } else {
+      // 봉투 안 카드 슬롯의 중심을 측정 → morph 시작 위치를 거기로 맞춰서 "봉투에서 나오는" 느낌
+      // Sway: card top=height*0.30, height=height*0.68 → 카드 중심 ≈ wrapper의 64%
+      // Flip: card top=height*0.221, height=height*0.738 → 카드 중심 ≈ wrapper의 59%
+      const wrap = envelopeWrapRef.current;
+      if (wrap) {
+        const rect = wrap.getBoundingClientRect();
+        const cardCenterRatio = envParsed.type === 'flip' ? 0.59 : 0.64;
+        const envCardCenterY = rect.top + rect.height * cardCenterRatio;
+        const viewportCenterY = window.innerHeight / 2;
+        setMorphStartY(envCardCenterY - viewportCenterY);
+      }
       setTransitioning(true);
     }
   };
@@ -189,6 +217,7 @@ export default function InvitationView({ card, feed, recipientName, recipientId,
       >
         {/* envelope-6 transition: 봉투를 빠르게 cross-fade out — overlay와 동시에 morph되도록 */}
         <motion.div
+          ref={envelopeWrapRef}
           className={`relative ${opening ? '' : 'cursor-pointer'}`}
           onClick={handleOpen}
           initial={false}
@@ -295,8 +324,8 @@ export default function InvitationView({ card, feed, recipientName, recipientId,
             <motion.div
               className="w-full max-w-md my-auto"
               style={{ transformOrigin: 'center' }}
-              initial={{ rotate: 90, scale: 0.489 }}
-              animate={{ rotate: 0, scale: 1 }}
+              initial={{ rotate: 90, scale: 0.489, y: morphStartY }}
+              animate={{ rotate: 0, scale: 1, y: 0 }}
               transition={{ duration: 1.4, ease: [0.4, 0, 0.2, 1] }}
             >
               <TemplateCard

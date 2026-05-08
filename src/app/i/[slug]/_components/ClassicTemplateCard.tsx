@@ -34,7 +34,7 @@ interface Props {
   /** wizard 편집 모드 */
   editable?: boolean;
   onFieldEdit?: (key: 'title' | 'greeting_oneliner' | 'body' | 'event_place' | 'contact_name' | 'extra_info' | 'event_label' | 'event_date', value: string) => void;
-  onFieldClick?: (key: 'title' | 'greeting_oneliner' | 'body' | 'event_place' | 'contact_name' | 'extra_info' | 'event_label') => void;
+  onFieldClick?: (key: 'title' | 'greeting_oneliner' | 'body' | 'event_place' | 'contact_name' | 'extra_info' | 'event_label' | 'event_date' | 'contact_phone') => void;
   highlightedField?: string | null;
 }
 
@@ -97,6 +97,7 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
       <span
         role="button"
         tabIndex={0}
+        data-field-key={fieldKey}
         onClick={(e) => { e.stopPropagation(); onFieldClick?.(fieldKey); }}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onFieldClick?.(fieldKey); } }}
         style={{
@@ -167,10 +168,12 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
         {/* 앞면: eventLabel(상단 디바이더 바로 아래) + subtitle(작게) + 타이틀 */}
         <FadeUp delay={0.1}>
           <div style={{ textAlign: 'center', padding: card.layout_id === 'layout-7' ? '0 10px 4px' : '0 10px 12px' }}>
-            {/* eventLabel — 상단 디바이더 바로 아래 (작은 간격) */}
+            {/* eventLabel — 상단 디바이더 바로 아래 (baptism은 십자가 디자인이 BG에 있어 텍스트 라벨 숨김) */}
             {(() => {
               const lay = getLayout(card.layout_id);
               if (!lay.fields.eventLabel) return null;
+              // baptism + 사용자 override 없음 → eventLabel 텍스트 미표시
+              if (card.event_type === 'baptism' && !card.event_label) return null;
               const labelField = lay.fields.eventLabel;
               return (
                 <div style={{
@@ -183,7 +186,7 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
                   marginTop: -4,
                   marginBottom: 12
                 }}>
-                  {getEventLabelText(card.event_type)}
+                  {card.event_label || getEventLabelText(card.event_type)}
                 </div>
               );
             })()}
@@ -201,7 +204,7 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
                 <Editable fieldKey="greeting_oneliner">{applyName(card.greeting_oneliner || '', recipientName)}</Editable>
               </div>
             )}
-            <h1 style={{ fontSize: 24, fontWeight: 500, color: palette.title, letterSpacing: '0.4em', margin: '0 0 8px', lineHeight: 1.3 }}>
+            <h1 style={{ fontSize: 24, fontWeight: 500, color: palette.title, letterSpacing: '0.4em', margin: '0 0 8px', lineHeight: 1.3, whiteSpace: 'pre-wrap' }}>
               <Editable fieldKey="title">{applyName(card.title, recipientName)}</Editable>
             </h1>
             {(card.body || editable) && card.layout_id !== 'layout-7' && (
@@ -250,7 +253,7 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
                 alignItems: 'center',
                 textAlign: 'center'
               }}>
-                {/* Date — SATURDAY | 16 MAY | 10 AM 우아한 split 포맷 */}
+                {/* Date — SATURDAY | 16 MAY | 10 AM 우아한 split 포맷 (편집 모드: 클릭 시 modal) */}
                 {(card.event_date || editable) && (() => {
                   const isDateHi = highlightedField === 'event_date';
                   const main = tpl?.colorMain || COLORS.textDark;
@@ -258,15 +261,21 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
                   const d = card.event_date ? new Date(card.event_date) : null;
                   const valid = d && !isNaN(d.getTime()) ? d : null;
                   return (
-                    <div style={{
-                      position: 'relative', width: '100%',
-                      padding: isDateHi ? '4px 8px' : 0,
-                      margin: isDateHi ? '-4px -8px 0' : 0,
-                      borderRadius: isDateHi ? 6 : 0,
-                      border: isDateHi ? '2px dashed rgba(123,94,167,0.55)' : 'none',
-                      background: isDateHi ? 'rgba(123,94,167,0.06)' : 'transparent',
-                      transition: 'all 0.15s'
-                    }}>
+                    <div
+                      data-field-key={editable ? 'event_date' : undefined}
+                      onClick={editable ? (e) => { e.stopPropagation(); onFieldClick?.('event_date'); } : undefined}
+                      role={editable ? 'button' : undefined}
+                      tabIndex={editable ? 0 : undefined}
+                      style={{
+                        position: 'relative', width: '100%',
+                        cursor: editable ? 'pointer' : 'default',
+                        padding: isDateHi ? '4px 8px' : 0,
+                        margin: isDateHi ? '-4px -8px 0' : 0,
+                        borderRadius: isDateHi ? 6 : 0,
+                        border: isDateHi ? '2px dashed rgba(123,94,167,0.55)' : 'none',
+                        background: isDateHi ? 'rgba(123,94,167,0.06)' : 'transparent',
+                        transition: 'all 0.15s'
+                      }}>
                       {valid ? (
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, color: main, fontFamily: SERIF }}>
                           <span style={{ flex: 1, fontSize: 13, fontWeight: 500, letterSpacing: '0.18em', textAlign: 'right' }}>
@@ -287,34 +296,7 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
                       ) : (
                         <div style={{ fontSize: 13, color: main, opacity: 0.55, padding: '12px 0' }}>클릭해서 날짜/시간 입력</div>
                       )}
-                      {editable && (() => {
-                        const dateStr = valid ? `${valid.getFullYear()}-${String(valid.getMonth()+1).padStart(2,'0')}-${String(valid.getDate()).padStart(2,'0')}` : '';
-                        const timeStr = valid ? `${String(valid.getHours()).padStart(2,'0')}:${String(valid.getMinutes()).padStart(2,'0')}` : '';
-                        const commit = (date: string, time: string) => {
-                          if (!date) { onFieldEdit?.('event_date', ''); return; }
-                          const [y, mo, dd] = date.split('-').map(Number);
-                          if (!y || !mo || !dd) return;
-                          const [h, m] = (time || '00:00').split(':').map(Number);
-                          const iso = new Date(y, mo - 1, dd, h || 0, m || 0).toISOString();
-                          onFieldEdit?.('event_date', iso);
-                        };
-                        const baseStyle: React.CSSProperties = {
-                          position: 'absolute', top: 0, height: '100%', opacity: 0.001, cursor: 'pointer', zIndex: 5,
-                          border: 'none', background: 'transparent', fontSize: 16
-                        };
-                        return (
-                          <>
-                            <input type="date" data-dearday-date-only value={dateStr}
-                              onChange={(e) => commit(e.target.value, timeStr)}
-                              style={{ ...baseStyle, left: 0, width: '100%' }}
-                              title="클릭해서 날짜 수정" />
-                            <input type="time" data-dearday-time-only value={timeStr}
-                              onChange={(e) => commit(dateStr, e.target.value)}
-                              style={{ position: 'absolute', left: 0, top: 0, width: 0, height: 0, opacity: 0, pointerEvents: 'none', border: 'none', background: 'transparent' }}
-                              tabIndex={-1} aria-hidden="true" />
-                          </>
-                        );
-                      })()}
+                      {/* native input 제거 — 부모 div onClick → onFieldClick('event_date') → modal 열림 */}
                     </div>
                   );
                 })()}
@@ -400,9 +382,13 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
             {(card.contact_phone || editable) && (() => {
               const isPhoneHi = highlightedField === 'contact_phone';
               return (
-              <p style={{
+              <p
+                data-field-key="contact_phone"
+                onClick={editable ? (e) => { e.stopPropagation(); onFieldClick?.('contact_phone'); } : undefined}
+                style={{
                 fontSize: 11, color: tpl?.colorMain || COLORS.textLight, marginTop: 4,
                 letterSpacing: '0.05em', opacity: 0.85, display: 'inline-block',
+                cursor: editable ? 'pointer' : 'default',
                 padding: isPhoneHi ? '2px 6px' : 0,
                 borderRadius: isPhoneHi ? 6 : 0,
                 border: isPhoneHi ? '2px dashed rgba(123,94,167,0.55)' : 'none',
@@ -410,7 +396,9 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
                 transition: 'all 0.15s'
               }}>
                 {card.contact_phone
-                  ? <a href={`tel:${card.contact_phone}`} style={{ color: 'inherit', textDecoration: 'none' }}>{card.contact_phone}</a>
+                  ? (editable
+                      ? <span>{card.contact_phone}</span>
+                      : <a href={`tel:${card.contact_phone}`} style={{ color: 'inherit', textDecoration: 'none' }}>{card.contact_phone}</a>)
                   : <span style={{ color: tpl?.colorMain || COLORS.textLight, opacity: 0.6 }}>전화번호 (클릭해서 입력)</span>
                 }
               </p>

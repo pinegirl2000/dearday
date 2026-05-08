@@ -48,8 +48,8 @@ export default function EnvelopeBlackGold({
     if (!isOpen) return;
     setPhase('flipping');
     const t1 = setTimeout(() => setPhase('opening'), 1300 * D);
-    // opening: 닫힌 flap fade 0.45s + 열린 flap rise 1.8s(delay 0.5s) = 2.3s + 카드 peek 0.4s + slide-up 1.0s = 3.7s + 0.5s 감상 = 4.2s
-    const t2 = setTimeout(() => onCompleteRef.current?.(), (1300 + 3700 + 500) * D);
+    // opening: flap rise 완료(2.0s) + 1.0s 감상 = 3.0s
+    const t2 = setTimeout(() => onCompleteRef.current?.(), (1300 + 2000 + 1000) * D);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, [isOpen, D]);
 

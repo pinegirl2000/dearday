@@ -23,7 +23,7 @@ interface Props {
   editable?: boolean;
   onFieldEdit?: (key: 'title' | 'greeting_oneliner' | 'body' | 'event_place' | 'contact_name' | 'extra_info' | 'event_label' | 'event_date', value: string) => void;
   /** 편집 모드에서 텍스트 클릭 시 호출 (모달 열기 트리거) */
-  onFieldClick?: (key: 'title' | 'greeting_oneliner' | 'body' | 'event_place' | 'contact_name' | 'extra_info' | 'event_label') => void;
+  onFieldClick?: (key: 'title' | 'greeting_oneliner' | 'body' | 'event_place' | 'contact_name' | 'extra_info' | 'event_label' | 'event_date' | 'contact_phone') => void;
   /** 현재 강조(flashing) 중인 필드 — 이 필드만 점선 표시, 나머지는 plain */
   highlightedField?: string | null;
 }
@@ -185,6 +185,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
       <span
         role="button"
         tabIndex={0}
+        data-field-key={fieldKey}
         onClick={(e) => { e.stopPropagation(); onFieldClick?.(fieldKey); }}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onFieldClick?.(fieldKey); } }}
         style={{
@@ -301,8 +302,8 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
             style={{
               position: 'absolute',
               // layout-5(Rightside): 우측에 좁고 세로로 긴 박스. 그 외: 카드 전체 폭.
-              left: layout.id === 'layout-5' ? '38%' : '6%',
-              right: layout.id === 'layout-5' ? '5%' : '6%',
+              left: layout.id === 'layout-5' ? '38%' : (layout.id === 'layout-center' ? '19%' : '6%'),
+              right: layout.id === 'layout-5' ? '5%' : (layout.id === 'layout-center' ? '19%' : '6%'),
               top: layout.id === 'layout-6'
                 ? `calc(${f.date.y + 0.5}%)`
                 : layout.id === 'layout-5'
@@ -366,7 +367,9 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
                 transition: 'all 0.15s'
               }}>
                 {card.contact_phone
-                  ? <a href={`tel:${card.contact_phone}`} style={{ color: 'inherit', textDecoration: 'none' }}>{card.contact_phone}</a>
+                  ? (editable
+                      ? <span>{card.contact_phone}</span>
+                      : <a href={`tel:${card.contact_phone}`} style={{ color: 'inherit', textDecoration: 'none' }}>{card.contact_phone}</a>)
                   : <span style={{ opacity: 0.5 }}>전화번호</span>
                 }
               </p>
@@ -404,50 +407,31 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
             ? <ModernSplitDate field={f.date} iso={card.event_date} delay={0.3} />
             : <FieldText field={f.date} delay={0.3}>{formatDate(card.event_date)}</FieldText>
       )}
-      {/* 편집 모드: Date 와 Time 분리 invisible 오버레이 (각각 native date/time picker) */}
-      {editable && f.date && (() => {
-        const cur = card.event_date ? new Date(card.event_date) : null;
-        const validCur = cur && !isNaN(cur.getTime()) ? cur : null;
-        const dateStr = validCur ? `${validCur.getFullYear()}-${String(validCur.getMonth()+1).padStart(2,'0')}-${String(validCur.getDate()).padStart(2,'0')}` : '';
-        const timeStr = validCur ? `${String(validCur.getHours()).padStart(2,'0')}:${String(validCur.getMinutes()).padStart(2,'0')}` : '';
-        const commit = (date: string, time: string) => {
-          if (!date) { onFieldEdit?.('event_date', ''); return; }
-          const [y, mo, d] = date.split('-').map(Number);
-          if (!y || !mo || !d) return;
-          const [h, m] = (time || '00:00').split(':').map(Number);
-          const iso = new Date(y, mo - 1, d, h || 0, m || 0).toISOString();
-          onFieldEdit?.('event_date', iso);
-        };
-        const baseStyle: React.CSSProperties = {
-          position: 'absolute',
-          top: `${f.date.y}%`,
-          height: 56, opacity: 0.001, cursor: 'pointer', zIndex: 40,
-          border: 'none', background: 'transparent', fontSize: 16
-        };
-        return (
-          <>
-            {/* Date input — 날짜 텍스트 영역 전체를 cover. 클릭하면 어디든 date picker. */}
-            <input
-              type="date"
-              data-dearday-date-only
-              value={dateStr}
-              onChange={(e) => commit(e.target.value, timeStr)}
-              style={{ ...baseStyle, left: `${f.date.x}%`, width: `${f.date.w}%` }}
-              title="클릭해서 날짜 수정"
-            />
-            {/* Time input — DOM에 존재하나 0 크기, badge 5 클릭으로만 picker 호출 */}
-            <input
-              type="time"
-              data-dearday-time-only
-              value={timeStr}
-              onChange={(e) => commit(dateStr, e.target.value)}
-              style={{ position: 'absolute', left: `${f.date.x}%`, top: `${f.date.y}%`, width: 0, height: 0, opacity: 0, pointerEvents: 'none', border: 'none', background: 'transparent' }}
-              tabIndex={-1}
-              aria-hidden="true"
-            />
-          </>
-        );
-      })()}
+      {/* Date 영역 클릭 가능 wrapper — 클릭 시 modal 열림 + highlight 표시 */}
+      {editable && f.date && (
+        <button
+          type="button"
+          data-field-key="event_date"
+          onClick={(e) => { e.stopPropagation(); onFieldClick?.('event_date'); }}
+          style={{
+            position: 'absolute',
+            left: `${f.date.x - 1}%`,
+            top: `${f.date.y - 2}%`,
+            width: `${f.date.w + 2}%`,
+            height: 56,
+            border: highlightedField === 'event_date' ? '2px dashed rgba(123,94,167,0.55)' : '1px dashed transparent',
+            background: highlightedField === 'event_date' ? 'rgba(123,94,167,0.06)' : 'transparent',
+            borderRadius: 6,
+            zIndex: 30,
+            cursor: 'pointer',
+            padding: 0,
+            transition: 'all 0.15s'
+          }}
+          title="클릭해서 날짜/시간 수정"
+          aria-label="Edit date and time"
+        />
+      )}
+      {/* native date input은 modal로 이전 — 별도 hidden input 불필요 */}
       {(card.event_place || editable) && f.place && (
         <FieldText field={f.place} delay={0.4}>
           <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -481,8 +465,10 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
                 ? `calc(${f.place.y + 11}%)`  // 박스(extra 포함) 아래로
               : layout.id === 'layout-topcenter'
                 ? `calc(${f.place.y + 11}%)`
-                : (layout.id === 'layout-3' || layout.id === 'layout-center')
+                : layout.id === 'layout-3'
                   ? `calc(${f.place.y + 6}%)`
+                : layout.id === 'layout-center'
+                  ? `calc(${f.place.y - 14}%)`
                   : `calc(${f.place.y}% + 24px)`,
             width: `${f.place.w}%`,
             textAlign: f.place.align,
@@ -512,7 +498,9 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
                     background: isPhoneHi ? 'rgba(123,94,167,0.06)' : 'transparent'
                   }}>
                     {card.contact_phone
-                      ? <a href={`tel:${card.contact_phone}`} style={{ color: f.place.color, textDecoration: 'none' }}>{card.contact_phone}</a>
+                      ? (editable
+                          ? <span style={{ color: f.place.color }}>{card.contact_phone}</span>
+                          : <a href={`tel:${card.contact_phone}`} style={{ color: f.place.color, textDecoration: 'none' }}>{card.contact_phone}</a>)
                       : <span style={{ opacity: 0.5 }}>전화번호</span>}
                   </span>
                 );
@@ -532,7 +520,9 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
                     background: isPhoneHi ? 'rgba(123,94,167,0.06)' : 'transparent'
                   }}>
                     {card.contact_phone
-                      ? <a href={`tel:${card.contact_phone}`} style={{ color: f.place.color, textDecoration: 'none' }}>{card.contact_phone}</a>
+                      ? (editable
+                          ? <span style={{ color: f.place.color }}>{card.contact_phone}</span>
+                          : <a href={`tel:${card.contact_phone}`} style={{ color: f.place.color, textDecoration: 'none' }}>{card.contact_phone}</a>)
                       : <span style={{ opacity: 0.5 }}>전화번호</span>}
                   </span>
                 );
