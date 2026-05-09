@@ -7,7 +7,8 @@ import {
   listRecipients,
   addRecipientsWithDetails,
   deleteRecipient,
-  sendInvitationsToRecipients
+  sendInvitationsToRecipients,
+  updateRecipientName
 } from '@/lib/actions/recipients';
 import type { BaseCard } from '@/types/card';
 
@@ -55,6 +56,26 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
   const [sendingId, setSendingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'recent_response' | 'recent_input' | 'name'>('recent_response');
+  const [editingNameId, setEditingNameId] = useState<string | null>(null);
+  const [editingNameValue, setEditingNameValue] = useState('');
+
+  const handleSaveName = (id: string, original: string) => {
+    const next = editingNameValue.trim();
+    setEditingNameId(null);
+    if (!next || next === original) return;
+    // 낙관적 업데이트
+    setRecipients((rs) => rs.map((r) => (r.id === id ? { ...r, name: next } : r)));
+    startTransition(async () => {
+      const res = await updateRecipientName(slug, ownerToken, id, next);
+      if (!res.ok) {
+        toast.error(res.error || '이름 수정 실패');
+        // rollback
+        setRecipients((rs) => rs.map((r) => (r.id === id ? { ...r, name: original } : r)));
+        return;
+      }
+      toast.success('이름 수정됨');
+    });
+  };
 
   // 초기 로드 + 갱신
   const load = () => {
@@ -445,8 +466,38 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
                 className="grid items-center gap-1.5 px-2 py-1.5 text-xs"
                 style={{ gridTemplateColumns: 'minmax(0,1fr) 84px 64px 78px auto' }}
               >
-                {/* col1: 이름 */}
-                <div className="min-w-0 font-semibold text-hydrangea-700 truncate">{r.name}</div>
+                {/* col1: 이름 — 클릭하면 인라인 편집 */}
+                <div className="min-w-0">
+                  {editingNameId === r.id ? (
+                    <input
+                      type="text"
+                      autoFocus
+                      value={editingNameValue}
+                      onChange={(e) => setEditingNameValue(e.target.value)}
+                      onBlur={() => handleSaveName(r.id, r.name)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          (e.target as HTMLInputElement).blur();
+                        } else if (e.key === 'Escape') {
+                          setEditingNameId(null);
+                        }
+                      }}
+                      className="w-full px-1 py-0.5 rounded border border-hydrangea-400 bg-white text-xs font-semibold text-hydrangea-700 focus:outline-none focus:ring-2 focus:ring-hydrangea-300"
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingNameId(r.id);
+                        setEditingNameValue(r.name);
+                      }}
+                      title="클릭해서 이름 수정"
+                      className="w-full text-left font-semibold text-hydrangea-700 truncate hover:text-hydrangea-500 hover:underline underline-offset-2 transition cursor-text"
+                    >
+                      {r.name}
+                    </button>
+                  )}
+                </div>
                 {/* col2: 링크복사 버튼 */}
                 <button
                   type="button"

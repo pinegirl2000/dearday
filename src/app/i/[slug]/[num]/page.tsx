@@ -33,13 +33,13 @@ export async function generateMetadata({ params }: Props) {
       description,
       type: 'website',
       siteName: 'DearDay',
-      images: [{ url: '/api/og', width: 1200, height: 630 }]
+      images: [{ url: '/api/og?v=2', width: 1200, height: 630 }]
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      images: ['/api/og']
+      images: ['/api/og?v=2']
     }
   };
 }

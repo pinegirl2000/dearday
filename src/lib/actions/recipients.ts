@@ -284,3 +284,21 @@ export async function deleteRecipient(slug: string, ownerToken: string | null, r
   revalidatePath(`/cards/${slug}/manage`);
   return { ok: true as const };
 }
+
+export async function updateRecipientName(
+  slug: string,
+  ownerToken: string | null,
+  recipientId: string,
+  name: string
+) {
+  const card = await verifyOwner({ slug, ownerToken });
+  if (!card) return { ok: false as const, error: '권한이 없습니다.' };
+  const trimmed = name.trim();
+  if (!trimmed) return { ok: false as const, error: '이름을 입력하세요.' };
+  await pool.query(
+    'UPDATE dearday_recipient SET name=$1 WHERE id=$2 AND card_id=$3',
+    [trimmed, recipientId, card.id]
+  );
+  revalidatePath(`/cards/${slug}/manage`);
+  return { ok: true as const };
+}
