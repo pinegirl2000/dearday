@@ -22,65 +22,66 @@ interface Sample {
   sub: string;
 }
 
+// 화려한 actual template 배경 이미지 5종
 const SAMPLES: Sample[] = [
   {
-    id: 'wedding',
-    emoji: '💒',
+    id: 'black-gold',
+    emoji: '🥂',
+    event: 'GRAND OPENING',
+    title: 'Round Cafe',
+    subtitle: 'A new chapter begins',
+    body: 'Join us for an evening of\ncocktails, hors d\'oeuvres & music.',
+    date: 'FRI 20 SEP · 7 PM',
+    place: 'Round Cafe, 1 Orchard Lane',
+    host: '— The Round Cafe Team —',
+    bg: "url('/templates/template-19-bg.png') center/cover",
+    main: '#F5E29A',
+    sub: '#D4A943'
+  },
+  {
+    id: 'pink-castle',
+    emoji: '🏰',
+    event: 'BIRTHDAY',
+    title: "Avery's 1st Birthday",
+    subtitle: 'A magical first year',
+    body: 'Step into our little princess\'s\nfairytale celebration.',
+    date: 'SUN 5 JUL · 11 AM',
+    place: 'The Lounge Function Room',
+    host: '— Love, the Family —',
+    bg: "url('/templates/template-13-bg.png') center/cover",
+    main: '#C97796',
+    sub: '#E89AA0'
+  },
+  {
+    id: 'rose-gold',
+    emoji: '🎈',
+    event: 'SWEET SIXTEEN',
+    title: 'Hello, Sixteen',
+    subtitle: 'Celebrate with us',
+    body: 'A special day deserves\na sparkle-filled night.',
+    date: 'SAT 18 OCT · 6 PM',
+    place: 'Garden Terrace, Marina Hotel',
+    host: '— Love, Mom & Dad —',
+    bg: "url('/templates/template-17-bg.png') center/cover",
+    main: '#C97766',
+    sub: '#E89A8C'
+  },
+  {
+    id: 'pressed-flowers',
+    emoji: '💐',
     event: 'WEDDING',
     title: 'Daniel ♥ Olivia',
     subtitle: 'Together with our families',
     body: 'We invite you to share in\nthe joy of our wedding day.',
-    date: 'SAT 14 JUN · 7 PM',
+    date: 'SAT 14 JUN · 4 PM',
     place: 'The Grand Ballroom, Marina Hotel',
-    host: 'From Daniel & Olivia',
-    bg: 'linear-gradient(160deg, #F4ECFA 0%, #E8DFF3 50%, #D5C5E8 100%)',
-    main: '#5A3D7A',
-    sub: '#8B7A9E'
-  },
-  {
-    id: 'birthday',
-    emoji: '🎂',
-    event: 'BIRTHDAY',
-    title: "Avery's 1st Birthday",
-    subtitle: 'A precious first year',
-    body: 'Come share laughter, joy, and cake\nas we celebrate Avery\'s special day.',
-    date: 'SUN 5 JUL · 11 AM',
-    place: 'The Lounge Function Room',
-    host: '— Jane Doe —',
-    bg: 'linear-gradient(160deg, #FFF1EB 0%, #FCE5DD 50%, #F5C8B8 100%)',
-    main: '#9C5040',
-    sub: '#C68676'
-  },
-  {
-    id: 'baptism',
-    emoji: '🕊️',
-    event: 'BAPTISM',
-    title: "Avery's Baptism Day",
-    subtitle: 'A blessed first step',
-    body: 'Please join us as we celebrate\nAvery\'s baptism in the Lord.',
-    date: 'SUN 3 MAY · 10 AM',
-    place: 'Grace Church, Main Sanctuary',
-    host: '— Jane Doe —',
-    bg: 'linear-gradient(160deg, #F1FAF4 0%, #DBEEDF 50%, #C8E5D2 100%)',
-    main: '#3D5C3F',
-    sub: '#7AA088'
-  },
-  {
-    id: 'opening',
-    emoji: '🎉',
-    event: 'OPENING',
-    title: 'Round Cafe',
-    subtitle: 'A new beginning',
-    body: 'We\'re excited to open our doors\nand share this moment with you.',
-    date: 'FRI 20 SEP · 5 PM',
-    place: 'Round Cafe, 1 Orchard Lane',
-    host: '— The Round Cafe Team —',
-    bg: 'linear-gradient(160deg, #FBF5E8 0%, #F0E5CD 50%, #E8DCC4 100%)',
+    host: '— Daniel & Olivia —',
+    bg: "url('/templates/template-15-bg.png') center/cover",
     main: '#7A5E2E',
-    sub: '#9C8B6E'
+    sub: '#B89456'
   },
   {
-    id: 'gathering',
+    id: 'watercolor-purple',
     emoji: '🤝',
     event: 'GATHERING',
     title: 'Spring Gathering',
@@ -88,10 +89,10 @@ const SAMPLES: Sample[] = [
     body: 'It has been too long.\nLet\'s gather and catch up.',
     date: 'SUN 12 APR · 2 PM',
     place: 'Hangang Park, Open Lawn',
-    host: '— Jane Doe —',
-    bg: 'linear-gradient(160deg, #FFFFFF 0%, #F2F8FC 50%, #E0EDF6 100%)',
-    main: '#2E5478',
-    sub: '#5A7B96'
+    host: '— From the Hosts —',
+    bg: "url('/templates/template-2-bg.png') center/cover",
+    main: '#5A3D7A',
+    sub: '#7B5EA7'
   }
 ];
 
