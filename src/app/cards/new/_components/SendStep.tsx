@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { toast } from 'sonner';
-import { Mail, Link as LinkIcon, Plus, Trash2, Send, Copy, Check, Calendar, Users, Download } from 'lucide-react';
+import { Mail, Link as LinkIcon, Plus, Trash2, Send, Copy, Check, Calendar, Users, Download, ThumbsUp, ThumbsDown, TrendingUp } from 'lucide-react';
 import {
   listRecipients,
   addRecipientsWithDetails,
@@ -402,20 +402,17 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
                     const names = r.rsvp_attendee_names && r.rsvp_attendee_names.length > 0
                       ? `: ${r.rsvp_attendee_names.join(', ')}`
                       : '';
-                    lines.push(`- ${r.name} (${cnt}명)${names}${r.rsvp_oneliner ? ` — "${r.rsvp_oneliner}"` : ''}`);
-                    lines.push(`  Link: ${linkFor(r.num)}`);
+                    lines.push(`- ${r.name} (${cnt}명)${names}${r.rsvp_oneliner ? ` — "${r.rsvp_oneliner}"` : ''} | ${linkFor(r.num)}`);
                   }
                   lines.push('');
                   lines.push(`[불참 — ${declined.length}건]`);
                   for (const r of declined) {
-                    lines.push(`- ${r.name}${r.rsvp_oneliner ? ` — "${r.rsvp_oneliner}"` : ''}`);
-                    lines.push(`  Link: ${linkFor(r.num)}`);
+                    lines.push(`- ${r.name}${r.rsvp_oneliner ? ` — "${r.rsvp_oneliner}"` : ''} | ${linkFor(r.num)}`);
                   }
                   lines.push('');
                   lines.push(`[미응답 — ${noResp.length}건]`);
                   for (const r of noResp) {
-                    lines.push(`- ${r.name}`);
-                    lines.push(`  Link: ${linkFor(r.num)}`);
+                    lines.push(`- ${r.name} | ${linkFor(r.num)}`);
                   }
                   const text = lines.join('\n');
                   const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
@@ -613,6 +610,98 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
           </div>
         )}
       </div>
+
+      {/* 응답 통계 — 수신자 등록 페이지 하단에도 노출 (recipients에서 직접 계산) */}
+      {recipients.length > 0 && (() => {
+        const totalRecipients = recipients.length;
+        const readRecipients = recipients.filter((r) => !!r.read_at).length;
+        const attending = recipients.filter((r) => r.rsvp_attend === true);
+        const declined = recipients.filter((r) => r.rsvp_attend === false);
+        const attendingRecords = attending.length;
+        const attendingTotal = attending.reduce((sum, r) => sum + (r.rsvp_count || 1), 0);
+        const declinedRecords = declined.length;
+        const totalReplies = attendingRecords + declinedRecords;
+        const denom = Math.max(totalRecipients, totalReplies);
+        const replyRate = denom > 0 ? Math.min(100, Math.round((totalReplies / denom) * 100)) : 0;
+        const attendPct = denom > 0 ? (attendingRecords / denom) * 100 : 0;
+        const declinePct = denom > 0 ? (declinedRecords / denom) * 100 : 0;
+        return (
+          <div className="rounded-xl border border-hydrangea-100 bg-hydrangea-50/30 p-3 space-y-3">
+            <div className="flex items-baseline gap-2">
+              <h3 className="text-[11px] font-bold text-hydrangea-700 uppercase tracking-wide flex items-center gap-1">
+                <TrendingUp className="w-3.5 h-3.5" /> 응답 통계
+              </h3>
+              <span className="text-[10px] text-hydrangea-400">
+                {new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })} 기준
+              </span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="rounded-xl bg-gradient-to-br from-hydrangea-50 to-hydrangea-100 border border-hydrangea-200 p-3 shadow-sm relative overflow-hidden">
+                <Send className="absolute -bottom-2 -right-2 w-12 h-12 text-hydrangea-300/40" strokeWidth={1.5} />
+                <div className="relative">
+                  <div className="text-[10px] font-semibold text-hydrangea-500 mb-0.5">총 링크 발송</div>
+                  <div className="flex items-baseline gap-0.5">
+                    <span className="text-2xl font-extrabold leading-none text-hydrangea-700">{totalRecipients}</span>
+                    <span className="text-[10px] text-hydrangea-500">건</span>
+                  </div>
+                  <div className="mt-1">
+                    <div className="text-[10px] inline-flex items-center gap-1 bg-hydrangea-500 text-white px-1.5 py-0.5 rounded-full font-semibold">
+                      👁 {readRecipients}명 읽음
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200 p-3 shadow-sm relative overflow-hidden">
+                <ThumbsUp className="absolute -bottom-2 -right-2 w-12 h-12 text-emerald-300/40" strokeWidth={1.5} />
+                <div className="relative">
+                  <div className="text-[10px] font-semibold text-emerald-600 mb-0.5">참석</div>
+                  <div className="flex items-baseline gap-0.5">
+                    <span className="text-2xl font-extrabold leading-none text-emerald-700">{attendingRecords}</span>
+                    <span className="text-[10px] text-emerald-600">건</span>
+                  </div>
+                  <div className="text-[10px] mt-1 inline-flex items-center gap-1 bg-emerald-500 text-white px-1.5 py-0.5 rounded-full font-semibold">
+                    <Users className="w-2.5 h-2.5" /> 총 {attendingTotal}명
+                  </div>
+                </div>
+              </div>
+              <div className="rounded-xl bg-gradient-to-br from-rose-50 to-rose-100 border border-rose-200 p-3 shadow-sm relative overflow-hidden">
+                <ThumbsDown className="absolute -bottom-2 -right-2 w-12 h-12 text-rose-300/40" strokeWidth={1.5} />
+                <div className="relative">
+                  <div className="text-[10px] font-semibold text-rose-600 mb-0.5">불참</div>
+                  <div className="flex items-baseline gap-0.5">
+                    <span className="text-2xl font-extrabold leading-none text-rose-700">{declinedRecords}</span>
+                    <span className="text-[10px] text-rose-600">건</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {totalRecipients > 0 && (
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-semibold text-hydrangea-600">응답률</span>
+                  <span className="text-[11px] font-bold text-hydrangea-700">
+                    응답 {totalReplies}건 / 발송 {totalRecipients}건
+                    <span className="text-hydrangea-400 font-medium ml-1">({replyRate}%)</span>
+                  </span>
+                </div>
+                <div className="h-2 rounded-full bg-hydrangea-100 overflow-hidden flex">
+                  {attendingRecords > 0 && (
+                    <div className="bg-emerald-500 h-full" style={{ width: `${attendPct}%` }} title={`참석 ${attendingRecords}`} />
+                  )}
+                  {declinedRecords > 0 && (
+                    <div className="bg-rose-400 h-full" style={{ width: `${declinePct}%` }} title={`불참 ${declinedRecords}`} />
+                  )}
+                </div>
+                <div className="flex items-center gap-3 mt-1.5 text-[9px] text-hydrangea-500">
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> 참석</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-400" /> 불참</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-hydrangea-100 border border-hydrangea-200" /> 미응답</span>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
     </div>
   );
