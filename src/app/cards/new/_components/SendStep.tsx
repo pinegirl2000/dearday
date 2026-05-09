@@ -464,7 +464,7 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
               <div key={r.id} className="rounded-lg border border-hydrangea-100 bg-white">
               <div
                 className="grid items-center gap-1.5 px-2 py-1.5 text-xs"
-                style={{ gridTemplateColumns: 'minmax(0,1fr) 84px 64px 78px auto' }}
+                style={{ gridTemplateColumns: 'minmax(60px,1fr) auto auto auto auto' }}
               >
                 {/* col1: 이름 — 클릭하면 인라인 편집 */}
                 <div className="min-w-0">
