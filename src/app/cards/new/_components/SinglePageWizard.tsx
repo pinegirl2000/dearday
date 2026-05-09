@@ -1047,13 +1047,35 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                             <button
                               type="button"
                               onClick={() => {
-                                // 번호 배지 클릭 = 해당 텍스트 영역 highlight (모달 X)
-                                setFlashFieldNo((cur) => (cur === fld.no ? null : fld.no));
-                                // RSVP만 예외 — 폼 RSVP 영역으로 스크롤
+                                // RSVP는 폼 영역으로 스크롤
                                 if (fld.key === 'rsvp_section') {
+                                  setFlashFieldNo((cur) => (cur === fld.no ? null : fld.no));
                                   const el = document.getElementById('dearday-rsvp-section');
                                   el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                  return;
                                 }
+                                // 필드가 비어있으면 모달 즉시 열기 (입력 도와주기)
+                                const empty = isEmpty(fld.key);
+                                if (empty) {
+                                  const k = fld.key;
+                                  if (k === 'event_date') { setDateTimeModalOpen(true); return; }
+                                  if (k === 'contact_phone') { setPhoneModalOpen(true); return; }
+                                  if (k === 'event_place') { setPlaceModalOpen(true); return; }
+                                  if (k === 'extra_info') { setExtraInfoModalOpen(true); return; }
+                                  if (k === 'greeting_oneliner' || k === 'title' || k === 'body' || k === 'contact_name') {
+                                    const labelMap: Record<string, string> = {
+                                      greeting_oneliner: 'Subtitle', title: 'Title', body: 'Message', contact_name: 'Host'
+                                    };
+                                    setTextEditField({
+                                      key: k as any,
+                                      label: labelMap[k] || k,
+                                      multiline: k === 'body' || k === 'title'
+                                    });
+                                    return;
+                                  }
+                                }
+                                // 값이 있으면 highlight 토글
+                                setFlashFieldNo((cur) => (cur === fld.no ? null : fld.no));
                               }}
                               style={{
                                 background: (active || isFlashing) ? GUIDE : 'rgba(255,255,255,0.95)',

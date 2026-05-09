@@ -13,7 +13,7 @@ interface Props {
 export async function generateMetadata({ params }: Props) {
   const card = await getCardBySlug(params.slug);
   if (!card) return { title: '초대장' };
-  const description = card.greeting_oneliner || '소중한 날에 초대합니다';
+  const description = card.greeting_oneliner || undefined;
   return {
     title: card.title,
     description,
