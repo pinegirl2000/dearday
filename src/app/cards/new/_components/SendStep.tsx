@@ -381,8 +381,8 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
             )}
           </div>
           <div className="flex items-center gap-1.5">
-            {/* 참석자 명단 텍스트 export */}
-            {recipients.some((r) => r.rsvp_attend === true) && (
+            {/* 참석자 명단 + 링크 텍스트 export */}
+            {recipients.length > 0 && (
               <button
                 type="button"
                 onClick={() => {
@@ -403,16 +403,19 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
                       ? `: ${r.rsvp_attendee_names.join(', ')}`
                       : '';
                     lines.push(`- ${r.name} (${cnt}명)${names}${r.rsvp_oneliner ? ` — "${r.rsvp_oneliner}"` : ''}`);
+                    lines.push(`  Link: ${linkFor(r.num)}`);
                   }
                   lines.push('');
                   lines.push(`[불참 — ${declined.length}건]`);
                   for (const r of declined) {
                     lines.push(`- ${r.name}${r.rsvp_oneliner ? ` — "${r.rsvp_oneliner}"` : ''}`);
+                    lines.push(`  Link: ${linkFor(r.num)}`);
                   }
                   lines.push('');
                   lines.push(`[미응답 — ${noResp.length}건]`);
                   for (const r of noResp) {
                     lines.push(`- ${r.name}`);
+                    lines.push(`  Link: ${linkFor(r.num)}`);
                   }
                   const text = lines.join('\n');
                   const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
