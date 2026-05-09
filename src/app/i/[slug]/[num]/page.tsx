@@ -32,14 +32,12 @@ export async function generateMetadata({ params }: Props) {
       title,
       description,
       type: 'website',
-      siteName: 'DearDay',
-      images: [{ url: '/api/og?v=2', width: 1200, height: 630 }]
+      siteName: 'DearDay'
     },
     twitter: {
-      card: 'summary_large_image',
+      card: 'summary',
       title,
-      description,
-      images: ['/api/og?v=2']
+      description
     }
   };
 }
