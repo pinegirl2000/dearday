@@ -302,8 +302,8 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
             style={{
               position: 'absolute',
               // layout-5(Rightside): 우측에 좁고 세로로 긴 박스. 그 외: 카드 전체 폭.
-              left: layout.id === 'layout-5' ? '38%' : (layout.id === 'layout-center' ? '19%' : '6%'),
-              right: layout.id === 'layout-5' ? '5%' : (layout.id === 'layout-center' ? '19%' : '6%'),
+              left: layout.id === 'layout-5' ? '38%' : '6%',
+              right: layout.id === 'layout-5' ? '5%' : '6%',
               top: layout.id === 'layout-6'
                 ? `calc(${f.date.y + 0.5}%)`
                 : layout.id === 'layout-5'

@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { useSession, signIn } from 'next-auth/react';
-import { Check, ChevronDown, ChevronUp, Minus, Plus, Sparkles, Calendar } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, Minus, Plus, Sparkles, Calendar, RotateCcw } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { MobileHeader } from '@/components/layout/MobileHeader';
 import { Input, Textarea, Button, PhoneInput } from '@/components/ui';
@@ -268,6 +268,12 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
       if (!res.ok) { toast.error(res.error || 'Save failed'); return; }
       toast.success('Saved!');
       setSavedSnapshot(JSON.stringify(draft));
+      // 저장 후 다음 단계로 자동 이동 (Send 단계는 이미 마지막이라 그대로 유지)
+      if (open < 4) {
+        const next = (open + 1) as SectionId;
+        setOpen(next);
+        setMaxStepCompleted((m) => Math.max(m, open));
+      }
     }).catch(() => {
       setSavingSticky(false);
       toast.error('Save failed');
@@ -1264,7 +1270,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                               textAlign: 'center',
                               color: inkColor,
                               fontFamily: "'Cormorant Garamond', 'Playfair Display', 'Noto Serif KR', serif",
-                              fontSize: 16,
+                              fontSize: 18,
                               fontWeight: 500,
                               fontVariant: 'small-caps',
                               letterSpacing: '0.12em',
@@ -1328,22 +1334,36 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                           ) : null}
                         />
                       </motion.div>
-                      {parsedEnv.type !== 'none' && (
-                        <motion.button
-                          type="button"
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ duration: 0.3, delay: 0.4 }}
-                          onClick={() => {
-                            setEnvelopeOpen(false);
-                            setEnvelopeOpening(false);
-                          }}
-                          className="absolute top-3 right-5 z-20 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur border border-hydrangea-300 text-hydrangea-700 text-xs font-semibold shadow-md hover:bg-white active:scale-95 transition"
-                        >
-                          ↺ 다시보기
-                        </motion.button>
-                      )}
                     </div>
+                  )}
+                  {/* === SAMPLE / 다시보기 워터마크 — 미리보기 가운데 === */}
+                  {parsedEnv.type !== 'none' && (
+                    <button
+                      type="button"
+                      onClick={envelopeOpen ? () => {
+                        setEnvelopeOpen(false);
+                        setEnvelopeOpening(false);
+                      } : undefined}
+                      disabled={!envelopeOpen}
+                      aria-label={envelopeOpen ? '다시 재생' : 'Sample preview'}
+                      className={`absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-16 h-16 rounded-full bg-white/30 backdrop-blur-md border border-white/40 text-hydrangea-700 flex flex-col items-center justify-center gap-0.5 shadow-lg transition opacity-60 ${
+                        envelopeOpen
+                          ? 'hover:bg-white/50 hover:opacity-100 active:scale-95 cursor-pointer'
+                          : 'cursor-default pointer-events-none'
+                      }`}
+                    >
+                      {envelopeOpen ? (
+                        <>
+                          <RotateCcw className="w-6 h-6" strokeWidth={2.5} />
+                          <span className="text-[10px] font-semibold tracking-wide">다시보기</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-[9px] font-bold tracking-widest uppercase">Sample</span>
+                          <span className="text-[9px] font-semibold tracking-wide">preview</span>
+                        </>
+                      )}
+                    </button>
                   )}
                 </div>
               );
