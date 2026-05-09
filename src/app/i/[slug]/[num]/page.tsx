@@ -4,6 +4,8 @@ import { getCardBySlug } from '@/lib/db/cards';
 import { getTheme } from '@/lib/theme';
 import { getMyRsvpByRecipient } from '@/lib/actions/submitRsvp';
 import { markRecipientRead } from '@/lib/actions/markRecipientRead';
+import { getAllTemplateColors } from '@/lib/actions/templateConfig';
+import { findTemplateByPair } from '@/lib/templates';
 import InvitationView from '../_components/InvitationView';
 
 interface Props {
@@ -75,6 +77,9 @@ export default async function PersonalInvitationPage({ params }: Props) {
   }
 
   const existingRsvp = recipient?.id ? await getMyRsvpByRecipient(recipient.id) : null;
+  const colorsMap = await getAllTemplateColors();
+  const tpl = findTemplateByPair(card.bg_id, card.layout_id);
+  const templateColorOverride = tpl ? colorsMap.get(tpl.id) : undefined;
 
   return (
     <InvitationView
@@ -82,6 +87,7 @@ export default async function PersonalInvitationPage({ params }: Props) {
       recipientName={recipient?.name}
       recipientId={recipient?.id}
       existingRsvp={existingRsvp}
+      templateColorOverride={templateColorOverride}
     />
   );
 }

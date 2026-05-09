@@ -307,13 +307,7 @@ export const TEMPLATES: TemplateMeta[] = [
     description: 'Black background with gold balloons — gala / adult party',
     bg_id: 'bg-img-19',
     layout_id: 'layout-classic',
-    colorMain: '#D4A943',
-    colorSub: '#2A2218',
-    infoBox: {
-      bg: 'linear-gradient(180deg, rgba(40,30,20,0.55) 0%, rgba(20,15,10,0.65) 100%)',
-      textColor: '#F5E29A',
-      borderColor: 'rgba(212,169,67,0.45)'
-    },
+    // colorMain/colorSub/infoBox는 DB(dearday_template_config)에 저장됨 — admin에서 수정 가능
     recommendEvents: ['birthday', 'opening', 'etc'],
     draft: true
   }

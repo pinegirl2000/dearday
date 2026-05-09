@@ -66,7 +66,7 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [slug, ownerToken]);
 
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-  const linkFor = (num: string) => `${baseUrl}/i/${slug}/${num}`;
+  const linkFor = (num: string) => `${baseUrl}/i/${slug}/${num}?v=2`;
 
   const handleAddSingle = () => {
     if (!singleName.trim()) { toast.error('이름을 입력하세요'); return; }

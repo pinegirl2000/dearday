@@ -96,7 +96,7 @@ import { listSamplesByEventType, type SampleData } from '@/lib/actions/sampleDat
 import { LAYOUTS, getLayout } from '@/lib/layouts';
 import type { BackgroundId, BaseCard, EnvelopeAnimId, EventType, LayoutId } from '@/types/card';
 
-type SectionId = 1 | 2 | 3 | 4;
+type SectionId = 1 | 2 | 3;
 
 interface SectionShellProps {
   id: SectionId;
@@ -154,16 +154,24 @@ interface SinglePageWizardProps {
   /** edit 모드에서 외부가 wizardStore에 직접 hydrate하므로 persist rehydrate 생략 */
   skipRehydrate?: boolean;
   /** edit 모드 진입 시 펼칠 섹션 (기본 1) */
-  initialOpen?: 1 | 2 | 3 | 4;
+  initialOpen?: 1 | 2 | 3;
   /** admin이 DB에 저장한 템플릿별 allowedLayouts override */
   templateConfigs?: Record<string, string[]>;
   /** admin이 DB에 저장한 이벤트별 템플릿 노출 순서 (event_id → template_id[]) */
   eventOrders?: Record<string, string[]>;
   /** admin이 DB에 저장한 이벤트별 제외된 템플릿 (event_id → template_id[]) */
   eventExcludes?: Record<string, string[]>;
+  /** admin이 DB에 저장한 템플릿별 색상 override (template_id → 5 colors) */
+  templateColors?: Record<string, {
+    color_main?: string | null;
+    color_sub?: string | null;
+    color_box_text?: string | null;
+    box_bg_top?: string | null;
+    box_bg_bottom?: string | null;
+  }>;
 }
 
-export default function SinglePageWizard({ skipRehydrate, initialOpen, templateConfigs, eventOrders, eventExcludes }: SinglePageWizardProps = {}) {
+export default function SinglePageWizard({ skipRehydrate, initialOpen, templateConfigs, eventOrders, eventExcludes, templateColors }: SinglePageWizardProps = {}) {
   const router = useRouter();
   const params = useSearchParams();
   const { status: sessionStatus } = useSession();
@@ -229,7 +237,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
   // 사용자가 Next 버튼으로 실제로 진행한 최대 단계 — 시각적 완료 표시용
   // edit 모드(initialOpen 지정됨)는 모든 단계를 이미 통과한 것으로 시작 — tick 표시
   const [maxStepCompleted, setMaxStepCompleted] = useState<number>(
-    initialOpen ? 3 : 0
+    initialOpen ? 2 : 0
   );
   const [pending, startTransition] = useTransition();
   // Section 3 Preview는 봉투부터 보여줌 — 사용자가 봉투를 클릭해서 카드를 펼치도록
@@ -238,6 +246,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
   // 발행된 카드 정보 (Step 5 활성화용). edit 모드면 editingSlug + localStorage 토큰 사용
   const [publishedSlug, setPublishedSlug] = useState<string | null>(editingSlug || null);
   const [publishedOwnerToken, setPublishedOwnerToken] = useState<string | null>(null);
+  const [publishSuccess, setPublishSuccess] = useState(false);
   useEffect(() => {
     if (publishedSlug && !publishedOwnerToken && typeof window !== 'undefined') {
       const t = localStorage.getItem(`dearday:owner:${publishedSlug}`);
@@ -267,8 +276,8 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
       if (!res.ok) { toast.error(res.error || 'Save failed'); return; }
       toast.success('Saved!');
       setSavedSnapshot(JSON.stringify(draft));
-      // 저장 후 다음 단계로 자동 이동 (Send 단계는 이미 마지막이라 그대로 유지)
-      if (open < 4) {
+      // 저장 후 다음 단계로 자동 이동 (Publish 단계가 마지막)
+      if (open < 3) {
         const next = (open + 1) as SectionId;
         setOpen(next);
         setMaxStepCompleted((m) => Math.max(m, open));
@@ -373,11 +382,8 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
   };
 
   // 섹션 활성화: 이전 섹션이 모두 완료되어야 클릭 가능
-  // step 4(Send)는 카드가 발행된 상태(publishedSlug)이거나 edit 모드일 때만 활성화
   const isEnabled = (id: SectionId): boolean => {
-    if (id === 4) return !!publishedSlug;
     for (let i = 1 as SectionId; i < id; i = (i + 1) as SectionId) {
-      if (i === 3) continue; // step 3는 publish action — done 여부로 판단 안 함
       if (!isDone(i)) return false;
     }
     return true;
@@ -476,17 +482,14 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
       return;
     }
     startTransition(async () => {
-      // 1) Edit 모드 — 기존 카드 update
-      // 2) 이미 이번 세션에서 발행한 경우(publishedSlug) — 중복 생성 방지를 위해 updateCard로 전환
-      // 3) 그 외 — 신규 publishCard
       const targetSlug = (isEditMode && editingSlug) || publishedSlug;
       if (targetSlug) {
         const res = await updateCard(targetSlug, draft);
         if (!res.ok) { toast.error(res.error || 'Update failed'); return; }
-        toast.success('Saved!');
         if (!publishedSlug) setPublishedSlug(targetSlug);
-        setOpen(4);
-        setMaxStepCompleted((m) => Math.max(m, 3));
+        // 성공 모달 1초 노출 후 My Invitations로 이동
+        setPublishSuccess(true);
+        setTimeout(() => router.push('/cards'), 1000);
         return;
       }
       const res = await publishCard(draft);
@@ -499,10 +502,9 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
         setPublishedSlug(res.slug);
         setPublishedOwnerToken(res.ownerToken);
       }
-      toast.success('Invitation published!');
-      // Step 4(초대장 보내기)로 진행 — 발행된 카드의 recipient 등록/이메일 발송
-      setOpen(4);
-      setMaxStepCompleted((m) => Math.max(m, 3));
+      // 성공 모달 1초 노출 후 My Invitations로 이동
+      setPublishSuccess(true);
+      setTimeout(() => router.push('/cards'), 1000);
     });
   };
 
@@ -520,8 +522,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
   const summaries = {
     1: `${meta.label} · ${tplName}`,
     2: draft.title || '',
-    3: envName,
-    4: ''
+    3: envName
   };
 
   const detailsCanProceed = (() => {
@@ -539,8 +540,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
   const SECTION_LABELS: Record<SectionId, string> = {
     1: 'Design',
     2: 'Details',
-    3: 'Preview',
-    4: 'Send'
+    3: 'Publish'
   };
 
   return (
@@ -550,11 +550,11 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
       {/* 상단 단계 표시 (sticky) — 작은 점/숫자 + 가는 connector. 현재 단계 라벨은 아래 SectionShell에 노출 */}
       <div className="sticky top-0 z-20 bg-white/95 backdrop-blur border-b border-hydrangea-100/70 px-4 py-3">
         <div className="flex items-start justify-center gap-0">
-          {([1, 2, 3, 4] as SectionId[]).map((id, idx) => {
+          {([1, 2, 3] as SectionId[]).map((id, idx) => {
             const active = open === id;
             const enabled = isEnabled(id);
             // 완료 표시: 사용자가 진행한 step(maxStepCompleted) 또는 isDone(현재 데이터로 충족)
-            const completed = !active && (id <= maxStepCompleted || (id !== 3 && id !== 4 && isDone(id)));
+            const completed = !active && (id <= maxStepCompleted || (id !== 3 && isDone(id)));
             return (
               <Fragment key={id}>
                 <div className="flex flex-col items-center">
@@ -595,7 +595,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                     {SECTION_LABELS[id]}
                   </button>
                 </div>
-                {idx < 3 && (
+                {idx < 2 && (
                   <span
                     aria-hidden="true"
                     className="flex-1 max-w-12 h-px mx-1 mt-3.5 bg-hydrangea-200"
@@ -694,30 +694,54 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                             key={t.id}
                             onClick={() => setPreviewTpl(t)}
                             whileTap={{ scale: 0.96 }}
-                            className={`relative aspect-[3/4] rounded-lg border-[3px] overflow-hidden transition ${
+                            className={`relative rounded-lg border-[3px] overflow-hidden transition flex flex-col ${
                               selected
                                 ? 'border-hydrangea-500 ring-4 ring-hydrangea-300 shadow-lg scale-[1.03]'
                                 : 'border-hydrangea-100/60'
                             }`}
                           >
-                            {bg.imageUrl ? (
-                              <img src={bg.imageUrl} alt={t.name} className="absolute inset-0 w-full h-full object-cover" />
-                            ) : (
-                              <div className="absolute inset-0" style={{ background: bg.gradient }} />
-                            )}
-                            {selected && (
-                              <div className="absolute inset-0 bg-hydrangea-500/20 pointer-events-none" />
-                            )}
-                            <div className={`absolute bottom-0 left-0 right-0 text-white text-[8px] py-0.5 text-center truncate px-0.5 ${
-                              selected ? 'bg-hydrangea-600 font-bold' : 'bg-black/45'
+                            {/* 템플릿 이미지 — 3:4 비율 */}
+                            <div className="relative w-full aspect-[3/4]">
+                              {bg.imageUrl ? (
+                                <img src={bg.imageUrl} alt={t.name} className="absolute inset-0 w-full h-full object-cover" />
+                              ) : (
+                                <div className="absolute inset-0" style={{ background: bg.gradient }} />
+                              )}
+                              {selected && (
+                                <div className="absolute inset-0 bg-hydrangea-500/20 pointer-events-none" />
+                              )}
+                              {selected && (
+                                <div className="absolute top-1 right-1 w-6 h-6 rounded-full bg-hydrangea-500 flex items-center justify-center shadow-md ring-2 ring-white">
+                                  <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
+                                </div>
+                              )}
+                            </div>
+                            {/* 이미지 아래 — 4색 스와치 + 이름 */}
+                            {(() => {
+                              const ov = templateColors?.[t.id];
+                              const swatches = [
+                                ov?.color_main || t.colorMain,
+                                ov?.color_sub || t.colorSub,
+                                ov?.color_box_text || t.infoBox?.textColor,
+                                ov?.box_bg_top
+                              ];
+                              return (
+                                <div className="flex w-full" style={{ height: 8 }}>
+                                  {swatches.map((c, i) => (
+                                    <div
+                                      key={i}
+                                      className="flex-1"
+                                      style={{ background: c || '#E5E7EB' }}
+                                    />
+                                  ))}
+                                </div>
+                              );
+                            })()}
+                            <div className={`text-[9px] py-0.5 text-center truncate px-0.5 ${
+                              selected ? 'bg-hydrangea-600 text-white font-bold' : 'bg-hydrangea-50 text-hydrangea-700'
                             }`}>
                               {selected ? `✓ ${t.name}` : t.name}
                             </div>
-                            {selected && (
-                              <div className="absolute top-1 right-1 w-6 h-6 rounded-full bg-hydrangea-500 flex items-center justify-center shadow-md ring-2 ring-white">
-                                <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
-                              </div>
-                            )}
                           </motion.button>
                         );
                       })}
@@ -1098,6 +1122,19 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                         </button>
                       </div>
                     )}
+                    {/* 응답 수정 허용 — 마감일 안에 attend↔decline 전환 가능 여부 */}
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-white border border-hydrangea-100/60">
+                      <div>
+                        <div className="text-sm text-hydrangea-700">응답 수정 허용</div>
+                        <div className="text-[11px] text-hydrangea-400 mt-0.5 leading-snug">
+                          마감일 안에 사용자가 참석↔불참 변경 가능
+                        </div>
+                      </div>
+                      <button type="button" onClick={() => setDraft({ rsvp_allow_change: !(draft.rsvp_allow_change ?? true) })}
+                        className={`relative w-11 h-6 rounded-full transition flex-shrink-0 ${(draft.rsvp_allow_change ?? true) ? 'bg-hydrangea-500' : 'bg-hydrangea-100'}`}>
+                        <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${(draft.rsvp_allow_change ?? true) ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                      </button>
+                    </div>
                     {/* Allow one-line reply 옵션은 화면에서 숨김 (default off) */}
                     {(() => {
                       const toLocalInput = (iso?: string | null) => {
@@ -1149,7 +1186,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
         {/* 3. 미리보기 + 봉투 옵션 + 발행 */}
         <SectionShell
           id={3}
-          title="Preview"
+          title="Publish"
           summary={summaries[3]}
           open={open === 3}
           done={!!publishedSlug}
@@ -1167,17 +1204,6 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                 <div className="relative flex flex-col items-center py-6 bg-hydrangea-50/40 rounded-2xl">
                   {!envelopeOpen ? (
                     <>
-                      {(() => {
-                        const t = parseEnvelopeAnim(draft.envelope_anim).type;
-                        if (t === 'none') return null;
-                        return (
-                          <p className="text-[11px] text-hydrangea-500 text-center px-4 mb-2 leading-snug">
-                            {t === 'flip'
-                              ? '봉투가 회전하며 뒷면이 보이고, 뚜껑이 열리며 안의 초청장이 펼쳐집니다.'
-                              : '봉투가 살랑거리다가 클릭하면 봉투가 열리고 꽃잎이 흩날리며 펼쳐집니다.'}
-                          </p>
-                        );
-                      })()}
                       <p className="text-xs text-hydrangea-400 mb-4">
                         {envelopeOpening ? 'Opening...' : 'Click the envelope to open'}
                       </p>
@@ -1198,7 +1224,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                           const greetingForEnv = tpl.replace(/\$NAME/g, previewNameForEnv);
                           return renderEnvelope(parsedEnv.type, parsedEnv.color, {
                           isOpen: envelopeOpening,
-                          width: 280,
+                          width: 252,
                           recipientGreeting: greetingForEnv,
                           cardPreview: (
                             <div style={{
@@ -1268,7 +1294,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                           const envColor = parsedEnv.color;
                           const isDark = ['midnight', 'cobalt', 'aubergine', 'onyx'].includes(envColor);
                           const inkColor = ENVELOPE_NAME_COLOR[envColor] || '#5A3D7A';
-                          const envHeight = Math.round(280 * 0.75);
+                          const envHeight = Math.round(252 * 0.75);
                           return (
                             <div style={{
                               position: 'absolute',
@@ -1292,6 +1318,59 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                           );
                         })()}
                       </div>
+                      {/* 색상 팔레트 — 봉투 아래, animation 위. 6×2 grid, 절반 사이즈, 중앙 정렬 */}
+                      {parsedEnv.type !== 'none' && (() => {
+                        const split = (body: string, accent: string) =>
+                          `linear-gradient(135deg, ${body} 0%, ${body} 50%, ${accent} 50%, ${accent} 100%)`;
+                        const COLORS_TOP = [
+                          { id: 'ivory',      label: 'Ivory White',     swatch: split('#F8F1DE', '#DCB748') },
+                          { id: 'pearl',      label: 'Gold Cream',      swatch: split('#DCB748', '#F5F0E2') },
+                          { id: 'lavender',   label: 'Lavender Silver', swatch: split('#C8B0E2', '#CABFCF') },
+                          { id: 'champagne',  label: 'Beige Ivory',     swatch: split('#DACFB6', '#F5F0E2') },
+                          { id: 'sage',       label: 'Sage Pearl',      swatch: split('#B0C5AC', '#E8E4D8') },
+                          { id: 'blush',      label: 'Blush Rose Gold', swatch: split('#F2C0B3', '#C9907A') },
+                          { id: 'rose',       label: 'Rose Petal',      swatch: split('#F4C5D2', '#F5EBD8') },
+                          { id: 'powder',     label: 'Powder Silver',   swatch: split('#BFD7EA', '#C4CDD4') },
+                          { id: 'midnight',   label: 'Midnight Gold',   swatch: split('#2D3D50', '#DCB748') },
+                          { id: 'cobalt',     label: 'Cobalt Cream',    swatch: split('#2E4A8C', '#F5F0E2') },
+                          { id: 'aubergine',  label: 'Aubergine Pearl', swatch: split('#3F2A4A', '#C0B6CC') },
+                          { id: 'onyx',       label: 'Onyx Gold',       swatch: split('#2A2A2A', '#DCB748') }
+                        ] as const;
+                        return (
+                          <div className="w-full mt-4 flex flex-col items-center">
+                            <div className="grid grid-cols-6 gap-1.5" style={{ width: '50%', minWidth: 180, maxWidth: 240 }}>
+                              {COLORS_TOP.map((c) => {
+                                const selected = parsedEnv.color === c.id;
+                                return (
+                                  <button
+                                    key={c.id}
+                                    type="button"
+                                    onClick={() => {
+                                      const newId = buildEnvelopeAnim(parsedEnv.type, c.id as EnvelopeColorId);
+                                      setDraft({ envelope_anim: newId as EnvelopeAnimId });
+                                      setEnvelopeOpen(false);
+                                    }}
+                                    title={c.label}
+                                    className={`relative aspect-square rounded-md border transition active:scale-95 ${
+                                      selected
+                                        ? 'border-hydrangea-500 ring-2 ring-hydrangea-200'
+                                        : 'border-hydrangea-100'
+                                    }`}
+                                    style={{ background: c.swatch }}
+                                  >
+                                    {selected && (
+                                      <Check className="absolute top-0 right-0 w-2.5 h-2.5 text-white drop-shadow" strokeWidth={3} />
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            <div className="text-[10px] text-hydrangea-400 mt-1 text-center">
+                              {COLORS_TOP.find((c) => c.id === parsedEnv.color)?.label}
+                            </div>
+                          </div>
+                        );
+                      })()}
                       {/* 애니메이션 선택 — 봉투 바로 아래에 한 줄 */}
                       {parsedEnv.type !== 'none' && (() => {
                         const ANIMS = [
@@ -1323,6 +1402,12 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                                 );
                               })}
                             </div>
+                            {/* 애니메이션 설명 — Sway/Flip 버튼 바로 아래 */}
+                            <p className="text-[11px] text-hydrangea-500 text-center px-2 leading-snug">
+                              {parsedEnv.type === 'flip'
+                                ? '봉투가 회전하며 뒷면이 보이고, 뚜껑이 열리며 안의 초청장이 펼쳐집니다.'
+                                : '봉투가 살랑거리다가 클릭하면 봉투가 열리고 꽃잎이 흩날리며 펼쳐집니다.'}
+                            </p>
                           </div>
                         );
                       })()}
@@ -1378,68 +1463,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
               );
             })()}
 
-            {/* === 봉투 옵션 (색상 + 애니메이션) === */}
-            {(() => {
-              const split = (body: string, accent: string) =>
-                `linear-gradient(135deg, ${body} 0%, ${body} 50%, ${accent} 50%, ${accent} 100%)`;
-              const COLORS = [
-                { id: 'ivory',      label: 'Ivory White',            swatch: split('#F8F1DE', '#DCB748') },
-                { id: 'pearl',      label: 'Gold Cream',             swatch: split('#DCB748', '#F5F0E2') },
-                { id: 'lavender',   label: 'Lavender Silver',        swatch: split('#C8B0E2', '#CABFCF') },
-                { id: 'champagne',  label: 'Beige Ivory',            swatch: split('#DACFB6', '#F5F0E2') },
-                { id: 'sage',       label: 'Sage Pearl',             swatch: split('#B0C5AC', '#E8E4D8') },
-                { id: 'blush',      label: 'Blush Rose Gold',        swatch: split('#F2C0B3', '#C9907A') },
-                { id: 'rose',       label: 'Rose Petal',             swatch: split('#F4C5D2', '#F5EBD8') },
-                { id: 'powder',     label: 'Powder Silver',          swatch: split('#BFD7EA', '#C4CDD4') },
-                { id: 'midnight',   label: 'Midnight Gold',          swatch: split('#2D3D50', '#DCB748') },
-                { id: 'cobalt',     label: 'Cobalt Cream',           swatch: split('#2E4A8C', '#F5F0E2') },
-                { id: 'aubergine',  label: 'Aubergine Pearl',        swatch: split('#3F2A4A', '#C0B6CC') },
-                { id: 'onyx',       label: 'Onyx Gold',              swatch: split('#2A2A2A', '#DCB748') }
-              ] as const;
-              const current = parseEnvelopeAnim(draft.envelope_anim);
-              const setTypeColor = (type: EnvelopeAnimType, color: EnvelopeColorId) => {
-                const newId = buildEnvelopeAnim(type, color);
-                setDraft({ envelope_anim: newId as EnvelopeAnimId });
-                // 봉투가 바뀌면 다시 닫힌 상태로 보여줌 — 새 봉투 미리보기 확인용
-                setEnvelopeOpen(false);
-              };
-              return (
-                <div className="space-y-4 pt-2 border-t border-hydrangea-100/60">
-                  <h4 className="text-xs font-semibold text-hydrangea-700">✉️ Envelope 색상</h4>
-                  {current.type !== 'none' && (
-                    <div>
-                      <label className="block text-xs font-semibold text-hydrangea-700 mb-2">색상</label>
-                      <div className="grid grid-cols-6 gap-2">
-                        {COLORS.map((c) => {
-                          const selected = current.color === c.id;
-                          return (
-                            <button
-                              key={c.id}
-                              type="button"
-                              onClick={() => setTypeColor(current.type, c.id as EnvelopeColorId)}
-                              title={c.label}
-                              className={`relative aspect-square rounded-lg border-2 transition active:scale-95 hover:border-hydrangea-300 ${
-                                selected
-                                  ? 'border-hydrangea-500 ring-2 ring-hydrangea-200'
-                                  : 'border-hydrangea-100'
-                              }`}
-                              style={{ background: c.swatch }}
-                            >
-                              {selected && (
-                                <Check className="absolute top-0.5 right-0.5 w-3 h-3 text-white drop-shadow" strokeWidth={3} />
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      <div className="text-[10px] text-hydrangea-400 mt-1.5 text-center">
-                        {COLORS.find((c) => c.id === current.color)?.label}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
+            {/* (봉투 색상은 미리보기 위쪽 6×2 grid로 이동) */}
 
             <div className="p-3 rounded-xl bg-hydrangea-50 text-xs space-y-1">
               <div className="flex items-center gap-2 font-semibold text-hydrangea-700 mb-1">
@@ -1468,23 +1492,6 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
           </div>
         </SectionShell>
 
-        {/* 4. 초대장 보내기 — 수신자 등록 + 이메일/링크 발송 */}
-        <SectionShell
-          id={4}
-          title="Send Invitation"
-          open={open === 4}
-          done={false}
-          enabled={isEnabled(4)}
-          onToggle={() => setOpen(4)}
-        >
-          {publishedSlug ? (
-            <SendStep slug={publishedSlug} ownerToken={publishedOwnerToken} card={draft} />
-          ) : (
-            <div className="text-center py-8 text-sm text-hydrangea-400">
-              먼저 3단계에서 초대장을 발행해 주세요.
-            </div>
-          )}
-        </SectionShell>
       </div>
 
       {/* Edit 모드: 변경사항 있을 때 sticky save bar */}
@@ -1784,6 +1791,41 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
               >완료</button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* 발행 성공 모달 — 1초 후 My Invitations로 이동 */}
+      {publishSuccess && (
+        <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm flex items-center justify-center p-6">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="bg-white rounded-2xl shadow-2xl px-8 py-7 text-center max-w-sm"
+          >
+            {/* 보라 그라디언트 링 + 흰 체크 — 세련된 success 마크 */}
+            <motion.div
+              initial={{ scale: 0, rotate: -90 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: 'spring', stiffness: 220, damping: 18, delay: 0.05 }}
+              className="w-14 h-14 mx-auto mb-3 rounded-full flex items-center justify-center shadow-lg"
+              style={{
+                background: 'linear-gradient(135deg, #A990CC 0%, #7B5EA7 60%, #5A3D7A 100%)'
+              }}
+            >
+              <motion.div
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{ pathLength: 1, opacity: 1 }}
+                transition={{ duration: 0.4, delay: 0.25 }}
+              >
+                <Check className="w-7 h-7 text-white" strokeWidth={3} />
+              </motion.div>
+            </motion.div>
+            <div className="text-base font-bold text-hydrangea-700 mb-1 tracking-tight">
+              {isEditMode || (publishedSlug && editingSlug !== publishedSlug) ? '저장되었습니다' : '초대장이 발행되었습니다'}
+            </div>
+            <div className="text-[11px] text-hydrangea-400">My Invitations로 이동합니다…</div>
+          </motion.div>
         </div>
       )}
     </PageContainer>

@@ -7,11 +7,14 @@ import { TEMPLATES, getTemplateLayouts } from '@/lib/templates';
 import { LAYOUTS, getLayout } from '@/lib/layouts';
 import { saveTemplateAllowedLayouts } from '@/lib/actions/templateConfig';
 import TemplateCard from '@/app/i/[slug]/_components/TemplateCard';
-import TemplateInfoPanel, { TemplateColorRow } from './_TemplateInfoPanel';
+import TemplateInfoPanel from './_TemplateInfoPanel';
+import TemplateColorEditor from './_TemplateColorEditor';
 import type { BaseCard, LayoutId } from '@/types/card';
+import type { TemplateColors } from '@/lib/actions/templateConfig';
 
 interface Props {
   configs?: Record<string, string[]>;
+  colorOverrides?: Record<string, TemplateColors>;
 }
 
 const SAMPLE_BY_EVENT: Record<string, Partial<BaseCard>> = {
@@ -85,7 +88,7 @@ function buildPreview(t: (typeof TEMPLATES)[number], layoutId: LayoutId): BaseCa
   } as BaseCard;
 }
 
-export default function TemplateBrowser({ configs }: Props) {
+export default function TemplateBrowser({ configs, colorOverrides }: Props) {
   const [tplId, setTplId] = useState<string>(TEMPLATES[0].id);
   const [layoutId, setLayoutId] = useState<LayoutId | null>(null);
   const [pending, startTransition] = useTransition();
@@ -172,11 +175,20 @@ export default function TemplateBrowser({ configs }: Props) {
 
       {activeLayoutId && (
         <>
-          <TemplateColorRow template={selectedTpl} />
           <div className="bg-hydrangea-50/40 rounded-2xl p-3">
             <TemplateCard card={buildPreview(selectedTpl, activeLayoutId)} />
           </div>
           <TemplateInfoPanel template={selectedTpl} layoutId={activeLayoutId} />
+          <TemplateColorEditor
+            templateId={selectedTpl.id}
+            codeDefaults={{
+              colorMain: selectedTpl.colorMain,
+              colorSub: selectedTpl.colorSub,
+              boxBg: selectedTpl.infoBox?.bg,
+              boxTextColor: selectedTpl.infoBox?.textColor
+            }}
+            initial={colorOverrides?.[selectedTpl.id] || null}
+          />
         </>
       )}
     </div>

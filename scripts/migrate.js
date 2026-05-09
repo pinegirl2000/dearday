@@ -77,6 +77,8 @@ CREATE TABLE IF NOT EXISTS dearday_card (
   rsvp_deadline TIMESTAMPTZ,
   rsvp_max_per_card INT DEFAULT 4 CHECK (rsvp_max_per_card BETWEEN 1 AND 5),
   rsvp_collect_names BOOLEAN DEFAULT false,
+  rsvp_allow_oneliner BOOLEAN DEFAULT false,
+  rsvp_allow_change BOOLEAN DEFAULT true,
 
   expiry_date TIMESTAMPTZ,
   plan TEXT DEFAULT 'free',
@@ -87,6 +89,9 @@ CREATE TABLE IF NOT EXISTS dearday_card (
 
 -- 카드 상단 이벤트 라벨 사용자 override (마이그레이션 — 기존 테이블에도 추가)
 ALTER TABLE dearday_card ADD COLUMN IF NOT EXISTS event_label TEXT;
+-- RSVP 옵션 — 기존 테이블에도 추가
+ALTER TABLE dearday_card ADD COLUMN IF NOT EXISTS rsvp_allow_oneliner BOOLEAN DEFAULT false;
+ALTER TABLE dearday_card ADD COLUMN IF NOT EXISTS rsvp_allow_change BOOLEAN DEFAULT true;
 
 -- 이벤트 타입별 sample data — 사용자가 detail 진입 시 선택 가능 (admin 관리 가능)
 CREATE TABLE IF NOT EXISTS dearday_sample_data (
@@ -156,6 +161,12 @@ CREATE TABLE IF NOT EXISTS dearday_template_config (
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   updated_by TEXT
 );
+-- 폰트 3색 + 박스 그라디언트 2색 (DB 우선, 미정의 시 코드 default fallback)
+ALTER TABLE dearday_template_config ADD COLUMN IF NOT EXISTS color_main TEXT;
+ALTER TABLE dearday_template_config ADD COLUMN IF NOT EXISTS color_sub TEXT;
+ALTER TABLE dearday_template_config ADD COLUMN IF NOT EXISTS color_box_text TEXT;
+ALTER TABLE dearday_template_config ADD COLUMN IF NOT EXISTS box_bg_top TEXT;
+ALTER TABLE dearday_template_config ADD COLUMN IF NOT EXISTS box_bg_bottom TEXT;
 
 -- 이벤트별 템플릿 노출 순서 (admin drag&drop으로 지정)
 CREATE TABLE IF NOT EXISTS dearday_template_event_order (

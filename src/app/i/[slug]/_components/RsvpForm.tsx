@@ -34,6 +34,8 @@ const ENVELOPE_PALETTE: Record<string, { primary: string; soft: string; deep: st
 
 export default function RsvpForm({ card, theme, recipientId, recipientName, existingRsvp, compact = false }: Props) {
   const hasExisting = !!existingRsvp;
+  // 응답 수정 잠금 — card.rsvp_allow_change=false + 이미 응답한 사용자는 변경 불가
+  const locked = hasExisting && card.rsvp_allow_change === false;
   const [attend, setAttend] = useState<boolean | null>(existingRsvp ? existingRsvp.attend : null);
   const [adultCount, setAdultCount] = useState(existingRsvp?.adult_count ?? 1);
   const [childCount, setChildCount] = useState(existingRsvp?.child_count ?? 0);
@@ -89,6 +91,10 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
   const isPreview = !card.id || card.id === 'preview' || card.slug === 'preview';
 
   const handleSubmit = (overrideAttend?: boolean) => {
+    if (locked) {
+      toast.error('이 초청장은 응답 수정을 허용하지 않습니다');
+      return;
+    }
     const attendVal = overrideAttend !== undefined ? overrideAttend : attend;
     if (attendVal === null) {
       toast.error('Please select Attend or Decline');
@@ -151,7 +157,15 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
       <div className="text-center">
         <div style={{ color: ACCENT, opacity: 0.6, fontSize: 11, marginBottom: 4, lineHeight: 1 }}>✽</div>
         <h3 className={`font-semibold ${compact ? 'text-sm' : 'text-lg'}`} style={{ color: ACCENT }}>Will you join us?</h3>
-        {hasExisting && (
+        {hasExisting && locked && (
+          <p className={`mt-1 font-semibold ${compact ? 'text-[11px]' : 'text-sm'}`} style={{ color: ACCENT_DEEP }}>
+            ✓ 이미 <span style={{ color: existingRsvp!.attend ? '#059669' : '#e11d48' }}>{existingRsvp!.attend ? '참석' : '불참'}</span>으로 응답하셨습니다
+            <span className={compact ? 'block text-[9px] opacity-70 mt-0.5 font-normal' : 'block text-xs opacity-70 mt-0.5 font-normal'}>
+              이 초청장은 응답 변경을 허용하지 않습니다
+            </span>
+          </p>
+        )}
+        {hasExisting && !locked && (
           <p className={`mt-1 ${compact ? 'text-[10px]' : 'text-xs'}`} style={{ color: ACCENT_DEEP, opacity: 0.75 }}>
             ✓ You already replied — edit and resubmit to update
           </p>
@@ -169,7 +183,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
           <motion.button
             whileTap={{ scale: 0.96 }}
             onClick={() => { setAttend(true); if (max <= 1) handleSubmit(true); }}
-            disabled={pending}
+            disabled={pending || locked}
             className="min-h-[34px] text-xs rounded-lg border font-medium transition flex items-center justify-center gap-1 disabled:opacity-50"
             style={{
               background: attend === true ? ACCENT : ACCENT_SOFT,
@@ -182,7 +196,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
           <motion.button
             whileTap={{ scale: 0.96 }}
             onClick={() => { setAttend(false); if (max <= 1) handleSubmit(false); }}
-            disabled={pending}
+            disabled={pending || locked}
             className="min-h-[34px] text-xs rounded-lg border font-medium transition flex items-center justify-center gap-1 disabled:opacity-50"
             style={{
               background: attend === false ? ACCENT_DEEP : ACCENT_SOFT,
@@ -222,7 +236,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
           <motion.button
             whileTap={{ scale: 0.96 }}
             onClick={() => { setAttend(true); if (max <= 1) handleSubmit(true); }}
-            disabled={pending}
+            disabled={pending || locked}
             className="min-h-[52px] rounded-xl border font-medium transition flex items-center justify-center gap-2 disabled:opacity-50"
             style={{
               background: attend === true ? ACCENT : ACCENT_SOFT,
@@ -235,7 +249,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
           <motion.button
             whileTap={{ scale: 0.96 }}
             onClick={() => { setAttend(false); if (max <= 1) handleSubmit(false); }}
-            disabled={pending}
+            disabled={pending || locked}
             className="min-h-[52px] rounded-xl border font-medium transition flex items-center justify-center gap-2 disabled:opacity-50"
             style={{
               background: attend === false ? ACCENT_DEEP : ACCENT_SOFT,
@@ -313,8 +327,8 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
 
       {/* one-line reply 입력 영구 제거 — DB 필드(rsvp_allow_oneliner)는 보존되나 UI 노출 X */}
 
-      {/* Reply 버튼: max>1 케이스에서만 노출 (max=1은 Attend/Decline 클릭이 곧 제출) */}
-      {attend !== null && max > 1 && (
+      {/* Reply 버튼: max>1 케이스에서만 노출 (max=1은 Attend/Decline 클릭이 곧 제출). locked면 숨김 */}
+      {attend !== null && max > 1 && !locked && (
         <motion.button
           whileTap={{ scale: 0.97 }}
           onClick={() => handleSubmit()}

@@ -197,7 +197,7 @@ export async function sendInvitationsToRecipients(
       );
       continue;
     }
-    const url = `${baseUrl}/i/${cardData.slug}/${r.num}`;
+    const url = `${baseUrl}/i/${cardData.slug}/${r.num}?v=2`;
     const result = await sendInvitationEmail({
       to: r.email,
       recipientName: r.name,

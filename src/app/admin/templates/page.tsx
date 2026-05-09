@@ -6,7 +6,7 @@ import { isAdminEmail } from '@/lib/admin';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { MobileHeader } from '@/components/layout/MobileHeader';
 import { TEMPLATES, getTemplateLayouts } from '@/lib/templates';
-import { getAllTemplateConfigs } from '@/lib/actions/templateConfig';
+import { getAllTemplateConfigs, getAllTemplateColors, type TemplateColors } from '@/lib/actions/templateConfig';
 import { getTemplateEventOrder } from '@/lib/actions/templateOrder';
 import { EVENT_TYPES } from '@/lib/eventType';
 import { LAYOUTS } from '@/lib/layouts';
@@ -58,6 +58,9 @@ export default async function TemplatesAdminPage({ searchParams }: PageProps) {
     : null;
 
   const configs = Object.fromEntries(await getAllTemplateConfigs());
+  const colorOverridesMap = await getAllTemplateColors();
+  const colorOverrides: Record<string, TemplateColors> = {};
+  colorOverridesMap.forEach((v, k) => { colorOverrides[k] = v; });
 
   const tab = (key: 'template' | 'event' | 'layout', label: string) => (
     <Link
@@ -86,7 +89,7 @@ export default async function TemplatesAdminPage({ searchParams }: PageProps) {
         <MobileHeader title="템플릿 관리" back />
         <div className="px-4 pt-3 pb-12">
           {ViewTabs}
-          <TemplateBrowser configs={configs} />
+          <TemplateBrowser configs={configs} colorOverrides={colorOverrides} />
         </div>
       </PageContainer>
     );

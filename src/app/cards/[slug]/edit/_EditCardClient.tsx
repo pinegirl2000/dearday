@@ -54,6 +54,7 @@ export default function EditCardClient({ card, templateConfigs }: Props) {
       rsvp_max_per_card: card.rsvp_max_per_card,
       rsvp_collect_names: card.rsvp_collect_names,
       rsvp_allow_oneliner: card.rsvp_allow_oneliner ?? true,
+      rsvp_allow_change: card.rsvp_allow_change ?? true,
       expiry_date: toIso(card.expiry_date),
       plan: card.plan
     };

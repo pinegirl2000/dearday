@@ -12,7 +12,7 @@ import { EVENT_TYPES } from '@/lib/eventType';
 import { saveTemplateEventOrder } from '@/lib/actions/templateOrder';
 import { addTemplateEventExclude } from '@/lib/actions/templateEventExclude';
 import TemplateCard from '@/app/i/[slug]/_components/TemplateCard';
-import TemplateInfoPanel, { TemplateColorRow } from './_TemplateInfoPanel';
+import TemplateInfoPanel from './_TemplateInfoPanel';
 import type { BaseCard, EventType, LayoutId } from '@/types/card';
 
 type Tpl = (typeof TEMPLATES)[number];
@@ -245,7 +245,6 @@ export default function EventBrowser({ configs, eventOrders, eventExcludes }: Pr
         </DndContext>
       ) : selectedTpl && previewLayoutId ? (
         <>
-          <TemplateColorRow template={selectedTpl} />
           <div className="bg-hydrangea-50/40 rounded-2xl p-3">
             <div className="text-[11px] font-semibold text-hydrangea-700 mb-2 px-1">
               Template name : <span className="text-hydrangea-500">{selectedTpl.name}</span>

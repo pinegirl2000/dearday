@@ -7,7 +7,7 @@ import { LAYOUTS, getLayout } from '@/lib/layouts';
 import { TEMPLATES, getTemplateLayouts } from '@/lib/templates';
 import { saveTemplateAllowedLayouts } from '@/lib/actions/templateConfig';
 import TemplateCard from '@/app/i/[slug]/_components/TemplateCard';
-import TemplateInfoPanel, { TemplateColorRow } from './_TemplateInfoPanel';
+import TemplateInfoPanel from './_TemplateInfoPanel';
 import type { BaseCard, LayoutId } from '@/types/card';
 
 interface Props {
@@ -173,7 +173,6 @@ export default function LayoutBrowser({ configs }: Props) {
 
       {selectedTpl && (
         <>
-          <TemplateColorRow template={selectedTpl} />
           <div className="bg-hydrangea-50/40 rounded-2xl p-3">
             <TemplateCard card={buildPreview(selectedTpl, layoutId)} />
           </div>

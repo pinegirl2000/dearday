@@ -77,15 +77,15 @@ export async function publishCard(draft: CardDraft): Promise<PublishResult> {
         theme, bg_id, layout_id, envelope_anim, custom_bg_url, font_family,
         body, event_date, event_place, map_url,
         contact_name, contact_phone, extra_info, greeting_oneliner, recipient_template,
-        rsvp_enabled, rsvp_deadline, rsvp_max_per_card, rsvp_collect_names, rsvp_allow_oneliner,
+        rsvp_enabled, rsvp_deadline, rsvp_max_per_card, rsvp_collect_names, rsvp_allow_oneliner, rsvp_allow_change,
         expiry_date, plan
       ) VALUES (
         $1, $2, $3, $4, $5,
         $6, $7, $8, $9, $10, $11,
         $12, $13, $14, $15,
         $16, $17, $18, $19, $20,
-        $21, $22, $23, $24, $25,
-        $26, $27
+        $21, $22, $23, $24, $25, $26,
+        $27, $28
       )`,
       [
         slug,
@@ -113,6 +113,7 @@ export async function publishCard(draft: CardDraft): Promise<PublishResult> {
         draft.rsvp_max_per_card || 1,
         draft.rsvp_collect_names ?? false,
         draft.rsvp_allow_oneliner ?? false,
+        draft.rsvp_allow_change ?? true,
         draft.expiry_date || null,
         draft.plan || 'free'
       ]
@@ -164,10 +165,11 @@ export async function updateCard(slug: string, draft: CardDraft): Promise<Update
         rsvp_max_per_card = $20,
         rsvp_collect_names = $21,
         rsvp_allow_oneliner = $22,
-        expiry_date = $23,
-        plan = $24,
+        rsvp_allow_change = $23,
+        expiry_date = $24,
+        plan = $25,
         updated_at = NOW()
-      WHERE slug = $25`,
+      WHERE slug = $26`,
       [
         draft.event_type,
         draft.title,
@@ -191,6 +193,7 @@ export async function updateCard(slug: string, draft: CardDraft): Promise<Update
         draft.rsvp_max_per_card || 1,
         draft.rsvp_collect_names ?? false,
         draft.rsvp_allow_oneliner ?? false,
+        draft.rsvp_allow_change ?? true,
         draft.expiry_date || null,
         draft.plan || 'free',
         slug

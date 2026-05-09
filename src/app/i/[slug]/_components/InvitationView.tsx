@@ -50,9 +50,16 @@ interface Props {
   recipientName?: string;
   recipientId?: string;
   existingRsvp?: MyRsvp | null;
+  templateColorOverride?: {
+    color_main?: string | null;
+    color_sub?: string | null;
+    color_box_text?: string | null;
+    box_bg_top?: string | null;
+    box_bg_bottom?: string | null;
+  };
 }
 
-export default function InvitationView({ card, feed, recipientName, recipientId, existingRsvp }: Props) {
+export default function InvitationView({ card, feed, recipientName, recipientId, existingRsvp, templateColorOverride }: Props) {
   // 봉투 'none'이면 봉투 단계 건너뛰고 바로 카드 표시
   const [open, setOpen] = useState(card.envelope_anim === 'none');
   const [opening, setOpening] = useState(false);
@@ -126,13 +133,17 @@ export default function InvitationView({ card, feed, recipientName, recipientId,
   const titleField = layout.fields.title;
   const dateField = layout.fields.date;
 
-  // 봉투가 열리거나 카드가 펼쳐지면 부모 창(미리보기 iframe 사용 시)에 알림
-  useEffect(() => {
+  // 카드 텍스트가 완전히 로딩/펼쳐진 후 부모 창에 알림 (iframe 미리보기에서 워터마크 전환용)
+  // - 'none' 타입: open=true 즉시
+  // - sway/flip: morph 애니메이션 onAnimationComplete에서 별도로 호출 (postCardReady)
+  const postCardReady = () => {
     if (typeof window === 'undefined' || window.parent === window) return;
-    if (open || opening) {
-      try { window.parent.postMessage({ type: 'dearday:envelope_opened', slug: card.slug }, '*'); } catch {}
-    }
-  }, [open, opening, card.slug]);
+    try { window.parent.postMessage({ type: 'dearday:envelope_opened', slug: card.slug }, '*'); } catch {}
+  };
+  useEffect(() => {
+    if (open && envParsed.type === 'none') postCardReady();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const handleOpen = () => {
     if (opening || open || transitioning) return;
@@ -255,7 +266,7 @@ export default function InvitationView({ card, feed, recipientName, recipientId,
                   transform: 'rotate(90deg) scale(0.467, 0.543)',
                   transformOrigin: 'center'
                 }}>
-                  <TemplateCard card={card} recipientName={recipientName} />
+                  <TemplateCard card={card} recipientName={recipientName} templateColorOverride={templateColorOverride} />
                 </div>
               </div>
             ) : undefined}
@@ -335,10 +346,12 @@ export default function InvitationView({ card, feed, recipientName, recipientId,
               initial={{ rotate: 90, scale: 0.489, y: morphStartY }}
               animate={{ rotate: 0, scale: 1, y: 0 }}
               transition={{ duration: 1.4, ease: [0.4, 0, 0.2, 1] }}
+              onAnimationComplete={postCardReady}
             >
               <TemplateCard
                 card={card}
                 recipientName={recipientName}
+                templateColorOverride={templateColorOverride}
                 rsvpSlot={card.rsvp_enabled ? (
                   <RsvpForm card={card} theme={theme} recipientId={recipientId} recipientName={recipientName} existingRsvp={existingRsvp} compact />
                 ) : null}
@@ -382,6 +395,7 @@ export default function InvitationView({ card, feed, recipientName, recipientId,
         <TemplateCard
           card={card}
           recipientName={recipientName}
+          templateColorOverride={templateColorOverride}
           rsvpSlot={card.rsvp_enabled ? (
             <RsvpForm card={card} theme={theme} recipientId={recipientId} recipientName={recipientName} existingRsvp={existingRsvp} compact />
           ) : null}

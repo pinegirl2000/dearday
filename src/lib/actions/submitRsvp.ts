@@ -25,7 +25,7 @@ export async function submitRsvp(input: RsvpInput): Promise<RsvpResult> {
   try {
     // 카드 조회 (마감일/제한 검증)
     const { rows: cardRows } = await pool.query(
-      'SELECT rsvp_enabled, rsvp_deadline, rsvp_max_per_card FROM dearday_card WHERE id = $1',
+      'SELECT rsvp_enabled, rsvp_deadline, rsvp_max_per_card, rsvp_allow_change FROM dearday_card WHERE id = $1',
       [input.card_id]
     );
     const card = cardRows[0];
@@ -33,6 +33,17 @@ export async function submitRsvp(input: RsvpInput): Promise<RsvpResult> {
     if (!card.rsvp_enabled) return { ok: false, error: '이 카드는 RSVP를 받지 않습니다.' };
     if (card.rsvp_deadline && new Date(card.rsvp_deadline) < new Date()) {
       return { ok: false, error: 'RSVP 마감일이 지났습니다.' };
+    }
+
+    // 응답 수정 잠금 검사 — allow_change=false + 이미 응답 존재 시 거부
+    if (card.rsvp_allow_change === false && input.recipient_id) {
+      const { rows: prior } = await pool.query<{ id: string }>(
+        'SELECT id FROM dearday_rsvp WHERE recipient_id = $1 LIMIT 1',
+        [input.recipient_id]
+      );
+      if (prior.length > 0) {
+        return { ok: false, error: '이 초청장은 응답 수정을 허용하지 않습니다.' };
+      }
     }
 
     const max = card.rsvp_max_per_card || 4;

@@ -26,6 +26,14 @@ interface Props {
   onFieldClick?: (key: 'title' | 'greeting_oneliner' | 'body' | 'event_place' | 'contact_name' | 'extra_info' | 'event_label' | 'event_date' | 'contact_phone') => void;
   /** 현재 강조(flashing) 중인 필드 — 이 필드만 점선 표시, 나머지는 plain */
   highlightedField?: string | null;
+  /** DB에 저장된 template별 색상 override (정의되어 있으면 코드 default보다 우선) */
+  templateColorOverride?: {
+    color_main?: string | null;
+    color_sub?: string | null;
+    color_box_text?: string | null;
+    box_bg_top?: string | null;
+    box_bg_bottom?: string | null;
+  };
 }
 
 function formatDate(iso?: string | null) {
@@ -176,7 +184,7 @@ function FieldText({ field, children, delay = 0 }: { field: TextField; children:
   );
 }
 
-export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverlay, editable, onFieldEdit, onFieldClick, highlightedField }: Props) {
+export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverlay, editable, onFieldEdit, onFieldClick, highlightedField, templateColorOverride }: Props) {
   // 편집 모드: 텍스트 클릭 시 모달 트리거. highlightedField만 점선 박스로 텍스트 영역 표시.
   const Editable = ({ fieldKey, children }: { fieldKey: 'title' | 'greeting_oneliner' | 'body' | 'event_place' | 'contact_name' | 'extra_info' | 'event_label'; children: React.ReactNode; multiline?: boolean }) => {
     if (!editable) return <>{children}</>;
@@ -217,9 +225,20 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
   }
 
   // 페어링된 템플릿 색상으로 layout 필드 색상 override
-  const tplMain = tpl?.colorMain;
-  const tplSub = tpl?.colorSub;
-  const tplInfoBox = tpl?.infoBox;
+  // DB override(templateColorOverride) 우선 → 없으면 코드 default(tpl.colorMain 등)
+  const tplMain = templateColorOverride?.color_main || tpl?.colorMain;
+  const tplSub = templateColorOverride?.color_sub || tpl?.colorSub;
+  // infoBox: DB에 box_bg_top(포인트색) 또는 color_box_text가 있으면 합성, 없으면 코드 infoBox
+  // box_bg_top은 단일 색 — rgba로 반투명 또는 solid 색상으로 사용
+  const dbAccent = templateColorOverride?.box_bg_top;
+  const dbBoxText = templateColorOverride?.color_box_text;
+  const tplInfoBox = (dbAccent || dbBoxText)
+    ? {
+        bg: dbAccent || tpl?.infoBox?.bg || '',
+        textColor: dbBoxText || tpl?.infoBox?.textColor,
+        borderColor: tpl?.infoBox?.borderColor
+      }
+    : tpl?.infoBox;
   const withColor = (field: TextField | undefined, color?: string): TextField | undefined => {
     if (!field || !color) return field;
     return { ...field, color };

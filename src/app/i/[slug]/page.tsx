@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation';
 import { getCardBySlug } from '@/lib/db/cards';
 import { getTheme } from '@/lib/theme';
+import { getAllTemplateColors } from '@/lib/actions/templateConfig';
+import { findTemplateByPair } from '@/lib/templates';
 import InvitationView from './_components/InvitationView';
 
 interface Props {
@@ -42,10 +44,14 @@ export default async function InvitationPage({ params, searchParams }: Props) {
   }
 
   const theme = getTheme(card.theme);
+  // template 색상 DB override 로드 — 카드의 (bg_id, layout_id) → template 매칭
+  const colorsMap = await getAllTemplateColors();
+  const tpl = findTemplateByPair(card.bg_id, card.layout_id);
+  const templateColorOverride = tpl ? colorsMap.get(tpl.id) : undefined;
   // 미리보기 모드 — preview_name으로 봉투에 표시할 sample 이름 전달
   const previewName = (searchParams?.preview_name || '').trim() || undefined;
   return (
-    <InvitationView card={card} recipientName={previewName} />
+    <InvitationView card={card} recipientName={previewName} templateColorOverride={templateColorOverride} />
   );
 }
 

@@ -44,6 +44,8 @@ export interface BaseCard {
   rsvp_max_per_card: 1 | 2 | 3 | 4 | 5;
   rsvp_collect_names: boolean;
   rsvp_allow_oneliner: boolean;
+  /** 마감일 안에 사용자가 응답을 수정할 수 있는지 (true: 언제든 attend↔decline, false: 첫 응답 후 잠김) */
+  rsvp_allow_change: boolean;
   expiry_date: string | null;
   plan: Plan;
   created_at: string;
