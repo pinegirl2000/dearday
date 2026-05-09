@@ -4,12 +4,13 @@ import { useEffect, useMemo, useState, useTransition } from 'react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical } from 'lucide-react';
+import { GripVertical, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { TEMPLATES, getTemplateLayouts } from '@/lib/templates';
 import { getBackground } from '@/lib/backgrounds';
 import { EVENT_TYPES } from '@/lib/eventType';
 import { saveTemplateEventOrder } from '@/lib/actions/templateOrder';
+import { addTemplateEventExclude } from '@/lib/actions/templateEventExclude';
 import TemplateCard from '@/app/i/[slug]/_components/TemplateCard';
 import TemplateInfoPanel, { TemplateColorRow } from './_TemplateInfoPanel';
 import type { BaseCard, EventType, LayoutId } from '@/types/card';
@@ -19,6 +20,7 @@ type Tpl = (typeof TEMPLATES)[number];
 interface Props {
   configs?: Record<string, string[]>;
   eventOrders?: Record<string, string[]>;
+  eventExcludes?: Record<string, string[]>;
 }
 
 const SAMPLE_BY_EVENT: Record<string, Partial<BaseCard>> = {
@@ -110,23 +112,42 @@ function SortableButton({ tpl }: { tpl: Tpl }) {
   );
 }
 
-export default function EventBrowser({ configs, eventOrders }: Props) {
+export default function EventBrowser({ configs, eventOrders, eventExcludes }: Props) {
   const [eventId, setEventId] = useState<EventType>('wedding');
   const [tplId, setTplId] = useState<string | null>(null);
   const [reorderMode, setReorderMode] = useState(false);
   const [pending, startTransition] = useTransition();
   const [localOrders, setLocalOrders] = useState<Record<string, string[]>>(() => ({ ...(eventOrders || {}) }));
+  const [localExcludes, setLocalExcludes] = useState<Record<string, string[]>>(() => ({ ...(eventExcludes || {}) }));
 
   useEffect(() => { setLocalOrders({ ...(eventOrders || {}) }); }, [eventOrders]);
+  useEffect(() => { setLocalExcludes({ ...(eventExcludes || {}) }); }, [eventExcludes]);
 
-  const baseTemplates = useMemo(
-    () => TEMPLATES.filter((t) => t.recommendEvents.includes(eventId)),
-    [eventId]
-  );
+  const baseTemplates = useMemo(() => {
+    const excludedSet = new Set(localExcludes[eventId] || []);
+    return TEMPLATES.filter((t) => t.recommendEvents.includes(eventId) && !excludedSet.has(t.id));
+  }, [eventId, localExcludes]);
   const templates = useMemo(
     () => applyOrder(baseTemplates, localOrders[eventId] || []),
     [baseTemplates, localOrders, eventId]
   );
+
+  const handleExcludeTpl = () => {
+    const tpl = templates.find((t) => t.id === tplId) || templates[0];
+    if (!tpl) return;
+    if (!confirm(`"${tpl.name}" 템플릿을 이 이벤트에서 숨길까요?\n(제외 후 사용자에게 보이지 않음)`)) return;
+    setLocalExcludes((s) => ({ ...s, [eventId]: [...(s[eventId] || []), tpl.id] }));
+    setTplId(null);
+    startTransition(async () => {
+      const res = await addTemplateEventExclude(eventId, tpl.id);
+      if (!res.ok) {
+        toast.error(res.error || '제외 실패');
+        setLocalExcludes((s) => ({ ...s, [eventId]: (s[eventId] || []).filter((id) => id !== tpl.id) }));
+        return;
+      }
+      toast.success('이벤트에서 제외됨');
+    });
+  };
   const selectedTpl = templates.find((t) => t.id === tplId) || templates[0] || null;
   const previewLayoutId = selectedTpl
     ? (effectiveLayouts(selectedTpl, configs)[0] || selectedTpl.layout_id)
@@ -178,17 +199,28 @@ export default function EventBrowser({ configs, eventOrders }: Props) {
         </div>
         <div className="flex-1 min-w-0">
           <label className="block text-[10px] font-semibold text-hydrangea-700 mb-1">Template</label>
-          <select
-            value={selectedTpl?.id || ''}
-            onChange={(e) => setTplId(e.target.value)}
-            disabled={templates.length === 0}
-            className="w-full px-2 py-2 rounded-lg border border-hydrangea-200 bg-white text-xs text-hydrangea-700 focus:outline-none focus:ring-2 focus:ring-hydrangea-300 disabled:opacity-50"
-          >
-            {templates.length === 0 && <option value="">— 템플릿 없음 —</option>}
-            {templates.map((t) => (
-              <option key={t.id} value={t.id}>{t.name}</option>
-            ))}
-          </select>
+          <div className="flex gap-1">
+            <select
+              value={selectedTpl?.id || ''}
+              onChange={(e) => setTplId(e.target.value)}
+              disabled={templates.length === 0}
+              className="flex-1 min-w-0 px-2 py-2 rounded-lg border border-hydrangea-200 bg-white text-xs text-hydrangea-700 focus:outline-none focus:ring-2 focus:ring-hydrangea-300 disabled:opacity-50"
+            >
+              {templates.length === 0 && <option value="">— 템플릿 없음 —</option>}
+              {templates.map((t) => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={handleExcludeTpl}
+              disabled={pending || !selectedTpl}
+              title="이 템플릿을 이 이벤트에서 숨김"
+              className="flex-shrink-0 px-2 rounded-lg bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
         {templates.length > 1 && (
           <button

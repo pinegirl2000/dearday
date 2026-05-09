@@ -18,6 +18,7 @@ import LayoutBrowser from './_LayoutBrowser';
 import EventBrowser from './_EventBrowser';
 import TemplateBrowser from './_TemplateBrowser';
 import { getAllTemplateEventOrders } from '@/lib/actions/templateOrder';
+import { getAllTemplateEventExcludes } from '@/lib/actions/templateEventExclude';
 
 export const dynamic = 'force-dynamic';
 
@@ -93,15 +94,20 @@ export default async function TemplatesAdminPage({ searchParams }: PageProps) {
 
   // ===== Event별 보기 — 드롭다운 + 템플릿 버튼 + preview =====
   if (view === 'event') {
-    const ordersMap = await getAllTemplateEventOrders();
+    const [ordersMap, excludesMap] = await Promise.all([
+      getAllTemplateEventOrders(),
+      getAllTemplateEventExcludes()
+    ]);
     const eventOrdersObj: Record<string, string[]> = {};
     ordersMap.forEach((v, k) => { eventOrdersObj[k] = v; });
+    const eventExcludesObj: Record<string, string[]> = {};
+    excludesMap.forEach((v, k) => { eventExcludesObj[k] = v; });
     return (
       <PageContainer noPadding>
         <MobileHeader title="템플릿 관리" back />
         <div className="px-4 pt-3 pb-12">
           {ViewTabs}
-          <EventBrowser configs={configs} eventOrders={eventOrdersObj} />
+          <EventBrowser configs={configs} eventOrders={eventOrdersObj} eventExcludes={eventExcludesObj} />
         </div>
       </PageContainer>
     );

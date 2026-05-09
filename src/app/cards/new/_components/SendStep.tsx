@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { Mail, Link as LinkIcon, Plus, Trash2, Send, Copy, Check } from 'lucide-react';
 import {
@@ -18,6 +18,11 @@ interface Recipient {
   delivery_method: string | null;
   sent_at: string | null;
   sent_status: string | null;
+  read_at: string | null;
+  rsvp_attend: boolean | null;
+  rsvp_count: number | null;
+  rsvp_attendee_names: string[] | null;
+  rsvp_oneliner: string | null;
 }
 
 interface Props {
@@ -43,6 +48,7 @@ export default function SendStep({ slug, ownerToken }: Props) {
 
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [sendingId, setSendingId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   // 초기 로드 + 갱신
   const load = () => {
@@ -106,11 +112,17 @@ export default function SendStep({ slug, ownerToken }: Props) {
     });
   };
 
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleCopy = async (num: string, id: string) => {
     try {
       await navigator.clipboard.writeText(linkFor(num));
-      setCopiedId(id);
-      setTimeout(() => setCopiedId(null), 2000);
+      // 같은 항목 재클릭 시에도 시각 피드백이 다시 트리거되도록 잠깐 reset
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+      setCopiedId(null);
+      requestAnimationFrame(() => {
+        setCopiedId(id);
+        copyTimerRef.current = setTimeout(() => setCopiedId(null), 2000);
+      });
       toast.success('링크 복사됨');
     } catch {
       toast.error('복사 실패');
@@ -282,67 +294,128 @@ export default function SendStep({ slug, ownerToken }: Props) {
             아직 등록된 수신자가 없습니다
           </div>
         ) : (
-          <div className="space-y-1.5 max-h-72 overflow-y-auto">
+          <div className="space-y-1.5 max-h-96 overflow-y-auto">
             {recipients.map((r) => (
+              <div key={r.id} className="rounded-lg border border-hydrangea-100 bg-white">
               <div
-                key={r.id}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-hydrangea-100 bg-white"
+                className="grid items-center gap-1.5 px-2 py-1.5 text-xs"
+                style={{ gridTemplateColumns: 'minmax(0,1fr) 84px 64px 78px auto' }}
               >
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-hydrangea-700 truncate">{r.name}</div>
-                  <div className="flex items-center gap-2 text-[10px] mt-0.5">
-                    {r.email && <span className="text-hydrangea-400 truncate">{r.email}</span>}
-                    {r.delivery_method === 'email' ? (
-                      r.sent_status === 'sent' ? (
-                        <span className="text-green-600 flex items-center gap-0.5"><Check className="w-2.5 h-2.5" />발송됨</span>
-                      ) : r.sent_status === 'failed' ? (
-                        <span className="text-red-500">실패</span>
-                      ) : (
-                        <span className="text-hydrangea-500">대기중</span>
-                      )
-                    ) : (
-                      <span className="text-hydrangea-400">링크</span>
-                    )}
-                  </div>
-                </div>
+                {/* col1: 이름 */}
+                <div className="min-w-0 font-semibold text-hydrangea-700 truncate">{r.name}</div>
+                {/* col2: 링크복사 버튼 */}
                 <button
                   type="button"
                   onClick={() => handleCopy(r.num, r.id)}
                   title="링크 복사"
-                  className="p-1.5 rounded-md text-hydrangea-500 hover:bg-hydrangea-50"
+                  className={`inline-flex items-center justify-center gap-1 px-2 py-1 rounded-md text-[11px] font-semibold transition active:scale-95 ${
+                    copiedId === r.id
+                      ? 'bg-green-50 text-green-700 border border-green-200'
+                      : 'bg-hydrangea-50 text-hydrangea-600 border border-hydrangea-200 hover:bg-hydrangea-100'
+                  }`}
                 >
-                  {copiedId === r.id ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copiedId === r.id ? (
+                    <>
+                      <Check className="w-3.5 h-3.5" />
+                      <span>복사됨</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>링크복사</span>
+                    </>
+                  )}
                 </button>
-                {r.delivery_method === 'email' && r.email && (
+                {/* col3: 읽음/안읽음 */}
+                {r.read_at ? (
+                  <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-hydrangea-50 text-hydrangea-700 border border-hydrangea-200 text-[10px] font-semibold">
+                    👁 읽음
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-gray-50 text-gray-500 border border-gray-200 text-[10px]">
+                    안읽음
+                  </span>
+                )}
+                {/* col4: RSVP 상태 + 인원수 — 참석은 클릭 시 attendee 이름 펼침 */}
+                {r.rsvp_attend === true ? (
                   <button
                     type="button"
-                    onClick={() => handleSendOne(r.id)}
-                    disabled={pending && sendingId === r.id}
-                    title={r.sent_status === 'sent' ? '재발송' : '이메일 발송'}
-                    className="p-1.5 rounded-md text-hydrangea-500 hover:bg-hydrangea-50 disabled:opacity-50"
+                    onClick={() => setExpandedId((cur) => (cur === r.id ? null : r.id))}
+                    title="참석자 이름 보기"
+                    className="inline-flex items-center justify-center gap-0.5 px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-semibold hover:bg-emerald-100 active:scale-95 transition cursor-pointer"
                   >
-                    <Send className="w-3.5 h-3.5" />
+                    ✓ 참석
+                    {r.rsvp_count && r.rsvp_count > 0 && (
+                      <span className="ml-0.5 px-1 rounded bg-emerald-500 text-white">{r.rsvp_count}</span>
+                    )}
                   </button>
+                ) : r.rsvp_attend === false ? (
+                  <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-semibold">
+                    ✕ 불참
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-gray-50 text-gray-400 border border-gray-200 text-[10px]">
+                    미응답
+                  </span>
                 )}
-                <button
-                  type="button"
-                  onClick={() => handleDelete(r.id)}
-                  title="삭제"
-                  className="p-1.5 rounded-md text-red-400 hover:bg-red-50"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+                {/* col5: 액션 — 이메일 발송(있을 때) + 삭제 */}
+                <div className="flex items-center gap-0.5">
+                  {r.delivery_method === 'email' && r.email && (
+                    <button
+                      type="button"
+                      onClick={() => handleSendOne(r.id)}
+                      disabled={pending && sendingId === r.id}
+                      title={r.sent_status === 'sent' ? '재발송' : '이메일 발송'}
+                      className="p-1.5 rounded-md text-hydrangea-500 hover:bg-hydrangea-50 disabled:opacity-50"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(r.id)}
+                    title="삭제"
+                    className="p-1.5 rounded-md text-red-400 hover:bg-red-50"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+              {/* 펼침 영역 — 참석자 이름 + 한줄 응답 (옵션) */}
+              {expandedId === r.id && r.rsvp_attend === true && (
+                <div className="px-3 pb-2 pt-0 border-t border-hydrangea-100/60 bg-emerald-50/30">
+                  <div className="text-[10px] font-semibold text-emerald-700 mt-1.5 mb-1">
+                    참석자 ({r.rsvp_count || 1}명)
+                  </div>
+                  {r.rsvp_attendee_names && r.rsvp_attendee_names.length > 0 ? (
+                    <div className="flex flex-wrap gap-1">
+                      {r.rsvp_attendee_names.map((n, i) => (
+                        <span
+                          key={i}
+                          className="inline-block px-2 py-0.5 rounded-full bg-white text-emerald-700 border border-emerald-200 text-[10px] font-medium"
+                        >
+                          {n}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-[10px] text-emerald-600/70">
+                      개별 이름은 입력되지 않았습니다.
+                    </div>
+                  )}
+                  {r.rsvp_oneliner && (
+                    <div className="mt-1.5 text-[10px] text-emerald-700 italic">
+                      💬 {r.rsvp_oneliner}
+                    </div>
+                  )}
+                </div>
+              )}
               </div>
             ))}
           </div>
         )}
       </div>
 
-      {/* 안내 */}
-      <div className="text-[11px] text-hydrangea-400 bg-hydrangea-50/50 rounded-xl p-3 leading-relaxed">
-        💡 추가 후 각 수신자의 개별 링크가 자동 생성됩니다. Email 모드에서는 등록된 이메일로 직접 발송 가능합니다.
-        나중에 더 추가하거나 발송 상태 확인은 <code className="bg-white px-1 rounded">Manage</code> 페이지에서도 가능합니다.
-      </div>
     </div>
   );
 }

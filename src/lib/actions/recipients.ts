@@ -54,7 +54,7 @@ export async function listRecipients(slug: string, ownerToken?: string | null) {
   const { rows } = await pool.query(
     `SELECT
        r.id, r.num, r.name, r.group_name, r.created_at,
-       r.email, r.delivery_method, r.sent_at, r.sent_status,
+       r.email, r.delivery_method, r.sent_at, r.sent_status, r.read_at,
        v.attend AS rsvp_attend,
        v.count AS rsvp_count,
        v.adult_count AS rsvp_adult_count,
@@ -84,6 +84,7 @@ export async function listRecipients(slug: string, ownerToken?: string | null) {
     delivery_method: string | null;
     sent_at: string | null;
     sent_status: string | null;
+    read_at: string | null;
     rsvp_attend: boolean | null;
     rsvp_count: number | null;
     rsvp_adult_count: number | null;

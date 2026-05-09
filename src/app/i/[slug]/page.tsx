@@ -5,6 +5,7 @@ import InvitationView from './_components/InvitationView';
 
 interface Props {
   params: { slug: string };
+  searchParams?: { preview_name?: string };
 }
 
 export async function generateMetadata({ params }: Props) {
@@ -30,7 +31,7 @@ export async function generateMetadata({ params }: Props) {
   };
 }
 
-export default async function InvitationPage({ params }: Props) {
+export default async function InvitationPage({ params, searchParams }: Props) {
   const card = await getCardBySlug(params.slug);
   if (!card) notFound();
 
@@ -41,8 +42,10 @@ export default async function InvitationPage({ params }: Props) {
   }
 
   const theme = getTheme(card.theme);
+  // 미리보기 모드 — preview_name으로 봉투에 표시할 sample 이름 전달
+  const previewName = (searchParams?.preview_name || '').trim() || undefined;
   return (
-    <InvitationView card={card} />
+    <InvitationView card={card} recipientName={previewName} />
   );
 }
 

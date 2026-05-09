@@ -12,7 +12,9 @@ export type EnvelopeColorId =
   | 'cobalt'
   | 'aubergine'
   | 'pearl'
-  | 'onyx';
+  | 'onyx'
+  | 'ivory'
+  | 'gold';
 
 export interface EnvelopePalette {
   id: EnvelopeColorId;
@@ -142,10 +144,28 @@ export const COLOR_PALETTES: Record<EnvelopeColorId, EnvelopePalette> = {
     // 진한 코발트와 어울리는 연한 크림 톤 — 깊은 블루 위 부드러운 ivory 콘트라스트
     goldHighlight:'#FFFFFF', goldLight:'#FBF8F0', gold:'#F5F0E2', goldDeep:'#DDD4BC', goldShadow:'#A89D80'
   },
+  ivory: {
+    id: 'ivory', label: 'Ivory White',
+    flap:'#FBF6E8', flapShadow:'#E5DCC4',
+    body:'#F8F1DE', bodyDark:'#D9CFB4', bodyMid:'#FBF6E8', bodyTint:'#FFFCF2',
+    inner:'#FFFCF2', paper:'#FFFFFF', accent:'#C9A85E', ink:'#5A4A28',
+    petals:['#FBF6E8','#F8F1DE','#F0E6CA','#FFFCF2','#E5DCC4','#FFFFFF'],
+    // 거의 흰색 크림 외피 + warm gold 안감 — 클린한 ivory wedding 룩
+    goldHighlight:'#FBEFA8', goldLight:'#F0DC78', gold:'#DCB748', goldDeep:'#A8862E', goldShadow:'#5A4017'
+  },
+  gold: {
+    id: 'gold', label: 'Pure Gold',
+    flap:'#E8C45A', flapShadow:'#9C7A22',
+    body:'#D9A93A', bodyDark:'#9C7A22', bodyMid:'#E8C45A', bodyTint:'#F2D684',
+    inner:'#A8862E', paper:'#FFFFFF', accent:'#5A4017', ink:'#3A2810',
+    petals:['#FBEFA8','#F0DC78','#DCB748','#E8C45A','#A8862E','#F2D684'],
+    // 진한 saturated gold 외피 + deep gold 안감 — pure metallic gold luxe
+    ...goldFoil
+  },
 };
 
 export const COLOR_IDS: EnvelopeColorId[] = [
-  'pearl','lavender','champagne','sage','blush','rose','powder','midnight','cobalt','aubergine','onyx'
+  'ivory','gold','pearl','lavender','champagne','sage','blush','rose','powder','midnight','cobalt','aubergine','onyx'
 ];
 
 // 구버전 색상 id → 신규 매핑 (저장된 카드 호환성)

@@ -126,6 +126,14 @@ export default function InvitationView({ card, feed, recipientName, recipientId,
   const titleField = layout.fields.title;
   const dateField = layout.fields.date;
 
+  // 봉투가 열리거나 카드가 펼쳐지면 부모 창(미리보기 iframe 사용 시)에 알림
+  useEffect(() => {
+    if (typeof window === 'undefined' || window.parent === window) return;
+    if (open || opening) {
+      try { window.parent.postMessage({ type: 'dearday:envelope_opened', slug: card.slug }, '*'); } catch {}
+    }
+  }, [open, opening, card.slug]);
+
   const handleOpen = () => {
     if (opening || open || transitioning) return;
     setOpening(true);
@@ -297,7 +305,7 @@ export default function InvitationView({ card, feed, recipientName, recipientId,
                 textAlign: 'center',
                 color: envelopeDeep,
                 fontFamily: "'Cormorant Garamond', 'Playfair Display', 'Noto Serif KR', serif",
-                fontSize: 22,
+                fontSize: 18,
                 fontWeight: 500,
                 fontVariant: 'small-caps',
                 letterSpacing: '0.12em',

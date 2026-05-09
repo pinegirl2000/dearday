@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { Sparkles, Plus, Heart, ArrowRight, List } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
-import LiveDemo from './_components/LiveDemo';
+import MobileShowcase from './_components/MobileShowcase';
 import FadeIn from './_components/FadeIn';
 
 const EVENT_KEYS = ['wedding', 'birthday', 'opening', 'baptism', 'meeting', 'etc'] as const;
@@ -75,19 +75,26 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== Live demo / Try it now ===== */}
-      <section className="px-6 pb-14">
+      {/* ===== Mobile Showcase — templates × samples × envelopes ===== */}
+      <section className="px-4 pb-14">
         <FadeIn>
           <div className="text-center mb-5">
+            <div className="flex items-center justify-center gap-3 mb-2">
+              <span className="block w-6 h-px" style={{ background: GOLD, opacity: 0.6 }} />
+              <span className="text-[10px] tracking-[0.4em]" style={{ color: GOLD }}>SHOWCASE</span>
+              <span className="block w-6 h-px" style={{ background: GOLD, opacity: 0.6 }} />
+            </div>
             <h2
               className="text-3xl text-hydrangea-700 mb-1"
               style={{ fontFamily: "var(--font-cormorant), serif", fontWeight: 500 }}
             >
-              {t('demoTitle')}
+              Designed for the smallest screen
             </h2>
-            <p className="text-xs text-hydrangea-400">{t('demoDesc')}</p>
+            <p className="text-xs text-hydrangea-400">
+              Real samples in real time — pick an event, see the magic
+            </p>
           </div>
-          <LiveDemo />
+          <MobileShowcase />
         </FadeIn>
       </section>
 

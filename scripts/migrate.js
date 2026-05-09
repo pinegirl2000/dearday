@@ -132,6 +132,7 @@ ALTER TABLE dearday_recipient ADD COLUMN IF NOT EXISTS email TEXT;
 ALTER TABLE dearday_recipient ADD COLUMN IF NOT EXISTS delivery_method TEXT DEFAULT 'link';
 ALTER TABLE dearday_recipient ADD COLUMN IF NOT EXISTS sent_at TIMESTAMPTZ;
 ALTER TABLE dearday_recipient ADD COLUMN IF NOT EXISTS sent_status TEXT DEFAULT 'pending';
+ALTER TABLE dearday_recipient ADD COLUMN IF NOT EXISTS read_at TIMESTAMPTZ;
 -- delivery_method: 'link' (링크만) | 'email' (이메일 발송)
 -- sent_status: 'pending' | 'sent' | 'failed'
 
@@ -167,6 +168,17 @@ CREATE TABLE IF NOT EXISTS dearday_template_event_order (
 );
 CREATE INDEX IF NOT EXISTS idx_dearday_template_event_order_event
   ON dearday_template_event_order(event_id, sort_order);
+
+-- 이벤트별 템플릿 제외 (admin이 특정 (event, template) 쌍 숨김)
+CREATE TABLE IF NOT EXISTS dearday_template_event_exclude (
+  event_id TEXT NOT NULL,
+  template_id TEXT NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_by TEXT,
+  PRIMARY KEY (event_id, template_id)
+);
+CREATE INDEX IF NOT EXISTS idx_dearday_template_event_exclude_event
+  ON dearday_template_event_exclude(event_id);
 
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_dearday_card_slug ON dearday_card(slug);

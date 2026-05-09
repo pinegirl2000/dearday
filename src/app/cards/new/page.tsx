@@ -2,22 +2,26 @@ import { Suspense } from 'react';
 import SinglePageWizard from './_components/SinglePageWizard';
 import { getAllTemplateConfigs } from '@/lib/actions/templateConfig';
 import { getAllTemplateEventOrders } from '@/lib/actions/templateOrder';
+import { getAllTemplateEventExcludes } from '@/lib/actions/templateEventExclude';
 
 export const dynamic = 'force-dynamic';
 
 export default async function NewCardPage() {
-  // admin DB 설정 (allowedLayouts override + 이벤트별 노출 순서)
-  const [configsMap, ordersMap] = await Promise.all([
+  // admin DB 설정 (allowedLayouts override + 이벤트별 노출 순서 + 이벤트별 제외)
+  const [configsMap, ordersMap, excludesMap] = await Promise.all([
     getAllTemplateConfigs(),
-    getAllTemplateEventOrders()
+    getAllTemplateEventOrders(),
+    getAllTemplateEventExcludes()
   ]);
   const configs: Record<string, string[]> = {};
   configsMap.forEach((v, k) => { configs[k] = v; });
   const eventOrders: Record<string, string[]> = {};
   ordersMap.forEach((v, k) => { eventOrders[k] = v; });
+  const eventExcludes: Record<string, string[]> = {};
+  excludesMap.forEach((v, k) => { eventExcludes[k] = v; });
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center">로딩...</div>}>
-      <SinglePageWizard templateConfigs={configs} eventOrders={eventOrders} />
+      <SinglePageWizard templateConfigs={configs} eventOrders={eventOrders} eventExcludes={eventExcludes} />
     </Suspense>
   );
 }

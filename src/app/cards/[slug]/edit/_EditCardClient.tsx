@@ -61,5 +61,5 @@ export default function EditCardClient({ card, templateConfigs }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [card.slug]);
 
-  return <SinglePageWizard skipRehydrate initialOpen={4} templateConfigs={templateConfigs} />;
+  return <SinglePageWizard skipRehydrate initialOpen={1} templateConfigs={templateConfigs} />;
 }

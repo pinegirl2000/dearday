@@ -1,8 +1,11 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useTransition } from 'react';
+import { toast } from 'sonner';
+import { Trash2 } from 'lucide-react';
 import { LAYOUTS, getLayout } from '@/lib/layouts';
 import { TEMPLATES, getTemplateLayouts } from '@/lib/templates';
+import { saveTemplateAllowedLayouts } from '@/lib/actions/templateConfig';
 import TemplateCard from '@/app/i/[slug]/_components/TemplateCard';
 import TemplateInfoPanel, { TemplateColorRow } from './_TemplateInfoPanel';
 import type { BaseCard, LayoutId } from '@/types/card';
@@ -85,13 +88,38 @@ function buildPreview(t: (typeof TEMPLATES)[number], layoutId: LayoutId): BaseCa
 export default function LayoutBrowser({ configs }: Props) {
   const [layoutId, setLayoutId] = useState<LayoutId>(LAYOUTS[0].id);
   const [tplId, setTplId] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+  const [localConfigs, setLocalConfigs] = useState<Record<string, string[]>>(() => ({ ...(configs || {}) }));
 
   const templates = useMemo(
-    () => TEMPLATES.filter((t) => effectiveLayouts(t, configs).includes(layoutId)),
-    [layoutId, configs]
+    () => TEMPLATES.filter((t) => effectiveLayouts(t, localConfigs).includes(layoutId)),
+    [layoutId, localConfigs]
   );
 
   const selectedTpl = templates.find((t) => t.id === tplId) || templates[0] || null;
+
+  const handleRemoveLayoutFromTpl = () => {
+    if (!selectedTpl) return;
+    const tplAllowed = effectiveLayouts(selectedTpl, localConfigs);
+    if (tplAllowed.length <= 1) {
+      toast.error('최소 1개 layout이 필요합니다');
+      return;
+    }
+    const layoutName = getLayout(layoutId).name;
+    if (!confirm(`"${selectedTpl.name}" 템플릿에서 "${layoutName}" layout을 제거할까요?`)) return;
+    const next = tplAllowed.filter((id) => id !== layoutId);
+    setLocalConfigs((s) => ({ ...s, [selectedTpl.id]: next }));
+    setTplId(null);
+    startTransition(async () => {
+      const res = await saveTemplateAllowedLayouts(selectedTpl.id, next as LayoutId[]);
+      if (!res.ok) {
+        toast.error(res.error || '삭제 실패');
+        setLocalConfigs((s) => ({ ...s, [selectedTpl.id]: tplAllowed }));
+        return;
+      }
+      toast.success('Layout 제거됨');
+    });
+  };
 
   return (
     <div className="space-y-3">
@@ -118,17 +146,28 @@ export default function LayoutBrowser({ configs }: Props) {
         </div>
         <div>
           <label className="block text-[10px] font-semibold text-hydrangea-700 mb-1">Template</label>
-          <select
-            value={selectedTpl?.id || ''}
-            onChange={(e) => setTplId(e.target.value)}
-            disabled={templates.length === 0}
-            className="w-full px-2 py-2 rounded-lg border border-hydrangea-200 bg-white text-xs text-hydrangea-700 focus:outline-none focus:ring-2 focus:ring-hydrangea-300 disabled:opacity-50"
-          >
-            {templates.length === 0 && <option value="">— 사용 템플릿 없음 —</option>}
-            {templates.map((t) => (
-              <option key={t.id} value={t.id}>{t.name}</option>
-            ))}
-          </select>
+          <div className="flex gap-1">
+            <select
+              value={selectedTpl?.id || ''}
+              onChange={(e) => setTplId(e.target.value)}
+              disabled={templates.length === 0}
+              className="flex-1 min-w-0 px-2 py-2 rounded-lg border border-hydrangea-200 bg-white text-xs text-hydrangea-700 focus:outline-none focus:ring-2 focus:ring-hydrangea-300 disabled:opacity-50"
+            >
+              {templates.length === 0 && <option value="">— 사용 템플릿 없음 —</option>}
+              {templates.map((t) => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={handleRemoveLayoutFromTpl}
+              disabled={pending || !selectedTpl}
+              title="이 layout을 이 template에서 제거"
+              className="flex-shrink-0 px-2 rounded-lg bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
 

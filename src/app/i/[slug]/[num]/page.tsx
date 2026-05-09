@@ -3,6 +3,7 @@ import { pool } from '@/lib/db';
 import { getCardBySlug } from '@/lib/db/cards';
 import { getTheme } from '@/lib/theme';
 import { getMyRsvpByRecipient } from '@/lib/actions/submitRsvp';
+import { markRecipientRead } from '@/lib/actions/markRecipientRead';
 import InvitationView from '../_components/InvitationView';
 
 interface Props {
@@ -66,6 +67,11 @@ export default async function PersonalInvitationPage({ params }: Props) {
         </div>
       </div>
     );
+  }
+
+  // 최초 열람 시 read_at 기록 (fire-and-forget — 통계 외 동작에 영향 없음)
+  if (recipient?.id) {
+    markRecipientRead(recipient.id).catch(() => {});
   }
 
   const existingRsvp = recipient?.id ? await getMyRsvpByRecipient(recipient.id) : null;

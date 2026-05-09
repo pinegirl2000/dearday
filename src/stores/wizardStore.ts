@@ -44,10 +44,13 @@ export const useWizardStore = create<WizardState>()(
       reset: () => set({ step: 1, draft: { ...initialDraft }, editingSlug: undefined }),
       setEventType: (type) =>
         set((s) => {
-          // event_type 변경 시 sample 데이터 영역(텍스트 필드)을 비워서
-          // section 3 진입 시 새 event_type의 sample이 자동 채워지도록 함
           const same = s.draft.event_type === type;
           if (same) return { draft: { ...s.draft, event_type: type } };
+          // Edit 모드(editingSlug 있음)에서는 기존 입력 데이터 보존 — event_type만 변경
+          if (s.editingSlug) {
+            return { draft: { ...s.draft, event_type: type } };
+          }
+          // Create 모드 — sample 데이터 영역(텍스트 필드) 비워서 새 event_type sample 자동 채움
           return {
             draft: {
               ...s.draft,

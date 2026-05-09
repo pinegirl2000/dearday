@@ -1,8 +1,11 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useTransition } from 'react';
+import { toast } from 'sonner';
+import { Trash2 } from 'lucide-react';
 import { TEMPLATES, getTemplateLayouts } from '@/lib/templates';
 import { LAYOUTS, getLayout } from '@/lib/layouts';
+import { saveTemplateAllowedLayouts } from '@/lib/actions/templateConfig';
 import TemplateCard from '@/app/i/[slug]/_components/TemplateCard';
 import TemplateInfoPanel, { TemplateColorRow } from './_TemplateInfoPanel';
 import type { BaseCard, LayoutId } from '@/types/card';
@@ -85,13 +88,39 @@ function buildPreview(t: (typeof TEMPLATES)[number], layoutId: LayoutId): BaseCa
 export default function TemplateBrowser({ configs }: Props) {
   const [tplId, setTplId] = useState<string>(TEMPLATES[0].id);
   const [layoutId, setLayoutId] = useState<LayoutId | null>(null);
+  const [pending, startTransition] = useTransition();
+  // 로컬 override — DB 저장 후 즉시 UI 반영 (server props 갱신 전)
+  const [localConfigs, setLocalConfigs] = useState<Record<string, string[]>>(() => ({ ...(configs || {}) }));
 
   const selectedTpl = TEMPLATES.find((t) => t.id === tplId) || TEMPLATES[0];
   const allowedLayouts = useMemo(
-    () => effectiveLayouts(selectedTpl, configs),
-    [selectedTpl, configs]
+    () => effectiveLayouts(selectedTpl, localConfigs),
+    [selectedTpl, localConfigs]
   );
   const activeLayoutId = (layoutId && allowedLayouts.includes(layoutId)) ? layoutId : allowedLayouts[0];
+
+  const handleDeleteLayout = () => {
+    if (!selectedTpl || !activeLayoutId) return;
+    if (allowedLayouts.length <= 1) {
+      toast.error('최소 1개 layout이 필요합니다');
+      return;
+    }
+    const layoutName = getLayout(activeLayoutId).name;
+    if (!confirm(`"${layoutName}" layout을 "${selectedTpl.name}" 템플릿에서 제거할까요?`)) return;
+    const next = allowedLayouts.filter((id) => id !== activeLayoutId);
+    setLocalConfigs((s) => ({ ...s, [selectedTpl.id]: next }));
+    setLayoutId(null);
+    startTransition(async () => {
+      const res = await saveTemplateAllowedLayouts(selectedTpl.id, next as LayoutId[]);
+      if (!res.ok) {
+        toast.error(res.error || '삭제 실패');
+        // rollback
+        setLocalConfigs((s) => ({ ...s, [selectedTpl.id]: allowedLayouts }));
+        return;
+      }
+      toast.success('Layout 제거됨');
+    });
+  };
 
   return (
     <div className="space-y-3">
@@ -113,20 +142,31 @@ export default function TemplateBrowser({ configs }: Props) {
         </div>
         <div>
           <label className="block text-[10px] font-semibold text-hydrangea-700 mb-1">Layout</label>
-          <select
-            value={activeLayoutId || ''}
-            onChange={(e) => setLayoutId(e.target.value as LayoutId)}
-            disabled={allowedLayouts.length === 0}
-            className="w-full px-2 py-2 rounded-lg border border-hydrangea-200 bg-white text-xs text-hydrangea-700 focus:outline-none focus:ring-2 focus:ring-hydrangea-300 disabled:opacity-50"
-          >
-            {allowedLayouts.map((id) => {
-              const lay = getLayout(id);
-              return (
-                <option key={id} value={id}>{lay.name}</option>
-              );
-            })}
-            {allowedLayouts.length === 0 && <option value="">— allowed layout 없음 —</option>}
-          </select>
+          <div className="flex gap-1">
+            <select
+              value={activeLayoutId || ''}
+              onChange={(e) => setLayoutId(e.target.value as LayoutId)}
+              disabled={allowedLayouts.length === 0}
+              className="flex-1 min-w-0 px-2 py-2 rounded-lg border border-hydrangea-200 bg-white text-xs text-hydrangea-700 focus:outline-none focus:ring-2 focus:ring-hydrangea-300 disabled:opacity-50"
+            >
+              {allowedLayouts.map((id) => {
+                const lay = getLayout(id);
+                return (
+                  <option key={id} value={id}>{lay.name}</option>
+                );
+              })}
+              {allowedLayouts.length === 0 && <option value="">— allowed layout 없음 —</option>}
+            </select>
+            <button
+              type="button"
+              onClick={handleDeleteLayout}
+              disabled={pending || !activeLayoutId || allowedLayouts.length <= 1}
+              title={allowedLayouts.length <= 1 ? '최소 1개 layout 필요' : '이 layout을 template에서 제거'}
+              className="flex-shrink-0 px-2 rounded-lg bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
 
