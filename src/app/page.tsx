@@ -98,26 +98,6 @@ export default function Home() {
         </FadeIn>
       </section>
 
-      {/* ===== Event types ===== */}
-      <section className="px-6 pb-12">
-        <h2 className="text-xs font-semibold text-hydrangea-400 mb-3 tracking-wider uppercase text-center">
-          {t('askEvent')}
-        </h2>
-        <div className="grid grid-cols-3 gap-3">
-          {EVENT_KEYS.map((id, i) => (
-            <FadeIn key={id} delay={i * 0.05}>
-              <Link
-                href={`/cards/new?type=${id}`}
-                className="aspect-square rounded-2xl bg-white border border-hydrangea-100/50 flex flex-col items-center justify-center gap-1 active:scale-95 transition shadow-sm hover:border-hydrangea-200"
-              >
-                <span className="text-3xl">{EVENT_EMOJI[id]}</span>
-                <span className="text-xs font-medium text-hydrangea-700">{tEvent(id)}</span>
-              </Link>
-            </FadeIn>
-          ))}
-        </div>
-      </section>
-
       {/* ===== Why DearDay (3-column) ===== */}
       <section className="px-6 pb-14 relative">
         <FadeIn>
