@@ -22,9 +22,9 @@ export async function generateMetadata({ params }: Props) {
   const recipientName = rows[0]?.name;
   // 메신저 공유 시 행사 제목이 카드 미리보기에 노출되도록 — recipient명은 description으로
   const title = card.title;
-  // greeting_oneliner가 비어있으면 fallback 없이 — 부제 입력 시에만 description에 포함
+  // 이름 그대로 표시 (호칭 추가 없음)
   const description = recipientName
-    ? (card.greeting_oneliner ? `${recipientName}님께 — ${card.greeting_oneliner}` : `${recipientName}님께`)
+    ? (card.greeting_oneliner ? `${recipientName} — ${card.greeting_oneliner}` : recipientName)
     : (card.greeting_oneliner || undefined);
   return {
     title,
