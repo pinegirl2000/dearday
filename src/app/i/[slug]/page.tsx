@@ -3,6 +3,7 @@ import { getCardBySlug } from '@/lib/db/cards';
 import { getTheme } from '@/lib/theme';
 import { getAllTemplateColors } from '@/lib/actions/templateConfig';
 import { findTemplateByPair } from '@/lib/templates';
+import { getBackground } from '@/lib/backgrounds';
 import InvitationView from './_components/InvitationView';
 
 interface Props {
@@ -14,6 +15,9 @@ export async function generateMetadata({ params }: Props) {
   const card = await getCardBySlug(params.slug);
   if (!card) return { title: '초대장' };
   const description = card.greeting_oneliner || undefined;
+  // og:image — 카드의 template 배경 이미지를 미리보기로 사용 (있으면)
+  const bg = getBackground(card.bg_id);
+  const ogImage = bg.imageUrl ? bg.imageUrl : undefined;
   return {
     title: card.title,
     description,
@@ -21,12 +25,14 @@ export async function generateMetadata({ params }: Props) {
       title: card.title,
       description,
       type: 'website',
-      siteName: 'DearDay'
+      siteName: 'DearDay',
+      ...(ogImage && { images: [{ url: ogImage }] })
     },
     twitter: {
-      card: 'summary',
+      card: ogImage ? 'summary_large_image' : 'summary',
       title: card.title,
-      description
+      description,
+      ...(ogImage && { images: [ogImage] })
     }
   };
 }

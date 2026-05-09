@@ -430,7 +430,7 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
                 title="참석자 명단 텍스트 파일로 저장"
                 className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-white border border-hydrangea-200 text-hydrangea-600 text-[11px] font-semibold hover:bg-hydrangea-50 active:scale-95 transition"
               >
-                <Download className="w-3 h-3" /> 명단 export
+                <Download className="w-3 h-3" /> 명단-링크 export
               </button>
             )}
             {pendingEmailCount > 0 && (

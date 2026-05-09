@@ -6,6 +6,7 @@ import { getMyRsvpByRecipient } from '@/lib/actions/submitRsvp';
 import { markRecipientRead } from '@/lib/actions/markRecipientRead';
 import { getAllTemplateColors } from '@/lib/actions/templateConfig';
 import { findTemplateByPair } from '@/lib/templates';
+import { getBackground } from '@/lib/backgrounds';
 import InvitationView from '../_components/InvitationView';
 
 interface Props {
@@ -26,6 +27,9 @@ export async function generateMetadata({ params }: Props) {
   const description = recipientName
     ? (card.greeting_oneliner ? `${recipientName} — ${card.greeting_oneliner}` : recipientName)
     : (card.greeting_oneliner || undefined);
+  // og:image — 카드 template 배경 이미지를 미리보기로 사용
+  const bg = getBackground(card.bg_id);
+  const ogImage = bg.imageUrl ? bg.imageUrl : undefined;
   return {
     title,
     description,
@@ -33,12 +37,14 @@ export async function generateMetadata({ params }: Props) {
       title,
       description,
       type: 'website',
-      siteName: 'DearDay'
+      siteName: 'DearDay',
+      ...(ogImage && { images: [{ url: ogImage }] })
     },
     twitter: {
-      card: 'summary',
+      card: ogImage ? 'summary_large_image' : 'summary',
       title,
-      description
+      description,
+      ...(ogImage && { images: [ogImage] })
     }
   };
 }
