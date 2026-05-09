@@ -21,6 +21,18 @@ export interface TemplateMeta {
    * 정의되어 있으면 layout의 기본 색상을 override.
    */
   colorSub?: string;
+  /**
+   * 날짜/장소 반투명 박스(layout-5/rightbottom/6 한정)의 스타일 override.
+   * 미정의 시 colorSub 기반 default(흰색 frosted glass)가 적용됨.
+   * - bg: CSS background 값 (linear-gradient 권장 — 반투명 + 톤)
+   * - textColor: 박스 안 텍스트 색상 (날짜/장소). 미정의 시 colorMain 또는 layout 기본
+   * - borderColor: 박스 테두리 (옵션)
+   */
+  infoBox?: {
+    bg: string;
+    textColor?: string;
+    borderColor?: string;
+  };
   /** 추천 이벤트 타입 */
   recommendEvents: EventType[];
   /**
@@ -297,6 +309,11 @@ export const TEMPLATES: TemplateMeta[] = [
     layout_id: 'layout-classic',
     colorMain: '#D4A943',
     colorSub: '#2A2218',
+    infoBox: {
+      bg: 'linear-gradient(180deg, rgba(40,30,20,0.55) 0%, rgba(20,15,10,0.65) 100%)',
+      textColor: '#F5E29A',
+      borderColor: 'rgba(212,169,67,0.45)'
+    },
     recommendEvents: ['birthday', 'opening', 'etc'],
     draft: true
   }

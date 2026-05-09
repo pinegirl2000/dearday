@@ -292,14 +292,14 @@ export default function InvitationView({ card, feed, recipientName, recipientId,
               )}
             </div>
           </Envelope>
-          {!(opening && envParsed.type === 'flip') && card.envelope_anim !== 'none' && envParsed.type !== 'none' && recipientName && recipientName.trim() && (() => {
+          {/* Sway만 외부 overlay (flip은 EnvelopeBlackGold 내부에서 렌더되어 봉투와 함께 회전) */}
+          {envParsed.type === 'sway' && card.envelope_anim !== 'none' && recipientName && recipientName.trim() && (() => {
             const envHeight = Math.round(envWidth * 0.75);
-            const isFlip = envParsed.type === 'flip';
             return (
               <div style={{
                 position: 'absolute',
                 left: '50%',
-                top: `${Math.round(envHeight * (isFlip ? 0.75 : 1.0))}px`,
+                top: `${envHeight}px`,
                 transform: 'translate(-50%, -50%)',
                 width: '85%',
                 textAlign: 'center',

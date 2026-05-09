@@ -259,6 +259,29 @@ function FrontFace({
         size={Math.round(width * 0.121)}
         palette={palette}
       />
+      {/* 받는 분 이름 — 봉투 가운데 */}
+      {greeting && (
+        <div
+          style={{
+            position: 'absolute',
+            left: '8%',
+            right: '8%',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            textAlign: 'center',
+            color: PALETTE.ink,
+            fontFamily: "'Cormorant Garamond', 'Playfair Display', 'Noto Serif KR', serif",
+            fontSize: Math.max(14, Math.round(width * 0.064)),
+            fontWeight: 500,
+            fontVariant: 'small-caps',
+            letterSpacing: '0.12em',
+            textShadow: '0 1px 2px rgba(0,0,0,0.35)',
+            pointerEvents: 'none'
+          }}
+        >
+          {greeting}
+        </div>
+      )}
     </div>
   );
 }

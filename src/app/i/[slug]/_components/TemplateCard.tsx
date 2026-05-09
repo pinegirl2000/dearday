@@ -219,6 +219,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
   // 페어링된 템플릿 색상으로 layout 필드 색상 override
   const tplMain = tpl?.colorMain;
   const tplSub = tpl?.colorSub;
+  const tplInfoBox = tpl?.infoBox;
   const withColor = (field: TextField | undefined, color?: string): TextField | undefined => {
     if (!field || !color) return field;
     return { ...field, color };
@@ -231,9 +232,9 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
     // greeting_oneliner(subtitle)도 메인 색상 사용
     subtitle: withColor(baseFields.subtitle, tplMain),
     body: withColor(baseFields.body, tplMain),
-    // date/place는 정보박스 안에 들어가므로 메인 색상으로 또렷하게
-    date: withColor(baseFields.date, tplMain),
-    place: withColor(baseFields.place, tplMain),
+    // date/place는 정보박스 안에 들어감. infoBox.textColor가 지정되면 우선 (dark 박스용)
+    date: withColor(baseFields.date, tplInfoBox?.textColor || tplMain),
+    place: withColor(baseFields.place, tplInfoBox?.textColor || tplMain),
     extra: withColor(baseFields.extra, tplSub)
   };
   const greeting = formatGreeting(recipientName, card.recipient_template);
@@ -290,9 +291,23 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
       <FieldText field={f.title} delay={0.2}><Editable fieldKey="title">{applyName(card.title, recipientName)}</Editable></FieldText>
       {/* Side Text + Center Text: 하단 date+place 영역 정보 박스 — 템플릿 sub 색상 톤 (없으면 흰색) */}
       {((layout.id === 'layout-5' || layout.id === 'layout-rightbottom') || layout.id === 'layout-6') && (card.event_date || card.event_place) && f.date && f.place && (() => {
-        // sub 색상이 정의된 경우에만 sub 톤 적용. 없으면 순수 흰색 박스 + 중성 그림자.
+        // 우선순위: 1) tpl.infoBox (template별 명시) 2) tplSub 기반 default 3) 흰색 default
+        const hasInfoBox = !!tplInfoBox;
         const hasSub = !!tplSub;
         const subTint = tplSub || '#FFFFFF';
+        const bg = hasInfoBox
+          ? tplInfoBox!.bg
+          : (hasSub
+              ? `linear-gradient(180deg, rgba(255,255,255,0.82) 0%, rgba(255,255,255,0.68) 100%), ${subTint}`
+              : 'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.82) 100%)');
+        const border = hasInfoBox && tplInfoBox!.borderColor
+          ? `1px solid ${tplInfoBox!.borderColor}`
+          : (hasSub ? `1px solid ${subTint}55` : '1px solid rgba(255,255,255,0.85)');
+        const shadow = hasInfoBox
+          ? '0 8px 18px rgba(0,0,0,0.18)'
+          : (hasSub
+              ? `0 6px 14px ${subTint}26, inset 0 1px 0 rgba(255,255,255,0.85)`
+              : '0 8px 18px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.95)');
         return (
           <motion.div
             initial={{ opacity: 0 }}
@@ -301,7 +316,6 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
             transition={{ duration: 0.5, delay: 0.25 }}
             style={{
               position: 'absolute',
-              // layout-5(Rightside): 우측에 좁고 세로로 긴 박스. 그 외: 카드 전체 폭.
               left: layout.id === 'layout-5' ? '38%' : '6%',
               right: layout.id === 'layout-5' ? '5%' : '6%',
               top: layout.id === 'layout-6'
@@ -311,8 +325,6 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
                   : layout.id === 'layout-rightbottom'
                     ? `calc(${f.date.y - 3}%)`
                     : `calc(${f.date.y - 1}%)`,
-              // layout-6: extra(Reception to follow 등)도 박스 안에 포함.
-              // layout-5/rightbottom: 박스 안 date+place(view map 포함) 가로세로 중앙정렬.
               bottom: layout.id === 'layout-6' && f.extra
                 ? `calc(${100 - (f.extra.y + 4)}%)`
                 : layout.id === 'layout-5'
@@ -320,18 +332,12 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
                   : layout.id === 'layout-rightbottom'
                     ? `calc(${100 - (f.place.y + 8)}%)`
                     : `calc(${100 - (f.place.y + 3)}%)`,
-              // sub 있으면: 흰색 반투명 위에 sub 솔리드 → 톤 비치는 frosted
-              // sub 없으면: 그냥 흰색 그라디언트
-              background: hasSub
-                ? `linear-gradient(180deg, rgba(255,255,255,0.82) 0%, rgba(255,255,255,0.68) 100%), ${subTint}`
-                : 'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.82) 100%)',
+              background: bg,
               backdropFilter: 'blur(6px)',
               WebkitBackdropFilter: 'blur(6px)',
-              border: hasSub ? `1px solid ${subTint}55` : '1px solid rgba(255,255,255,0.85)',
+              border,
               borderRadius: 14,
-              boxShadow: hasSub
-                ? `0 6px 14px ${subTint}26, inset 0 1px 0 rgba(255,255,255,0.85)`
-                : '0 8px 18px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.95)',
+              boxShadow: shadow,
               zIndex: 0
             }}
           />

@@ -71,7 +71,7 @@ export async function listRecipients(slug: string, ownerToken?: string | null) {
        LIMIT 1
      ) v ON true
      WHERE r.card_id=$1
-     ORDER BY r.num ASC`,
+     ORDER BY r.created_at ASC, r.id ASC`,
     [card.id]
   );
   return { ok: true as const, recipients: rows as Array<{

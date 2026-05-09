@@ -28,10 +28,13 @@ function fmtDate(iso?: string | null) {
 
 export default function RecentCardSelector({
   cards,
-  stats
+  stats,
+  owners
 }: {
   cards: BaseCard[];
   stats: Record<string, CardStats>;
+  /** admin 전용 — 카드별 소유자 정보 (cardId → { name?, email? }) */
+  owners?: Record<string, { name?: string | null; email?: string | null }>;
 }) {
   const [liveStats, setLiveStats] = useState<Record<string, CardStats>>(stats);
   const [refreshing, setRefreshing] = useState(false);
@@ -114,6 +117,19 @@ export default function RecentCardSelector({
           <div className="text-lg font-extrabold uppercase tracking-wide truncate drop-shadow-sm">
             {c.title || '(제목 없음)'}
           </div>
+          {owners && (owners[c.id]?.name || owners[c.id]?.email) && (
+            <div className="text-[10px] opacity-90 mt-0.5 truncate">
+              👤 by {owners[c.id]?.name || ''}
+              {owners[c.id]?.email && (
+                <span className="opacity-75"> · {owners[c.id]?.email}</span>
+              )}
+            </div>
+          )}
+          {(c.updated_at || c.created_at) && (
+            <div className="text-[10px] opacity-75 mt-0.5">
+              최종작성일 {fmtDate(c.updated_at || c.created_at)}
+            </div>
+          )}
         </div>
         <span className="flex-shrink-0 text-[10px] bg-white/20 px-2 py-1 rounded-full font-semibold">
           총 {cards.length}개
@@ -137,10 +153,17 @@ export default function RecentCardSelector({
                 }`}
               >
                 <span className="text-base flex-shrink-0">{cMeta.emoji}</span>
-                <span className="flex-1 min-w-0 truncate">
-                  {idx === 0 && <span className="text-[10px] text-hydrangea-400 mr-1">최근</span>}
-                  {card.title || '(제목 없음)'}
-                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="truncate">
+                    {idx === 0 && <span className="text-[10px] text-hydrangea-400 mr-1">최근</span>}
+                    {card.title || '(제목 없음)'}
+                  </div>
+                  {owners && (owners[card.id]?.name || owners[card.id]?.email) && (
+                    <div className="text-[10px] text-hydrangea-400 truncate font-normal">
+                      👤 {owners[card.id]?.name || owners[card.id]?.email}
+                    </div>
+                  )}
+                </div>
                 <span className="text-[10px] text-hydrangea-400 flex-shrink-0">{fmtDate(card.event_date)}</span>
                 {isSelected && <Check className="w-3.5 h-3.5 text-hydrangea-500 flex-shrink-0" strokeWidth={3} />}
               </button>
@@ -175,27 +198,22 @@ export default function RecentCardSelector({
         </div>
       </button>
 
-      {/* 수정하기 링크 + 최종작성일 — 템플릿 아래 가운데 정렬 */}
-      <div className="flex flex-col items-center gap-1 py-3 border-t border-hydrangea-100/60">
+      {/* 수정하기 — 가로 풀 너비 버튼 */}
+      <div className="px-3 pt-3 border-t border-hydrangea-100/60">
         <Link
           href={`/cards/${c.slug}/edit`}
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-hydrangea-600 hover:text-hydrangea-700 underline-offset-4 hover:underline transition"
+          className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-hydrangea-500 text-white text-sm font-semibold hover:bg-hydrangea-600 active:scale-95 transition"
         >
-          <Pencil className="w-3.5 h-3.5" /> 수정하기
+          <Pencil className="w-4 h-4" /> 수정하기
         </Link>
-        {(c.updated_at || c.created_at) && (
-          <div className="text-[11px] text-hydrangea-400">
-            최종작성일 {fmtDate(c.updated_at || c.created_at)}
-          </div>
-        )}
       </div>
 
       {/* === 노트 탭 — Recipients 관리 / Send 통계 === */}
       <div className="border-t border-hydrangea-100/60 bg-hydrangea-50/30">
         <div className="flex gap-1 px-3 pt-2 -mb-px">
           {([
-            { id: 'recipients' as const, label: 'Recipients 관리', icon: Send },
-            { id: 'stats'      as const, label: 'Send 통계',       icon: TrendingUp }
+            { id: 'stats'      as const, label: '응답 통계',   icon: TrendingUp },
+            { id: 'recipients' as const, label: '수신자 등록', icon: Send }
           ]).map((t) => {
             const isActive = tab === t.id;
             const Icon = t.icon;
@@ -221,7 +239,7 @@ export default function RecentCardSelector({
 
       {tab === 'recipients' && (
         <div className="bg-white p-3">
-          <SendStep slug={c.slug} ownerToken={null} />
+          <SendStep slug={c.slug} ownerToken={null} card={c} />
         </div>
       )}
 
@@ -230,7 +248,7 @@ export default function RecentCardSelector({
         <div className="flex items-center justify-between">
           <div className="flex items-baseline gap-2">
             <h3 className="text-[11px] font-bold text-hydrangea-700 uppercase tracking-wide flex items-center gap-1">
-              <TrendingUp className="w-3.5 h-3.5" /> Send 통계
+              <TrendingUp className="w-3.5 h-3.5" /> 응답 통계
             </h3>
             <span className="text-[10px] text-hydrangea-400">
               {new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })} 기준

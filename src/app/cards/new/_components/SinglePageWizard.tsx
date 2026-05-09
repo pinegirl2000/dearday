@@ -42,8 +42,7 @@ const ENVELOPE_NAME_COLOR: Record<EnvelopeColorId, string> = {
   cobalt:    '#FBF7EC',  // dark blue → ivory cream
   aubergine: '#E0DAE6',  // dark purple → soft pearl
   onyx:      '#F0DC78',  // black → bright gold
-  ivory:     '#A8862E',  // ivory white → warm gold
-  gold:      '#5A4017'   // pure gold → deep bronze
+  ivory:     '#A8862E'   // ivory white → warm gold
 };
 function renderEnvelope(type: EnvelopeAnimType, color: EnvelopeColorId, props: { width?: number; isOpen?: boolean; children?: React.ReactNode; recipientGreeting?: string; cardPreview?: React.ReactNode; onComplete?: () => void }) {
   if (type === 'none') return <NoneEnvelope {...props} isOpen={!!props.isOpen} />;
@@ -477,12 +476,15 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
       return;
     }
     startTransition(async () => {
-      if (isEditMode && editingSlug) {
-        const res = await updateCard(editingSlug, draft);
+      // 1) Edit 모드 — 기존 카드 update
+      // 2) 이미 이번 세션에서 발행한 경우(publishedSlug) — 중복 생성 방지를 위해 updateCard로 전환
+      // 3) 그 외 — 신규 publishCard
+      const targetSlug = (isEditMode && editingSlug) || publishedSlug;
+      if (targetSlug) {
+        const res = await updateCard(targetSlug, draft);
         if (!res.ok) { toast.error(res.error || 'Update failed'); return; }
         toast.success('Saved!');
-        // Edit 모드: 발행된 카드이므로 step 4(초대장 보내기)로 진행
-        setPublishedSlug(editingSlug);
+        if (!publishedSlug) setPublishedSlug(targetSlug);
         setOpen(4);
         setMaxStepCompleted((m) => Math.max(m, 3));
         return;
@@ -653,7 +655,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                           setEventType(e.id);
                           setDraft({ bg_id: undefined, layout_id: undefined } as any);
                         }}
-                        className={`flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 rounded-lg transition min-w-0 ${
+                        className={`relative flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 rounded-lg transition min-w-0 ${
                           selected
                             ? 'bg-white text-hydrangea-700 border-2 border-hydrangea-500 font-semibold'
                             : 'bg-white text-hydrangea-700 border border-hydrangea-100 active:bg-hydrangea-50'
@@ -661,6 +663,11 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                       >
                         <span className="text-base leading-none">{e.emoji}</span>
                         <span className="text-[9px] font-medium tracking-tight truncate max-w-full">{tEvent(e.id)}</span>
+                        {selected && (
+                          <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-hydrangea-500 border border-white flex items-center justify-center shadow-sm">
+                            <Check className="w-2.5 h-2.5 text-white" strokeWidth={3.5} />
+                          </span>
+                        )}
                       </button>
                     );
                   })}
@@ -679,7 +686,9 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                     <div className="grid grid-cols-5 gap-1.5">
                       {tpls.map((t) => {
                         const bg = getBackground(t.bg_id);
-                        const selected = draft.bg_id === t.bg_id && draft.layout_id === t.layout_id;
+                        // 카드의 layout_id가 template의 default와 다를 수 있음 (allowed_layouts 중 다른 것 선택)
+                        // → bg_id 일치만으로 동일 template 판정 (각 template의 bg_id는 고유)
+                        const selected = draft.bg_id === t.bg_id;
                         return (
                           <motion.button
                             key={t.id}
@@ -1146,7 +1155,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
           done={!!publishedSlug}
           enabled={isEnabled(3)}
           onToggle={() => setOpen(3)}
-          headerAction={isEditMode
+          headerAction={(isEditMode || publishedSlug)
             ? { label: 'SAVE', onClick: handlePublish, disabled: pending }
             : { label: 'PUBLISH', onClick: handlePublish, disabled: pending }}
         >
@@ -1375,7 +1384,6 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                 `linear-gradient(135deg, ${body} 0%, ${body} 50%, ${accent} 50%, ${accent} 100%)`;
               const COLORS = [
                 { id: 'ivory',      label: 'Ivory White',            swatch: split('#F8F1DE', '#DCB748') },
-                { id: 'gold',       label: 'Pure Gold',              swatch: split('#D9A93A', '#A8862E') },
                 { id: 'pearl',      label: 'Gold Cream',             swatch: split('#DCB748', '#F5F0E2') },
                 { id: 'lavender',   label: 'Lavender Silver',        swatch: split('#C8B0E2', '#CABFCF') },
                 { id: 'champagne',  label: 'Beige Ivory',            swatch: split('#DACFB6', '#F5F0E2') },
@@ -1445,8 +1453,8 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
 
             <Button onClick={handlePublish} disabled={pending} full size="lg">
               {pending
-                ? (isEditMode ? 'Saving...' : 'Publishing...')
-                : isEditMode
+                ? ((isEditMode || publishedSlug) ? 'Saving...' : 'Publishing...')
+                : (isEditMode || publishedSlug)
                   ? '✏️ Save changes'
                   : sessionStatus === 'unauthenticated'
                     ? '🔒 Sign in to publish'
@@ -1470,7 +1478,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
           onToggle={() => setOpen(4)}
         >
           {publishedSlug ? (
-            <SendStep slug={publishedSlug} ownerToken={publishedOwnerToken} />
+            <SendStep slug={publishedSlug} ownerToken={publishedOwnerToken} card={draft} />
           ) : (
             <div className="text-center py-8 text-sm text-hydrangea-400">
               먼저 3단계에서 초대장을 발행해 주세요.

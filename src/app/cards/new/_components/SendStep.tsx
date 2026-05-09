@@ -2,13 +2,14 @@
 
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { toast } from 'sonner';
-import { Mail, Link as LinkIcon, Plus, Trash2, Send, Copy, Check } from 'lucide-react';
+import { Mail, Link as LinkIcon, Plus, Trash2, Send, Copy, Check, Calendar, Users, Download } from 'lucide-react';
 import {
   listRecipients,
   addRecipientsWithDetails,
   deleteRecipient,
   sendInvitationsToRecipients
 } from '@/lib/actions/recipients';
+import type { BaseCard } from '@/types/card';
 
 interface Recipient {
   id: string;
@@ -19,21 +20,25 @@ interface Recipient {
   sent_at: string | null;
   sent_status: string | null;
   read_at: string | null;
+  created_at: string | null;
   rsvp_attend: boolean | null;
   rsvp_count: number | null;
   rsvp_attendee_names: string[] | null;
   rsvp_oneliner: string | null;
+  rsvp_created_at: string | null;
 }
 
 interface Props {
   slug: string;
   ownerToken: string | null;
+  /** RSVP 설정 표시용 (카드 데이터 — 옵션) */
+  card?: Partial<BaseCard> & { title?: string };
 }
 
 type Mode = 'email' | 'link';
 type AddMode = 'single' | 'bulk';
 
-export default function SendStep({ slug, ownerToken }: Props) {
+export default function SendStep({ slug, ownerToken, card }: Props) {
   const [mode, setMode] = useState<Mode>('link');
   const [addMode, setAddMode] = useState<AddMode>('single');
   const [recipients, setRecipients] = useState<Recipient[]>([]);
@@ -49,6 +54,7 @@ export default function SendStep({ slug, ownerToken }: Props) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [sendingId, setSendingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<'recent_response' | 'recent_input' | 'name'>('recent_response');
 
   // 초기 로드 + 갱신
   const load = () => {
@@ -205,20 +211,31 @@ export default function SendStep({ slug, ownerToken }: Props) {
 
       {/* 추가 방식 선택 */}
       <div>
-        <div className="flex items-center justify-between mb-2">
-          <label className="block text-xs font-semibold text-hydrangea-700">수신자 추가</label>
-          <div className="flex gap-1 text-[10px]">
-            <button
-              type="button"
-              onClick={() => setAddMode('single')}
-              className={`px-2 py-1 rounded-md ${addMode === 'single' ? 'bg-hydrangea-500 text-white' : 'bg-hydrangea-50 text-hydrangea-500'}`}
-            >Single</button>
-            <button
-              type="button"
-              onClick={() => setAddMode('bulk')}
-              className={`px-2 py-1 rounded-md ${addMode === 'bulk' ? 'bg-hydrangea-500 text-white' : 'bg-hydrangea-50 text-hydrangea-500'}`}
-            >Bulk</button>
-          </div>
+        <label className="block text-xs font-semibold text-hydrangea-700 mb-2">수신자 추가</label>
+        {/* Segmented control — 한 줄 전체 폭, 두 모드 모두 확실히 보이게 */}
+        <div className="flex p-1 rounded-xl bg-hydrangea-100/70 border border-hydrangea-200 mb-2">
+          <button
+            type="button"
+            onClick={() => setAddMode('single')}
+            className={`flex-1 py-2 rounded-lg text-xs font-semibold transition active:scale-95 ${
+              addMode === 'single'
+                ? 'bg-white text-hydrangea-700 shadow-sm'
+                : 'text-hydrangea-500 hover:text-hydrangea-700'
+            }`}
+          >
+            👤 한 명씩
+          </button>
+          <button
+            type="button"
+            onClick={() => setAddMode('bulk')}
+            className={`flex-1 py-2 rounded-lg text-xs font-semibold transition active:scale-95 ${
+              addMode === 'bulk'
+                ? 'bg-white text-hydrangea-700 shadow-sm'
+                : 'text-hydrangea-500 hover:text-hydrangea-700'
+            }`}
+          >
+            📋 한꺼번에 (Bulk)
+          </button>
         </div>
 
         {addMode === 'single' ? (
@@ -271,22 +288,138 @@ export default function SendStep({ slug, ownerToken }: Props) {
         )}
       </div>
 
+      {/* RSVP 설정 / 마감 정보 — card 정보 있을 때만 */}
+      {card?.rsvp_enabled && (() => {
+        const deadline = card.rsvp_deadline ? new Date(card.rsvp_deadline) : null;
+        const validDeadline = deadline && !isNaN(deadline.getTime()) ? deadline : null;
+        const now = new Date();
+        const daysLeft = validDeadline
+          ? Math.ceil((validDeadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+          : null;
+        const expired = daysLeft !== null && daysLeft < 0;
+        const maxPerCard = card.rsvp_max_per_card || 1;
+        const allowGroup = maxPerCard > 1;
+        const collectNames = !!card.rsvp_collect_names;
+        return (
+          <div className="rounded-xl border border-hydrangea-200 bg-hydrangea-50/50 p-3 space-y-2 text-[11px]">
+            {/* 마감일 */}
+            {validDeadline && (
+              <div className="flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-hydrangea-500 flex-shrink-0" />
+                <span className="text-hydrangea-700 font-medium">RSVP 마감</span>
+                <span className="text-hydrangea-500">
+                  {validDeadline.toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' })}
+                </span>
+                <span className={`ml-auto px-1.5 py-0.5 rounded-full font-bold ${
+                  expired ? 'bg-rose-500 text-white'
+                    : daysLeft! <= 3 ? 'bg-amber-500 text-white'
+                    : 'bg-emerald-500 text-white'
+                }`}>
+                  {expired ? '마감됨' : daysLeft === 0 ? '오늘 마감' : `${daysLeft}일 남음`}
+                </span>
+              </div>
+            )}
+            {/* RSVP 옵션 */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <Users className="w-3.5 h-3.5 text-hydrangea-500 flex-shrink-0" />
+              <span className="text-hydrangea-700 font-medium">옵션</span>
+              <span className={`px-1.5 py-0.5 rounded-full font-semibold ${
+                allowGroup ? 'bg-hydrangea-500 text-white' : 'bg-gray-200 text-gray-600'
+              }`}>
+                동반자 {allowGroup ? `최대 ${maxPerCard}명` : '불가'}
+              </span>
+              {allowGroup && (
+                <span className={`px-1.5 py-0.5 rounded-full font-semibold ${
+                  collectNames ? 'bg-emerald-500 text-white' : 'bg-gray-200 text-gray-600'
+                }`}>
+                  이름 입력 {collectNames ? '필수' : '없음'}
+                </span>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* 수신자 리스트 */}
       <div>
-        <div className="flex items-center justify-between mb-2">
-          <label className="block text-xs font-semibold text-hydrangea-700">
-            수신자 ({recipients.length})
-          </label>
-          {pendingEmailCount > 0 && (
-            <button
-              type="button"
-              onClick={handleSendAllPending}
-              disabled={pending}
-              className="px-3 py-1.5 rounded-lg bg-hydrangea-500 text-white text-[11px] font-semibold flex items-center gap-1 disabled:opacity-50"
-            >
-              <Send className="w-3 h-3" /> 모두 발송 ({pendingEmailCount})
-            </button>
-          )}
+        <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5">
+            <label className="block text-xs font-semibold text-hydrangea-700">
+              수신자 ({recipients.length})
+            </label>
+            {recipients.length > 1 && (
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                className="text-[10px] px-1.5 py-0.5 rounded-md border border-hydrangea-200 bg-white text-hydrangea-600 font-medium focus:outline-none focus:ring-2 focus:ring-hydrangea-300"
+              >
+                <option value="recent_response">최근응답순</option>
+                <option value="recent_input">최근입력순</option>
+                <option value="name">이름순</option>
+              </select>
+            )}
+          </div>
+          <div className="flex items-center gap-1.5">
+            {/* 참석자 명단 텍스트 export */}
+            {recipients.some((r) => r.rsvp_attend === true) && (
+              <button
+                type="button"
+                onClick={() => {
+                  const lines: string[] = [];
+                  const titleRaw = (card?.title && card.title.trim()) || slug;
+                  const cardTitle = `[${titleRaw}]`;
+                  lines.push(`=== ${cardTitle} 참석자 명단 ===`);
+                  lines.push(`생성: ${new Date().toLocaleString('ko-KR')}`);
+                  lines.push('');
+                  const attending = recipients.filter((r) => r.rsvp_attend === true);
+                  const declined = recipients.filter((r) => r.rsvp_attend === false);
+                  const noResp = recipients.filter((r) => r.rsvp_attend === null);
+                  const totalPeople = attending.reduce((sum, r) => sum + (r.rsvp_count || 1), 0);
+                  lines.push(`[참석 — ${attending.length}건 / 총 ${totalPeople}명]`);
+                  for (const r of attending) {
+                    const cnt = r.rsvp_count || 1;
+                    const names = r.rsvp_attendee_names && r.rsvp_attendee_names.length > 0
+                      ? `: ${r.rsvp_attendee_names.join(', ')}`
+                      : '';
+                    lines.push(`- ${r.name} (${cnt}명)${names}${r.rsvp_oneliner ? ` — "${r.rsvp_oneliner}"` : ''}`);
+                  }
+                  lines.push('');
+                  lines.push(`[불참 — ${declined.length}건]`);
+                  for (const r of declined) {
+                    lines.push(`- ${r.name}${r.rsvp_oneliner ? ` — "${r.rsvp_oneliner}"` : ''}`);
+                  }
+                  lines.push('');
+                  lines.push(`[미응답 — ${noResp.length}건]`);
+                  for (const r of noResp) {
+                    lines.push(`- ${r.name}`);
+                  }
+                  const text = lines.join('\n');
+                  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `${cardTitle}_참석자명단_${new Date().toISOString().slice(0,10)}.txt`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  toast.success('참석자 명단 다운로드');
+                }}
+                title="참석자 명단 텍스트 파일로 저장"
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-white border border-hydrangea-200 text-hydrangea-600 text-[11px] font-semibold hover:bg-hydrangea-50 active:scale-95 transition"
+              >
+                <Download className="w-3 h-3" /> 명단 export
+              </button>
+            )}
+            {pendingEmailCount > 0 && (
+              <button
+                type="button"
+                onClick={handleSendAllPending}
+                disabled={pending}
+                className="px-3 py-1.5 rounded-lg bg-hydrangea-500 text-white text-[11px] font-semibold flex items-center gap-1 disabled:opacity-50"
+              >
+                <Send className="w-3 h-3" /> 모두 발송 ({pendingEmailCount})
+              </button>
+            )}
+          </div>
         </div>
 
         {recipients.length === 0 ? (
@@ -295,7 +428,18 @@ export default function SendStep({ slug, ownerToken }: Props) {
           </div>
         ) : (
           <div className="space-y-1.5 max-h-96 overflow-y-auto">
-            {recipients.map((r) => (
+            {[...recipients].sort((a, b) => {
+              if (sortBy === 'name') return (a.name || '').localeCompare(b.name || '');
+              if (sortBy === 'recent_response') {
+                const av = a.rsvp_created_at ? new Date(a.rsvp_created_at).getTime() : 0;
+                const bv = b.rsvp_created_at ? new Date(b.rsvp_created_at).getTime() : 0;
+                return bv - av; // 응답 있는 게 위, 최근 응답 우선
+              }
+              // recent_input: 최근 입력 순 (created_at DESC)
+              const ai = a.created_at ? new Date(a.created_at).getTime() : 0;
+              const bi = b.created_at ? new Date(b.created_at).getTime() : 0;
+              return bi - ai;
+            }).map((r) => (
               <div key={r.id} className="rounded-lg border border-hydrangea-100 bg-white">
               <div
                 className="grid items-center gap-1.5 px-2 py-1.5 text-xs"
