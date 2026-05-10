@@ -7,7 +7,7 @@ import { Sparkles, ArrowRight } from 'lucide-react';
 
 const GOLD = '#C4A36A';
 
-type LayoutStyle = 'centered' | 'rightside' | 'bottombox' | 'topstack' | 'centerdown';
+type LayoutStyle = 'centered' | 'rightside' | 'bottombox' | 'topstack' | 'centerdown' | 'thankcard';
 
 interface Sample {
   id: string;
@@ -40,22 +40,22 @@ const SAMPLES: Sample[] = [
     bg: "url('/templates/template-19-bg.png') center/cover",
     main: '#F5E29A',
     sub: '#D4A943',
-    style: 'bottombox'
+    style: 'centered'
   },
   {
-    id: 'pink-teddy',
-    emoji: '🧸',
-    event: 'BIRTHDAY',
-    title: "Avery's 1st Birthday",
-    subtitle: 'A precious first year',
-    body: 'Come celebrate with our\nlittle one and a sky full of balloons.',
-    date: 'SUN 5 JUL · 11 AM',
-    place: 'The Lounge Function Room',
-    host: '— Love, the Family —',
-    bg: "url('/templates/template-6-bg.png') center/cover",
-    main: '#8E5A4D',
-    sub: '#E89AA0',
-    style: 'centered'
+    id: 'thank-mom',
+    emoji: '💝',
+    event: "MOTHER'S DAY",
+    title: 'Avery',
+    subtitle: "To the World's Best Mom,",
+    body: 'Happy Mother\'s Day!\nHope your day is as lovely as you are!',
+    date: '',
+    place: '',
+    host: 'your loving one',
+    bg: "url('/templates/template-20-bg.png') center/cover",
+    main: '#8B6075',
+    sub: '#C97796',
+    style: 'thankcard'
   },
   {
     id: 'pink-ribbon-arch',
@@ -70,7 +70,7 @@ const SAMPLES: Sample[] = [
     bg: "url('/templates/template-8-bg.png') center/cover",
     main: '#A65A6F',
     sub: '#E89AA0',
-    style: 'topstack'
+    style: 'centered'
   },
   {
     id: 'eucalyptus-gold',
@@ -85,7 +85,7 @@ const SAMPLES: Sample[] = [
     bg: "url('/templates/template-10-bg.png') center/cover",
     main: '#A07C2C',
     sub: '#7A9B6E',
-    style: 'rightside'
+    style: 'centered'
   },
   {
     id: 'pressed-flowers',
@@ -115,7 +115,7 @@ const SAMPLES: Sample[] = [
     bg: "url('/templates/template-2-bg.png') center/cover",
     main: '#5A3D7A',
     sub: '#7B5EA7',
-    style: 'centerdown'
+    style: 'centered'
   }
 ];
 
@@ -167,6 +167,57 @@ function CardPreview({ sample }: { sample: Sample }) {
   );
 
   // ── style별 레이아웃 분기 ──────────────────────────────────────────────
+  if (sample.style === 'thankcard') {
+    // thank_classic 미니어처 — bg(top 고정) + 사각 사진 + 필기체 title + 메시지 + From 라인
+    return (
+      <div
+        className="absolute inset-0 flex flex-col items-center px-5 text-center"
+        style={{
+          backgroundImage: "url('/templates/template-20-bg.png')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'top center',
+          backgroundRepeat: 'no-repeat',
+          paddingTop: 38,
+          paddingBottom: 14
+        }}
+      >
+        {/* 상단 사각 사진 — 절대 위치로 고정 */}
+        <div
+          style={{
+            width: 96, height: 96,
+            borderRadius: 0, overflow: 'hidden',
+            background: '#fff',
+            boxShadow: `0 2px 6px ${sample.main}33, 0 10px 20px ${sample.main}26`,
+            marginBottom: 14
+          }}
+        >
+          <img src="/samples/mom-thank.png" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+        </div>
+        {/* subtitle (small serif) */}
+        <p className="text-[9px] tracking-[0.2em] font-medium mb-1" style={{ color: sample.sub, fontFamily: "'Cormorant Garamond', serif" }}>
+          {sample.subtitle}
+        </p>
+        {/* title (script font, large) */}
+        <h3 className="mb-2" style={{
+          fontFamily: "'Sacramento', 'Great Vibes', cursive",
+          fontWeight: 400, fontSize: 30, lineHeight: 1.05,
+          color: sample.main, letterSpacing: '0.01em'
+        }}>{sample.title}</h3>
+        {/* small ✽ divider */}
+        <span className="text-[10px] mb-2" style={{ color: sample.main, opacity: 0.6 }}>✽</span>
+        {/* body */}
+        <p className="text-[9.5px] whitespace-pre-line mb-3" style={{ color: sample.main, opacity: 0.85, lineHeight: 1.6, fontFamily: "'Cormorant Garamond', serif" }}>
+          {sample.body}
+        </p>
+        {/* From line — 작은 'from' + 큰 이름 in script. body 바로 아래에 (flex spacer 없음) */}
+        <p style={{ margin: '8px 0 0', lineHeight: 1.2, color: sample.main, fontFamily: "'Sacramento', 'Great Vibes', cursive" }}>
+          <span style={{ fontSize: 9, opacity: 0.7, marginRight: 3 }}>from </span>
+          <span style={{ fontSize: 17 }}>{sample.host}</span>
+        </p>
+      </div>
+    );
+  }
+
   if (sample.style === 'rightside') {
     // 우측 세로 텍스트 + 좌측 빈 영역 (mimics layout-5)
     return (

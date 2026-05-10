@@ -178,15 +178,26 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
           alt=""
           style={{
             position: 'absolute', inset: 0, width: '100%', height: '100%',
-            objectFit: 'cover', zIndex: 0, pointerEvents: 'none'
+            objectFit: 'cover',
+            // text 길이로 카드 높이가 변해도 bg 상단 기준으로 일관되게 — thank_classic은 위 고정
+            objectPosition: card.layout_id === 'thank_classic' ? 'top center' : 'center',
+            zIndex: 0, pointerEvents: 'none'
           }}
         />
       )}
-      <div style={{ position: 'relative', padding: card.layout_id === 'layout-7' ? '110px 20px 60px' : '24px 20px 60px', zIndex: 1 }}>
-        {/* thank_* 레이아웃 전용: 상단 사각 하이라이트 사진 (custom_bg_url 사용) */}
+      <div style={{ position: 'relative', padding: card.layout_id === 'layout-7' ? '110px 20px 60px' : card.layout_id === 'thank_classic' ? '378px 20px 60px' : '24px 20px 60px', zIndex: 1 }}>
+        {/* thank_* 레이아웃 전용: 상단 사각 하이라이트 사진 — 절대 위치로 고정 (text 양과 무관) */}
         {card.layout_id?.startsWith('thank_') && (card.custom_bg_url || editable) && (
-          <FadeUp delay={0.02}>
-            <div style={{ display: 'flex', justifyContent: 'center', padding: '139px 0 20px' }}>
+          <div style={{
+            position: 'absolute',
+            top: 156,
+            left: 0,
+            right: 0,
+            display: 'flex',
+            justifyContent: 'center',
+            zIndex: 2,
+            pointerEvents: editable ? 'auto' : 'none'
+          }}>
               <div
                 onClick={editable ? (e) => { e.stopPropagation(); onPhotoClick?.(); } : undefined}
                 style={{
@@ -198,10 +209,10 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
                   borderRadius: 0,
                   overflow: 'hidden',
                   border: 'none',
-                  // 부드러운 그림자 — 템플릿 색상 기반
                   boxShadow: `0 2px 6px ${palette.title}33, 0 12px 28px ${palette.title}26`,
                   background: '#ffffff',
-                  cursor: editable ? 'pointer' : 'default'
+                  cursor: editable ? 'pointer' : 'default',
+                  pointerEvents: 'auto'
                 }}
               >
                 {card.custom_bg_url ? (
@@ -220,8 +231,7 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
                   </div>
                 )}
               </div>
-            </div>
-          </FadeUp>
+          </div>
         )}
         {/* 상단 장식 — 템플릿 메인 색상으로 ✽ + gradient 라인 (Topdown Text, Thank-Classic 제외) */}
         {card.layout_id !== 'layout-7' && card.layout_id !== 'thank_classic' && (
