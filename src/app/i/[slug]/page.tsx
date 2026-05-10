@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { getCardBySlug } from '@/lib/db/cards';
 import { getTheme } from '@/lib/theme';
 import { getAllTemplateColors } from '@/lib/actions/templateConfig';
@@ -14,7 +15,10 @@ interface Props {
 
 export async function generateMetadata({ params }: Props) {
   const card = await getCardBySlug(params.slug);
-  if (!card) return { title: '초대장' };
+  if (!card) {
+    const t = await getTranslations('Invitation');
+    return { title: t('metaTitle') };
+  }
   const description = card.greeting_oneliner || undefined;
   // og:image — 카드의 template 배경 이미지를 미리보기로 사용 (있으면)
   const bg = getBackground(card.bg_id);
@@ -45,7 +49,7 @@ export default async function InvitationPage({ params, searchParams }: Props) {
   // 만료 체크
   const now = new Date();
   if (card.expiry_date && new Date(card.expiry_date) < now) {
-    return <ExpiredView title={card.title} />;
+    return await ExpiredView({ title: card.title });
   }
 
   const theme = getTheme(card.theme);
@@ -61,7 +65,8 @@ export default async function InvitationPage({ params, searchParams }: Props) {
   );
 }
 
-function ExpiredView({ title }: { title: string }) {
+async function ExpiredView({ title }: { title: string }) {
+  const t = await getTranslations('Invitation');
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-hydrangea-100 to-hydrangea-200 p-6">
       <div className="bg-white/95 rounded-3xl p-12 text-center max-w-sm shadow-xl">
@@ -69,7 +74,7 @@ function ExpiredView({ title }: { title: string }) {
           <span className="text-white text-2xl">❀</span>
         </div>
         <h2 className="text-xl font-serif text-hydrangea-700 mb-3">{title}</h2>
-        <p className="text-sm text-hydrangea-400 leading-relaxed">이 초대장의 확인 기간이<br />종료되었습니다.</p>
+        <p className="text-sm text-hydrangea-400 leading-relaxed">{t('expiredLine1')}<br />{t('expiredLine2')}</p>
       </div>
     </div>
   );

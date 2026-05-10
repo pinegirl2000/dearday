@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 import { MapPin } from 'lucide-react';
 import { applyName } from '@/lib/layouts';
 import { getEventLabelScript, getEventTypeMeta } from '@/lib/eventType';
@@ -82,6 +83,7 @@ export default function VintageScriptCard({
   card, recipientName, background, rsvpSlot,
   guideOverlay, editable, onFieldEdit, onFieldClick, highlightedField, templateColorOverride, eventCardType
 }: Props) {
+  const t = useTranslations('Wizard');
   const hideEventLabel = eventCardType === 'thankcard' || eventCardType === 'congrats';
   const tpl = findTemplateByPair(card.bg_id, card.layout_id);
   const main = templateColorOverride?.color_main || tpl?.colorMain || '#1A2A3A';
@@ -119,7 +121,7 @@ export default function VintageScriptCard({
           background: isHighlighted ? 'rgba(123,94,167,0.06)' : 'transparent',
           transition: 'all 0.15s'
         }}
-        title="클릭해서 수정"
+        title={t('clickToEdit')}
       >{children}</span>
     );
   };
@@ -254,7 +256,7 @@ export default function VintageScriptCard({
                   }}>
                   {card.event_date
                     ? <SplitDate iso={card.event_date} color={boxTextColor} />
-                    : (editable && <div style={{ fontSize: 13, color: boxTextColor, opacity: 0.6, padding: '12px 0' }}>클릭해서 날짜/시간 입력</div>)
+                    : (editable && <div style={{ fontSize: 13, color: boxTextColor, opacity: 0.6, padding: '12px 0' }}>{t('clickToEnterDate')}</div>)
                   }
                 </div>
               )}
@@ -310,7 +312,7 @@ export default function VintageScriptCard({
                   ? (editable
                       ? <span style={{ color: main }}>{card.contact_phone}</span>
                       : <a href={`tel:${card.contact_phone}`} style={{ color: main, textDecoration: 'none' }}>{card.contact_phone}</a>)
-                  : <span style={{ color: main, opacity: 0.6 }}>전화번호 (클릭해서 입력)</span>
+                  : <span style={{ color: main, opacity: 0.6 }}>{t('phoneClickToEnter')}</span>
                 }
               </p>
             )}

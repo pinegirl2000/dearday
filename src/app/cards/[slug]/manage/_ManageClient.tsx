@@ -4,6 +4,7 @@ import { useState, useEffect, useTransition } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Copy, Check, Trash2, Plus, Eye, Users, Pencil, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { MobileHeader } from '@/components/layout/MobileHeader';
 import { Button, Sheet, Textarea } from '@/components/ui';
@@ -32,6 +33,7 @@ interface Recipient {
 }
 
 export default function ManageClient({ slug, cardTitle }: Props) {
+  const t = useTranslations('Manage');
   const [ownerToken, setOwnerToken] = useState<string | null>(null);
   const [recipients, setRecipients] = useState<Recipient[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,7 +97,7 @@ export default function ManageClient({ slug, cardTitle }: Props) {
   const handleBulkAdd = () => {
     const names = bulkText.split('\n').map((n) => n.trim()).filter((n) => n.length > 0);
     if (names.length === 0) {
-      toast.error('이름을 입력하세요');
+      toast.error(t('nameRequired'));
       return;
     }
     startTransition(async () => {
@@ -104,7 +106,7 @@ export default function ManageClient({ slug, cardTitle }: Props) {
         toast.error(res.error);
         return;
       }
-      toast.success(`${res.count}명 추가됨`);
+      toast.success(t('addedCount', { n: res.count }));
       setBulkText('');
       setSheetOpen(false);
       refresh(ownerToken);
@@ -123,7 +125,7 @@ export default function ManageClient({ slug, cardTitle }: Props) {
     const url = `${origin}/i/${slug}/${num}?v=4`;
     await navigator.clipboard.writeText(url);
     setCopiedNum(num);
-    toast.success('링크가 복사되었어요');
+    toast.success(t('linkCopied'));
     setTimeout(() => setCopiedNum(null), 1500);
   };
 
@@ -133,7 +135,7 @@ export default function ManageClient({ slug, cardTitle }: Props) {
         <MobileHeader title="Manage Recipients" back />
         <div className="text-center py-20">
           <p className="text-hydrangea-400 mb-4">{error}</p>
-          <a href={`/i/${slug}`} className="text-hydrangea-500 underline text-sm">초대장 보기</a>
+          <a href={`/i/${slug}`} className="text-hydrangea-500 underline text-sm">{t('viewInvitation')}</a>
         </div>
       </PageContainer>
     );
@@ -143,7 +145,7 @@ export default function ManageClient({ slug, cardTitle }: Props) {
     <PageContainer noPadding>
       <MobileHeader title="Manage Recipients" back />
       <div className="px-5 pt-3">
-        <div className="text-xs text-hydrangea-400 mb-1">초대장</div>
+        <div className="text-xs text-hydrangea-400 mb-1">{t('invitationLabelHeader')}</div>
         <h1 className="text-lg font-semibold text-hydrangea-700 mb-3 truncate">{cardTitle}</h1>
 
         <div className="grid grid-cols-3 gap-2 mb-6">
@@ -194,12 +196,12 @@ export default function ManageClient({ slug, cardTitle }: Props) {
         )}
 
         {loading ? (
-          <p className="text-center py-12 text-hydrangea-300">로딩 중...</p>
+          <p className="text-center py-12 text-hydrangea-300">{t('loading')}</p>
         ) : recipients.length === 0 ? (
           <div className="rounded-2xl border-2 border-dashed border-hydrangea-100 p-10 text-center">
-            <p className="text-sm text-hydrangea-400 mb-4">수신자를 등록하면<br />각자 이름이 들어간 링크가 생성됩니다</p>
+            <p className="text-sm text-hydrangea-400 mb-4">{t('emptyHintLine1')}<br />{t('emptyHintLine2')}</p>
             <Button onClick={() => setSheetOpen(true)} size="sm">
-              <Plus className="w-4 h-4 mr-1" /> 처음 등록하기
+              <Plus className="w-4 h-4 mr-1" /> {t('firstAdd')}
             </Button>
           </div>
         ) : (

@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 import { CalendarDays, MapPin, Phone, ExternalLink } from 'lucide-react';
 import { formatGreeting, applyName, getLayout } from '@/lib/layouts';
 import { getEventLabelText, getEventTypeMeta } from '@/lib/eventType';
@@ -98,6 +99,7 @@ const BG_PALETTE: Record<string, { title: string; subtitle: string; accent: stri
 };
 
 export default function ClassicTemplateCard({ card, recipientName, background, rsvpSlot, guideOverlay, editable, onFieldEdit, onFieldClick, highlightedField, templateColorOverride, eventCardType, onPhotoClick }: Props) {
+  const t = useTranslations('Wizard');
   const hideEventLabel = eventCardType === 'thankcard' || eventCardType === 'congrats';
   const evMeta = getEventTypeMeta(card.event_type);
   const ph = evMeta.fields;
@@ -122,7 +124,7 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
           background: isHighlighted ? 'rgba(123,94,167,0.06)' : 'transparent',
           transition: 'all 0.15s'
         }}
-        title="클릭해서 수정"
+        title={t('clickToEdit')}
       >{children}</span>
     );
   };
@@ -381,7 +383,7 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
                           </span>
                         </div>
                       ) : (
-                        <div style={{ fontSize: 13, color: main, opacity: 0.55, padding: '12px 0' }}>클릭해서 날짜/시간 입력</div>
+                        <div style={{ fontSize: 13, color: main, opacity: 0.55, padding: '12px 0' }}>{t('clickToEnterDate')}</div>
                       )}
                       {/* native input 제거 — 부모 div onClick → onFieldClick('event_date') → modal 열림 */}
                     </div>
@@ -445,7 +447,7 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
                     ? applyName(card.body, recipientName).split(/\r?\n/).map((line, i, arr) => (
                         <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
                       ))
-                    : <span style={{ opacity: 0.5 }}>메시지 (클릭해서 입력)</span>}
+                    : <span style={{ opacity: 0.5 }}>{t('messageClickToEnter')}</span>}
                 </Editable>
               </div>
             </div>
@@ -508,7 +510,7 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
                   ? (editable
                       ? <span>{card.contact_phone}</span>
                       : <a href={`tel:${card.contact_phone}`} style={{ color: 'inherit', textDecoration: 'none' }}>{card.contact_phone}</a>)
-                  : <span style={{ color: dbMain || tpl?.colorMain || COLORS.textLight, opacity: 0.6 }}>전화번호 (클릭해서 입력)</span>
+                  : <span style={{ color: dbMain || tpl?.colorMain || COLORS.textLight, opacity: 0.6 }}>{t('phoneClickToEnter')}</span>
                 }
               </p>
               );
@@ -523,7 +525,7 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
               <Editable fieldKey="extra_info" multiline>
                 {card.extra_info
                   ? applyName(card.extra_info, recipientName)
-                  : <span style={{ opacity: 0.5 }}>추가 정보 (클릭해서 입력)</span>}
+                  : <span style={{ opacity: 0.5 }}>{t('extraClickToEnter')}</span>}
               </Editable>
             </p>
           </div>

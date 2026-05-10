@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import { Mail, Link as LinkIcon, Plus, Trash2, Send, Copy, Check, Calendar, Users, Download, ThumbsUp, ThumbsDown, TrendingUp } from 'lucide-react';
 import {
   listRecipients,
@@ -40,6 +41,7 @@ type Mode = 'email' | 'link';
 type AddMode = 'single' | 'bulk';
 
 export default function SendStep({ slug, ownerToken, card }: Props) {
+  const t = useTranslations('Send');
   const [mode, setMode] = useState<Mode>('link');
   const [addMode, setAddMode] = useState<AddMode>('single');
   const [recipients, setRecipients] = useState<Recipient[]>([]);
@@ -68,12 +70,12 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
     startTransition(async () => {
       const res = await updateRecipientName(slug, ownerToken, id, next);
       if (!res.ok) {
-        toast.error(res.error || '이름 수정 실패');
+        toast.error(res.error || t('nameUpdateFailed'));
         // rollback
         setRecipients((rs) => rs.map((r) => (r.id === id ? { ...r, name: original } : r)));
         return;
       }
-      toast.success('이름 수정됨');
+      toast.success(t('nameUpdated'));
     });
   };
 
@@ -90,15 +92,15 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
   const linkFor = (num: string) => `${baseUrl}/i/${slug}/${num}?v=4`;
 
   const handleAddSingle = () => {
-    if (!singleName.trim()) { toast.error('이름을 입력하세요'); return; }
-    if (mode === 'email' && !singleEmail.trim()) { toast.error('이메일을 입력하세요'); return; }
+    if (!singleName.trim()) { toast.error(t('nameRequired')); return; }
+    if (mode === 'email' && !singleEmail.trim()) { toast.error(t('emailRequired')); return; }
     startTransition(async () => {
       const res = await addRecipientsWithDetails(slug, ownerToken,
         [{ name: singleName.trim(), email: mode === 'email' ? singleEmail.trim() : null }],
         mode
       );
       if (!res.ok) { toast.error(res.error); return; }
-      toast.success(`${res.count}명 추가됨`);
+      toast.success(t('addedCount', { n: res.count }));
       setSingleName('');
       setSingleEmail('');
       load();
@@ -107,7 +109,7 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
 
   const handleAddBulk = () => {
     const lines = bulkText.split('\n').map((l) => l.trim()).filter((l) => l.length > 0);
-    if (lines.length === 0) { toast.error('비어있습니다'); return; }
+    if (lines.length === 0) { toast.error(t('emptyBulk')); return; }
     const items: Array<{ name: string; email?: string | null }> = lines.map((l) => {
       // 구분자 "/" — "이름/이메일" 또는 이름만
       const parts = l.split('/').map((p) => p.trim());
@@ -116,25 +118,25 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
     if (mode === 'email') {
       const missing = items.filter((it) => !it.email);
       if (missing.length > 0) {
-        toast.error(`이메일 누락 ${missing.length}건. 형식: "이름/이메일"`);
+        toast.error(t('emailMissing', { n: missing.length }));
         return;
       }
     }
     startTransition(async () => {
       const res = await addRecipientsWithDetails(slug, ownerToken, items, mode);
       if (!res.ok) { toast.error(res.error); return; }
-      toast.success(`${res.count}명 추가됨`);
+      toast.success(t('addedCount', { n: res.count }));
       setBulkText('');
       load();
     });
   };
 
   const handleDelete = (id: string) => {
-    if (!confirm('이 수신자를 삭제하시겠어요?')) return;
+    if (!confirm(t('deleteConfirm'))) return;
     startTransition(async () => {
       const res = await deleteRecipient(slug, ownerToken, id);
-      if (!res.ok) { toast.error(res.error || '삭제 실패'); return; }
-      toast.success('삭제됨');
+      if (!res.ok) { toast.error(res.error || t('deleteFailed')); return; }
+      toast.success(t('deleted'));
       load();
     });
   };
@@ -150,9 +152,9 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
         setCopiedId(id);
         copyTimerRef.current = setTimeout(() => setCopiedId(null), 2000);
       });
-      toast.success('링크 복사됨');
+      toast.success(t('linkCopied'));
     } catch {
-      toast.error('복사 실패');
+      toast.error(t('linkCopyFailed'));
     }
   };
 
@@ -163,9 +165,9 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
       setSendingId(null);
       if (!res.ok) { toast.error(res.error); return; }
       if (res.failed > 0) {
-        toast.error(`${res.failed}건 실패: ${res.failures.join(', ')}`);
+        toast.error(t('sendFailed', { n: res.failed, failures: res.failures.join(', ') }));
       } else {
-        toast.success(`${res.sent}건 발송 완료`);
+        toast.success(t('sentSuccess', { n: res.sent }));
       }
       load();
     });
@@ -175,14 +177,14 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
     const pendingIds = recipients
       .filter((r) => r.delivery_method === 'email' && r.email && r.sent_status !== 'sent')
       .map((r) => r.id);
-    if (pendingIds.length === 0) { toast.message('보낼 수신자가 없습니다'); return; }
+    if (pendingIds.length === 0) { toast.message(t('noPending')); return; }
     startTransition(async () => {
       const res = await sendInvitationsToRecipients(slug, ownerToken, pendingIds);
       if (!res.ok) { toast.error(res.error); return; }
       if (res.failed > 0) {
-        toast.error(`${res.sent}건 성공 / ${res.failed}건 실패`);
+        toast.error(t('sentMixed', { ok: res.sent, fail: res.failed }));
       } else {
-        toast.success(`${res.sent}건 모두 발송됨`);
+        toast.success(t('sentAll', { n: res.sent }));
       }
       load();
     });
@@ -196,7 +198,7 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
     <div className="space-y-5 mt-2">
       {/* 발송 모드 선택 */}
       <div>
-        <label className="block text-xs font-semibold text-hydrangea-700 mb-2">발송 방법</label>
+        <label className="block text-xs font-semibold text-hydrangea-700 mb-2">{t('modeLabel')}</label>
         <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
@@ -208,9 +210,9 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
             <LinkIcon className="w-4 h-4 text-hydrangea-500 mb-1" />
             <div className="text-xs font-semibold text-hydrangea-700">Link only</div>
             <div className="text-[10px] text-hydrangea-400 mt-0.5 leading-snug">
-              개인 링크 생성 후 메신저를 이용해 직접 링크를 보내는 방식입니다.
+              {t('linkOnlyDesc')}
               <span className="inline-flex items-center gap-0.5 mx-0.5"><Copy className="inline w-2.5 h-2.5" /></span>
-              아이콘을 클릭하면 링크가 복사됩니다.
+              {t('linkCopyHint')}
             </div>
           </button>
           <button
@@ -218,21 +220,21 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
             disabled
             aria-disabled="true"
             className="relative px-3 py-3 rounded-xl border-2 text-left transition border-hydrangea-100 bg-hydrangea-50/40 opacity-60 cursor-not-allowed"
-            title="준비중"
+            title={t('comingSoon')}
           >
             <Mail className="w-4 h-4 text-hydrangea-300 mb-1" />
             <div className="text-xs font-semibold text-hydrangea-400 flex items-center gap-1.5">
               Email
-              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-hydrangea-200 text-hydrangea-600">준비중</span>
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-hydrangea-200 text-hydrangea-600">{t('comingSoon')}</span>
             </div>
-            <div className="text-[10px] text-hydrangea-300 mt-0.5">DearDay에서 직접 이메일 발송</div>
+            <div className="text-[10px] text-hydrangea-300 mt-0.5">{t('emailDesc')}</div>
           </button>
         </div>
       </div>
 
       {/* 추가 방식 선택 */}
       <div>
-        <label className="block text-xs font-semibold text-hydrangea-700 mb-2">수신자 추가</label>
+        <label className="block text-xs font-semibold text-hydrangea-700 mb-2">{t('addLabel')}</label>
         {/* Segmented control — 한 줄 전체 폭, 두 모드 모두 확실히 보이게 */}
         <div className="flex p-1 rounded-xl bg-hydrangea-100/70 border border-hydrangea-200 mb-2">
           <button
@@ -244,7 +246,7 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
                 : 'text-hydrangea-500 hover:text-hydrangea-700'
             }`}
           >
-            👤 한 명씩
+            {t('addOne')}
           </button>
           <button
             type="button"
@@ -255,7 +257,7 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
                 : 'text-hydrangea-500 hover:text-hydrangea-700'
             }`}
           >
-            📋 한꺼번에 (Bulk)
+            {t('addBulk')}
           </button>
         </div>
 
@@ -263,7 +265,7 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
           <div className="space-y-2">
             <input
               type="text"
-              placeholder="이름 (예: Ms. Sarah)"
+              placeholder={t('namePlaceholder')}
               value={singleName}
               onChange={(e) => setSingleName(e.target.value)}
               className="w-full min-h-[44px] px-3 rounded-xl border border-hydrangea-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-hydrangea-300"
@@ -271,7 +273,7 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
             {mode === 'email' && (
               <input
                 type="email"
-                placeholder="이메일 (예: sarah@example.com)"
+                placeholder={t('emailPlaceholder')}
                 value={singleEmail}
                 onChange={(e) => setSingleEmail(e.target.value)}
                 className="w-full min-h-[44px] px-3 rounded-xl border border-hydrangea-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-hydrangea-300"
@@ -283,15 +285,13 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
               disabled={pending}
               className="w-full min-h-[44px] rounded-xl bg-hydrangea-500 text-white text-sm font-semibold flex items-center justify-center gap-1.5 transition active:scale-95 disabled:opacity-50"
             >
-              <Plus className="w-4 h-4" /> 추가
+              <Plus className="w-4 h-4" /> {t('addButton')}
             </button>
           </div>
         ) : (
           <div className="space-y-2">
             <textarea
-              placeholder={mode === 'email'
-                ? '한 줄에 한 명씩 — "이름/이메일" 형식\n예:\nMs. Sarah/sarah@example.com\nMr. Daniel/daniel@example.com'
-                : '한 줄에 한 명씩 (이름만)\n예:\nMs. Sarah\nMr. Daniel'}
+              placeholder={mode === 'email' ? t('bulkEmailPlaceholder') : t('bulkNamePlaceholder')}
               value={bulkText}
               onChange={(e) => setBulkText(e.target.value)}
               rows={6}
@@ -303,7 +303,7 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
               disabled={pending}
               className="w-full min-h-[44px] rounded-xl bg-hydrangea-500 text-white text-sm font-semibold flex items-center justify-center gap-1.5 transition active:scale-95 disabled:opacity-50"
             >
-              <Plus className="w-4 h-4" /> 일괄 추가
+              <Plus className="w-4 h-4" /> {t('bulkButton')}
             </button>
           </div>
         )}
@@ -327,7 +327,7 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
             {validDeadline && (
               <div className="flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5 text-hydrangea-500 flex-shrink-0" />
-                <span className="text-hydrangea-700 font-medium">RSVP 마감</span>
+                <span className="text-hydrangea-700 font-medium">{t('rsvpDeadline')}</span>
                 <span className="text-hydrangea-500">
                   {validDeadline.toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' })}
                 </span>
@@ -336,24 +336,24 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
                     : daysLeft! <= 3 ? 'bg-amber-500 text-white'
                     : 'bg-emerald-500 text-white'
                 }`}>
-                  {expired ? '마감됨' : daysLeft === 0 ? '오늘 마감' : `${daysLeft}일 남음`}
+                  {expired ? t('expired') : daysLeft === 0 ? t('today') : t('daysLeft', { n: daysLeft! })}
                 </span>
               </div>
             )}
             {/* RSVP 옵션 */}
             <div className="flex items-center gap-1.5 flex-wrap">
               <Users className="w-3.5 h-3.5 text-hydrangea-500 flex-shrink-0" />
-              <span className="text-hydrangea-700 font-medium">옵션</span>
+              <span className="text-hydrangea-700 font-medium">{t('options')}</span>
               <span className={`px-1.5 py-0.5 rounded-full font-semibold ${
                 allowGroup ? 'bg-hydrangea-500 text-white' : 'bg-gray-200 text-gray-600'
               }`}>
-                동반자 {allowGroup ? `최대 ${maxPerCard}명` : '불가'}
+                {allowGroup ? t('guestMax', { n: maxPerCard }) : t('guestNone')}
               </span>
               {allowGroup && (
                 <span className={`px-1.5 py-0.5 rounded-full font-semibold ${
                   collectNames ? 'bg-emerald-500 text-white' : 'bg-gray-200 text-gray-600'
                 }`}>
-                  이름 입력 {collectNames ? '필수' : '없음'}
+                  {collectNames ? t('namesRequired') : t('namesNone')}
                 </span>
               )}
             </div>
@@ -366,7 +366,7 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
         <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
           <div className="flex items-center gap-1.5">
             <label className="block text-xs font-semibold text-hydrangea-700">
-              수신자 ({recipients.length})
+              {t('recipientsTitle')} ({recipients.length})
             </label>
             {recipients.length > 1 && (
               <select
@@ -374,9 +374,9 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
                 onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
                 className="text-[10px] px-1.5 py-0.5 rounded-md border border-hydrangea-200 bg-white text-hydrangea-600 font-medium focus:outline-none focus:ring-2 focus:ring-hydrangea-300"
               >
-                <option value="recent_response">최근응답순</option>
-                <option value="recent_input">최근입력순</option>
-                <option value="name">이름순</option>
+                <option value="recent_response">{t('sortRecentResponse')}</option>
+                <option value="recent_input">{t('sortRecentInput')}</option>
+                <option value="name">{t('sortName')}</option>
               </select>
             )}
           </div>
@@ -389,28 +389,28 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
                   const lines: string[] = [];
                   const titleRaw = (card?.title && card.title.trim()) || slug;
                   const cardTitle = `[${titleRaw}]`;
-                  lines.push(`=== ${cardTitle} 참석자 명단 ===`);
-                  lines.push(`생성: ${new Date().toLocaleString('ko-KR')}`);
+                  lines.push(t('exportTitleLine', { title: cardTitle }));
+                  lines.push(t('exportCreated', { datetime: new Date().toLocaleString() }));
                   lines.push('');
                   const attending = recipients.filter((r) => r.rsvp_attend === true);
                   const declined = recipients.filter((r) => r.rsvp_attend === false);
                   const noResp = recipients.filter((r) => r.rsvp_attend === null);
                   const totalPeople = attending.reduce((sum, r) => sum + (r.rsvp_count || 1), 0);
-                  lines.push(`[참석 — ${attending.length}건 / 총 ${totalPeople}명]`);
+                  lines.push(t('exportAttending', { records: attending.length, people: totalPeople }));
                   for (const r of attending) {
                     const cnt = r.rsvp_count || 1;
                     const names = r.rsvp_attendee_names && r.rsvp_attendee_names.length > 0
                       ? `: ${r.rsvp_attendee_names.join(', ')}`
                       : '';
-                    lines.push(`- ${r.name} (${cnt}명)${names}${r.rsvp_oneliner ? ` — "${r.rsvp_oneliner}"` : ''} | ${linkFor(r.num)}`);
+                    lines.push(`- ${r.name} ${t('exportPersonCount', { n: cnt })}${names}${r.rsvp_oneliner ? ` — "${r.rsvp_oneliner}"` : ''} | ${linkFor(r.num)}`);
                   }
                   lines.push('');
-                  lines.push(`[불참 — ${declined.length}건]`);
+                  lines.push(t('exportDeclined', { n: declined.length }));
                   for (const r of declined) {
                     lines.push(`- ${r.name}${r.rsvp_oneliner ? ` — "${r.rsvp_oneliner}"` : ''} | ${linkFor(r.num)}`);
                   }
                   lines.push('');
-                  lines.push(`[미응답 — ${noResp.length}건]`);
+                  lines.push(t('exportNoResponse', { n: noResp.length }));
                   for (const r of noResp) {
                     lines.push(`- ${r.name} | ${linkFor(r.num)}`);
                   }
@@ -419,15 +419,15 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement('a');
                   a.href = url;
-                  a.download = `${cardTitle}_참석자명단_${new Date().toISOString().slice(0,10)}.txt`;
+                  a.download = t('exportFileName', { title: cardTitle, date: new Date().toISOString().slice(0,10) });
                   a.click();
                   URL.revokeObjectURL(url);
-                  toast.success('참석자 명단 다운로드');
+                  toast.success(t('exportSuccess'));
                 }}
-                title="참석자 명단 텍스트 파일로 저장"
+                title={t('exportTitle')}
                 className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-white border border-hydrangea-200 text-hydrangea-600 text-[11px] font-semibold hover:bg-hydrangea-50 active:scale-95 transition"
               >
-                <Download className="w-3 h-3" /> 명단-링크 export
+                <Download className="w-3 h-3" /> {t('exportButton')}
               </button>
             )}
             {pendingEmailCount > 0 && (
@@ -437,7 +437,7 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
                 disabled={pending}
                 className="px-3 py-1.5 rounded-lg bg-hydrangea-500 text-white text-[11px] font-semibold flex items-center gap-1 disabled:opacity-50"
               >
-                <Send className="w-3 h-3" /> 모두 발송 ({pendingEmailCount})
+                <Send className="w-3 h-3" /> {t('sendAll', { n: pendingEmailCount })}
               </button>
             )}
           </div>
@@ -445,7 +445,7 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
 
         {recipients.length === 0 ? (
           <div className="text-center py-8 text-xs text-hydrangea-400 bg-hydrangea-50/40 rounded-xl">
-            아직 등록된 수신자가 없습니다
+            {t('noRecipients')}
           </div>
         ) : (
           <div className="space-y-1.5 max-h-96 overflow-y-auto">
@@ -491,7 +491,7 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
                         setEditingNameId(r.id);
                         setEditingNameValue(r.name);
                       }}
-                      title="클릭해서 이름 수정"
+                      title={t('editNameTitle')}
                       className="w-full text-left font-semibold text-hydrangea-700 truncate hover:text-hydrangea-500 hover:underline underline-offset-2 transition cursor-text"
                     >
                       {r.name}
@@ -502,7 +502,7 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
                 <button
                   type="button"
                   onClick={() => handleCopy(r.num, r.id)}
-                  title="링크 복사"
+                  title={t('copyLink')}
                   className={`inline-flex items-center justify-center gap-1 px-2 py-1 rounded-md text-[11px] font-semibold transition active:scale-95 ${
                     copiedId === r.id
                       ? 'bg-green-50 text-green-700 border border-green-200'
@@ -512,23 +512,23 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
                   {copiedId === r.id ? (
                     <>
                       <Check className="w-3.5 h-3.5" />
-                      <span>복사됨</span>
+                      <span>{t('linkCopied')}</span>
                     </>
                   ) : (
                     <>
                       <Copy className="w-3.5 h-3.5" />
-                      <span>링크복사</span>
+                      <span>{t('linkLabel')}</span>
                     </>
                   )}
                 </button>
                 {/* col3: 읽음/안읽음 */}
                 {r.read_at ? (
                   <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-hydrangea-50 text-hydrangea-700 border border-hydrangea-200 text-[10px] font-semibold">
-                    👁 읽음
+                    {t('read')}
                   </span>
                 ) : (
                   <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-gray-50 text-gray-500 border border-gray-200 text-[10px]">
-                    안읽음
+                    {t('unread')}
                   </span>
                 )}
                 {/* col4: RSVP 상태 + 인원수 — 참석은 클릭 시 attendee 이름 펼침 */}
@@ -536,21 +536,21 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
                   <button
                     type="button"
                     onClick={() => setExpandedId((cur) => (cur === r.id ? null : r.id))}
-                    title="참석자 이름 보기"
+                    title={t('viewAttendees')}
                     className="inline-flex items-center justify-center gap-0.5 px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-semibold hover:bg-emerald-100 active:scale-95 transition cursor-pointer"
                   >
-                    ✓ 참석
+                    {t('attend')}
                     {r.rsvp_count && r.rsvp_count > 0 && (
                       <span className="ml-0.5 px-1 rounded bg-emerald-500 text-white">{r.rsvp_count}</span>
                     )}
                   </button>
                 ) : r.rsvp_attend === false ? (
                   <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-semibold">
-                    ✕ 불참
+                    {t('decline')}
                   </span>
                 ) : (
                   <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-gray-50 text-gray-400 border border-gray-200 text-[10px]">
-                    미응답
+                    {t('noResponse')}
                   </span>
                 )}
                 {/* col5: 액션 — 이메일 발송(있을 때) + 삭제 */}
@@ -560,7 +560,7 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
                       type="button"
                       onClick={() => handleSendOne(r.id)}
                       disabled={pending && sendingId === r.id}
-                      title={r.sent_status === 'sent' ? '재발송' : '이메일 발송'}
+                      title={r.sent_status === 'sent' ? t('resend') : t('sendEmail')}
                       className="p-1.5 rounded-md text-hydrangea-500 hover:bg-hydrangea-50 disabled:opacity-50"
                     >
                       <Send className="w-3.5 h-3.5" />
@@ -569,7 +569,7 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
                   <button
                     type="button"
                     onClick={() => handleDelete(r.id)}
-                    title="삭제"
+                    title={t('deleteAria')}
                     className="p-1.5 rounded-md text-red-400 hover:bg-red-50"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -580,7 +580,7 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
               {expandedId === r.id && r.rsvp_attend === true && (
                 <div className="px-3 pb-2 pt-0 border-t border-hydrangea-100/60 bg-emerald-50/30">
                   <div className="text-[10px] font-semibold text-emerald-700 mt-1.5 mb-1">
-                    참석자 ({r.rsvp_count || 1}명)
+                    {t('attendees', { n: r.rsvp_count || 1 })}
                   </div>
                   {r.rsvp_attendee_names && r.rsvp_attendee_names.length > 0 ? (
                     <div className="flex flex-wrap gap-1">
@@ -595,7 +595,7 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
                     </div>
                   ) : (
                     <div className="text-[10px] text-emerald-600/70">
-                      개별 이름은 입력되지 않았습니다.
+                      {t('noIndividualNames')}
                     </div>
                   )}
                   {r.rsvp_oneliner && (
@@ -629,24 +629,24 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
           <div className="rounded-xl border border-hydrangea-100 bg-hydrangea-50/30 p-3 space-y-3">
             <div className="flex items-baseline gap-2">
               <h3 className="text-[11px] font-bold text-hydrangea-700 uppercase tracking-wide flex items-center gap-1">
-                <TrendingUp className="w-3.5 h-3.5" /> 응답 통계
+                <TrendingUp className="w-3.5 h-3.5" /> {t('statsTitle')}
               </h3>
               <span className="text-[10px] text-hydrangea-400">
-                {new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })} 기준
+                {t('asOf', { date: new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) })}
               </span>
             </div>
             <div className="grid grid-cols-3 gap-2">
               <div className="rounded-xl bg-gradient-to-br from-hydrangea-50 to-hydrangea-100 border border-hydrangea-200 p-3 shadow-sm relative overflow-hidden">
                 <Send className="absolute -bottom-2 -right-2 w-12 h-12 text-hydrangea-300/40" strokeWidth={1.5} />
                 <div className="relative">
-                  <div className="text-[10px] font-semibold text-hydrangea-500 mb-0.5">총 링크 발송</div>
+                  <div className="text-[10px] font-semibold text-hydrangea-500 mb-0.5">{t('totalLinksSent')}</div>
                   <div className="flex items-baseline gap-0.5">
                     <span className="text-2xl font-extrabold leading-none text-hydrangea-700">{totalRecipients}</span>
-                    <span className="text-[10px] text-hydrangea-500">건</span>
+                    <span className="text-[10px] text-hydrangea-500">{t('unit')}</span>
                   </div>
                   <div className="mt-1">
                     <div className="text-[10px] inline-flex items-center gap-1 bg-hydrangea-500 text-white px-1.5 py-0.5 rounded-full font-semibold">
-                      👁 {readRecipients}명 읽음
+                      👁 {t('readCount', { n: readRecipients })}
                     </div>
                   </div>
                 </div>
@@ -654,23 +654,23 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
               <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200 p-3 shadow-sm relative overflow-hidden">
                 <ThumbsUp className="absolute -bottom-2 -right-2 w-12 h-12 text-emerald-300/40" strokeWidth={1.5} />
                 <div className="relative">
-                  <div className="text-[10px] font-semibold text-emerald-600 mb-0.5">참석</div>
+                  <div className="text-[10px] font-semibold text-emerald-600 mb-0.5">{t('attendingLabel')}</div>
                   <div className="flex items-baseline gap-0.5">
                     <span className="text-2xl font-extrabold leading-none text-emerald-700">{attendingRecords}</span>
-                    <span className="text-[10px] text-emerald-600">건</span>
+                    <span className="text-[10px] text-emerald-600">{t('unit')}</span>
                   </div>
                   <div className="text-[10px] mt-1 inline-flex items-center gap-1 bg-emerald-500 text-white px-1.5 py-0.5 rounded-full font-semibold">
-                    <Users className="w-2.5 h-2.5" /> 총 {attendingTotal}명
+                    <Users className="w-2.5 h-2.5" /> {t('totalPeople', { n: attendingTotal })}
                   </div>
                 </div>
               </div>
               <div className="rounded-xl bg-gradient-to-br from-rose-50 to-rose-100 border border-rose-200 p-3 shadow-sm relative overflow-hidden">
                 <ThumbsDown className="absolute -bottom-2 -right-2 w-12 h-12 text-rose-300/40" strokeWidth={1.5} />
                 <div className="relative">
-                  <div className="text-[10px] font-semibold text-rose-600 mb-0.5">불참</div>
+                  <div className="text-[10px] font-semibold text-rose-600 mb-0.5">{t('declinedLabel')}</div>
                   <div className="flex items-baseline gap-0.5">
                     <span className="text-2xl font-extrabold leading-none text-rose-700">{declinedRecords}</span>
-                    <span className="text-[10px] text-rose-600">건</span>
+                    <span className="text-[10px] text-rose-600">{t('unit')}</span>
                   </div>
                 </div>
               </div>
@@ -678,24 +678,24 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
             {totalRecipients > 0 && (
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] font-semibold text-hydrangea-600">응답률</span>
+                  <span className="text-[10px] font-semibold text-hydrangea-600">{t('responseRate')}</span>
                   <span className="text-[11px] font-bold text-hydrangea-700">
-                    응답 {totalReplies}건 / 발송 {totalRecipients}건
+                    {t('replyVsSend', { replies: totalReplies, total: totalRecipients })}
                     <span className="text-hydrangea-400 font-medium ml-1">({replyRate}%)</span>
                   </span>
                 </div>
                 <div className="h-2 rounded-full bg-hydrangea-100 overflow-hidden flex">
                   {attendingRecords > 0 && (
-                    <div className="bg-emerald-500 h-full" style={{ width: `${attendPct}%` }} title={`참석 ${attendingRecords}`} />
+                    <div className="bg-emerald-500 h-full" style={{ width: `${attendPct}%` }} title={t('attendingLabel') + ' ' + attendingRecords} />
                   )}
                   {declinedRecords > 0 && (
-                    <div className="bg-rose-400 h-full" style={{ width: `${declinePct}%` }} title={`불참 ${declinedRecords}`} />
+                    <div className="bg-rose-400 h-full" style={{ width: `${declinePct}%` }} title={t('declinedLabel') + ' ' + declinedRecords} />
                   )}
                 </div>
                 <div className="flex items-center gap-3 mt-1.5 text-[9px] text-hydrangea-500">
-                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> 참석</span>
-                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-400" /> 불참</span>
-                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-hydrangea-100 border border-hydrangea-200" /> 미응답</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> {t('attendingLabel')}</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-400" /> {t('declinedLabel')}</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-hydrangea-100 border border-hydrangea-200" /> {t('noResponse')}</span>
                 </div>
               </div>
             )}

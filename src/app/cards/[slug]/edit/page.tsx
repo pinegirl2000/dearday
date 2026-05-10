@@ -20,7 +20,7 @@ export default async function EditCardPage({ params }: Props) {
   configsMap.forEach((v, k) => { configs[k] = v; });
 
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">로딩...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
       <EditCardClient card={card} templateConfigs={configs} />
     </Suspense>
   );

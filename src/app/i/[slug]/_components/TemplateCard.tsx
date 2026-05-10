@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 import { Phone, MapPin } from 'lucide-react';
 // NOTE: framer-motion의 whileInView는 장식용 fade-in에만 사용. 본문/연락처처럼
 // "반드시 보여야 하는" 정보는 whileInView로 감싸지 말 것 — IntersectionObserver
@@ -190,6 +191,7 @@ function FieldText({ field, children, delay = 0 }: { field: TextField; children:
 }
 
 export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverlay, editable, onFieldEdit, onFieldClick, highlightedField, templateColorOverride, eventCardType, onPhotoClick }: Props) {
+  const t = useTranslations('Wizard');
   const hideEventLabel = eventCardType === 'thankcard' || eventCardType === 'congrats';
   // 편집 모드: 텍스트 클릭 시 모달 트리거. highlightedField만 점선 박스로 텍스트 영역 표시.
   const Editable = ({ fieldKey, children }: { fieldKey: 'title' | 'greeting_oneliner' | 'body' | 'event_place' | 'contact_name' | 'extra_info' | 'event_label'; children: React.ReactNode; multiline?: boolean }) => {
@@ -212,7 +214,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
           background: isHighlighted ? 'rgba(123,94,167,0.06)' : 'transparent',
           transition: 'all 0.15s'
         }}
-        title="클릭해서 수정"
+        title={t('clickToEdit')}
       >{children}</span>
     );
   };
@@ -409,7 +411,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
                   ? (editable
                       ? <span>{card.contact_phone}</span>
                       : <a href={`tel:${card.contact_phone}`} style={{ color: 'inherit', textDecoration: 'none' }}>{card.contact_phone}</a>)
-                  : <span style={{ opacity: 0.5 }}>전화번호</span>
+                  : <span style={{ opacity: 0.5 }}>{t('phonePlaceholder')}</span>
                 }
               </p>
             );
@@ -467,7 +469,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
             padding: 0,
             transition: 'all 0.15s'
           }}
-          title="클릭해서 날짜/시간 수정"
+          title={t('clickToEditDate')}
           aria-label="Edit date and time"
         />
       )}
@@ -541,7 +543,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
                       ? (editable
                           ? <span style={{ color: f.place.color }}>{card.contact_phone}</span>
                           : <a href={`tel:${card.contact_phone}`} style={{ color: f.place.color, textDecoration: 'none' }}>{card.contact_phone}</a>)
-                      : <span style={{ opacity: 0.5 }}>전화번호</span>}
+                      : <span style={{ opacity: 0.5 }}>{t('phonePlaceholder')}</span>}
                   </span>
                 );
               })()}
@@ -563,7 +565,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
                       ? (editable
                           ? <span style={{ color: f.place.color }}>{card.contact_phone}</span>
                           : <a href={`tel:${card.contact_phone}`} style={{ color: f.place.color, textDecoration: 'none' }}>{card.contact_phone}</a>)
-                      : <span style={{ opacity: 0.5 }}>전화번호</span>}
+                      : <span style={{ opacity: 0.5 }}>{t('phonePlaceholder')}</span>}
                   </span>
                 );
               })()}

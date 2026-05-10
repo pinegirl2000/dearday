@@ -186,6 +186,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
   const { status: sessionStatus } = useSession();
   const t = useTranslations('Wizard');
   const tEvent = useTranslations('EventTypes');
+  const tCommon = useTranslations('Common');
   const { draft, setDraft, setEventType, reset, editingSlug } = useWizardStore();
   const isEditMode = !!editingSlug;
   const [open, setOpen] = useState<SectionId>((initialOpen as SectionId) || 1);
@@ -263,11 +264,11 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
       form.append('kind', 'thankPhoto');
       const res = await fetch('/api/upload', { method: 'POST', body: form });
       const json = await res.json();
-      if (!res.ok || !json.ok) throw new Error(json.error || '업로드 실패');
+      if (!res.ok || !json.ok) throw new Error(json.error || t('uploadError'));
       setDraft({ custom_bg_url: json.url });
-      toast.success('사진이 업로드되었어요');
+      toast.success(t('uploadSuccess'));
     } catch (err: any) {
-      toast.error(err.message || '업로드 중 오류');
+      toast.error(err.message || t('uploadingError'));
     }
   };
   const triggerThankPhotoUpload = () => thankPhotoInputRef.current?.click();
@@ -624,7 +625,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                     type="button"
                     onClick={() => enabled && setOpen(id)}
                     disabled={!enabled}
-                    title={!enabled ? '이전 단계를 먼저 완료하세요' : SECTION_LABELS[id]}
+                    title={!enabled ? t('stepLockedHint') : SECTION_LABELS[id]}
                     className={`relative w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold transition active:scale-95 disabled:cursor-not-allowed ${
                       active
                         ? 'bg-hydrangea-500 text-white shadow ring-2 ring-hydrangea-200'
@@ -746,7 +747,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                       <div>
                         <div className="text-[10px] font-semibold text-hydrangea-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                           <span>📅</span><span>Invitation</span>
-                          <span className="text-[9px] text-hydrangea-400 font-normal normal-case tracking-normal">· 날짜/장소 포함</span>
+                          <span className="text-[9px] text-hydrangea-400 font-normal normal-case tracking-normal">{t('withDate')}</span>
                         </div>
                         <div className="grid grid-cols-6 gap-1">
                           {invitationEvents.map(renderEventBtn)}
@@ -756,7 +757,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                         <div>
                           <div className="text-[10px] font-semibold text-amber-600 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                             <span>💌</span><span>Thank Card</span>
-                            <span className="text-[9px] text-hydrangea-400 font-normal normal-case tracking-normal">· 감사·답례</span>
+                            <span className="text-[9px] text-hydrangea-400 font-normal normal-case tracking-normal">{t('thanks')}</span>
                           </div>
                           <div className="grid grid-cols-6 gap-1">
                             {thankEvents.map(renderEventBtn)}
@@ -767,7 +768,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                         <div>
                           <div className="text-[10px] font-semibold text-pink-600 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                             <span>🎉</span><span>Congrats</span>
-                            <span className="text-[9px] text-hydrangea-400 font-normal normal-case tracking-normal">· 축하 메시지</span>
+                            <span className="text-[9px] text-hydrangea-400 font-normal normal-case tracking-normal">{t('congratsLabel')}</span>
                           </div>
                           <div className="grid grid-cols-6 gap-1">
                             {congratsEvents.map(renderEventBtn)}
@@ -785,7 +786,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                   </h4>
                   {tpls.length === 0 ? (
                     <div className="text-center py-8 text-sm text-hydrangea-400">
-                      이 이벤트에 등록된 템플릿이 없습니다.
+                      {t('noTemplates')}
                     </div>
                   ) : (
                     <div className="grid grid-cols-5 gap-1.5">
@@ -988,7 +989,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
               const samplesToShow = availableSamples.slice(0, 3);
               return (
                 <div>
-                  <h4 className="text-xs font-semibold text-hydrangea-700 mb-2">📝 Sample — 시작할 예시 선택</h4>
+                  <h4 className="text-xs font-semibold text-hydrangea-700 mb-2">{t('sampleHeader')}</h4>
                   <div className="grid grid-cols-3 gap-1.5">
                     {samplesToShow.map((s) => {
                       const selected = draft.title === s.title && draft.body === s.body;
@@ -1088,7 +1089,9 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
               <div className="flex items-start gap-2">
                 <span className="text-base flex-shrink-0">✨</span>
                 <div className="text-[12px] text-hydrangea-700 leading-relaxed">
-                  아래 템플릿 위의 <span className="font-semibold">텍스트를 수정</span>해서 나만의 초청장을 만들어보세요. <span className="font-semibold">동그라미 번호</span>를 클릭하면 해당 항목의 위치를 확인할 수 있고, <span className="font-semibold">텍스트를 클릭</span>하여 내용 {isEditMode ? '수정' : '변경'}할 수 있습니다.
+                  {t.rich(isEditMode ? 'guideHintEdit' : 'guideHintCreate', {
+                    bold: (chunks) => <span className="font-semibold">{chunks}</span>
+                  })}
                 </div>
               </div>
             </div>
@@ -1231,12 +1234,12 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
 
             {draft.layout_id?.startsWith('thank_') && (
               <div className="pt-3 border-t border-hydrangea-100/60">
-                <h4 className="text-xs font-semibold text-hydrangea-700 mb-2">상단 사진 (선택)</h4>
+                <h4 className="text-xs font-semibold text-hydrangea-700 mb-2">{t('topPhotoTitle')}</h4>
                 <ImageUploader
                   kind="thankPhoto"
                   value={draft.custom_bg_url || undefined}
                   onChange={(url) => setDraft({ custom_bg_url: url })}
-                  hint="원형 하이라이트로 카드 상단에 표시됩니다 (최대 20KB, 자동 압축)"
+                  hint={t('topPhotoHint')}
                 />
               </div>
             )}
@@ -1288,9 +1291,9 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                     {/* 응답 수정 허용 — 마감일 안에 attend↔decline 전환 가능 여부 */}
                     <div className="flex items-center justify-between p-3 rounded-xl bg-white border border-hydrangea-100/60">
                       <div>
-                        <div className="text-sm text-hydrangea-700">응답 수정 허용</div>
+                        <div className="text-sm text-hydrangea-700">{t('rsvpAllowChange')}</div>
                         <div className="text-[11px] text-hydrangea-400 mt-0.5 leading-snug">
-                          마감일 안에 사용자가 참석↔불참 변경 가능
+                          {t('rsvpAllowChangeDesc')}
                         </div>
                       </div>
                       <button type="button" onClick={() => setDraft({ rsvp_allow_change: !(draft.rsvp_allow_change ?? true) })}
@@ -1311,7 +1314,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                       const maxStr = draft.event_date ? toLocalInput(draft.event_date) : undefined;
                       return (
                         <Input label="RSVP deadline" type="datetime-local"
-                          hint={maxStr ? 'Must be before the event start time. 이 날짜 후에는 카드를 받은 사용자가 RSVP를 할 수 없습니다.' : undefined}
+                          hint={maxStr ? t('rsvpDeadlineHint') : undefined}
                           min={minStr}
                           max={maxStr}
                           value={toLocalInput(draft.rsvp_deadline)}
@@ -1568,9 +1571,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                             </div>
                             {/* 애니메이션 설명 — Sway/Flip 버튼 바로 아래 */}
                             <p className="text-[11px] text-hydrangea-500 text-center px-2 leading-snug">
-                              {parsedEnv.type === 'flip'
-                                ? '봉투가 회전하며 뒷면이 보이고, 뚜껑이 열리며 안의 초청장이 펼쳐집니다.'
-                                : '봉투가 살랑거리다가 클릭하면 봉투가 열리고 꽃잎이 흩날리며 펼쳐집니다.'}
+                              {parsedEnv.type === 'flip' ? t('envFlipDesc') : t('envSwayDesc')}
                             </p>
                           </div>
                         );
@@ -1604,7 +1605,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                         setEnvelopeOpening(false);
                       } : undefined}
                       disabled={!envelopeOpen}
-                      aria-label={envelopeOpen ? '다시 재생' : 'Sample preview'}
+                      aria-label={envelopeOpen ? t('replayAria') : 'Sample preview'}
                       className={`absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-16 h-16 rounded-full bg-white/30 backdrop-blur-md border border-white/40 text-hydrangea-700 flex flex-col items-center justify-center gap-0.5 shadow-lg transition opacity-60 ${
                         envelopeOpen
                           ? 'hover:bg-white/50 hover:opacity-100 active:scale-95 cursor-pointer'
@@ -1614,7 +1615,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                       {envelopeOpen ? (
                         <>
                           <RotateCcw className="w-6 h-6" strokeWidth={2.5} />
-                          <span className="text-[10px] font-semibold tracking-wide">다시보기</span>
+                          <span className="text-[10px] font-semibold tracking-wide">{t('replay')}</span>
                         </>
                       ) : (
                         <>
@@ -1755,7 +1756,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
           >
             <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
               <div className="px-4 py-3 flex items-center justify-between border-b border-hydrangea-100">
-                <div className="text-sm font-semibold text-hydrangea-700">날짜 & 시간</div>
+                <div className="text-sm font-semibold text-hydrangea-700">{t('dateTimeTitle')}</div>
                 <button type="button" onClick={() => setDateTimeModalOpen(false)}
                   className="text-hydrangea-400 hover:text-hydrangea-700 text-2xl leading-none" aria-label="Close">×</button>
               </div>
@@ -1777,7 +1778,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                 />
               </div>
               <div className="px-4 pb-3 pt-1">
-                <label className="block text-xs font-medium text-hydrangea-700 mb-1.5">시간</label>
+                <label className="block text-xs font-medium text-hydrangea-700 mb-1.5">{t('timeLabel')}</label>
                 <input
                   type="time"
                   step={300}
@@ -1786,12 +1787,12 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                   className="w-full min-h-[48px] px-3 rounded-xl border border-hydrangea-200 bg-white text-hydrangea-700 text-base focus:outline-none focus:ring-2 focus:ring-hydrangea-300 [color-scheme:light]"
                   style={{ fontSize: '16px' }}
                 />
-                <p className="text-[11px] text-hydrangea-400 mt-2">RSVP 마감일과 만료일도 자동으로 동기화됩니다.</p>
+                <p className="text-[11px] text-hydrangea-400 mt-2">{t('dateTimeHint')}</p>
               </div>
               <div className="p-3 flex border-t border-hydrangea-100">
                 <button type="button" onClick={() => setDateTimeModalOpen(false)}
                   className="flex-1 px-4 py-2.5 rounded-xl bg-hydrangea-500 text-white text-sm font-semibold hover:bg-hydrangea-600 transition"
-                >완료</button>
+                >{tCommon('done')}</button>
               </div>
             </div>
           </div>
@@ -1809,31 +1810,31 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
             onClick={(e) => e.stopPropagation()}
           >
             <div className="px-4 py-3 flex items-center justify-between border-b border-hydrangea-100">
-              <div className="text-sm font-semibold text-hydrangea-700">장소 입력</div>
+              <div className="text-sm font-semibold text-hydrangea-700">{t('placeTitle')}</div>
               <button type="button" onClick={() => setPlaceModalOpen(false)}
                 className="text-hydrangea-400 hover:text-hydrangea-700 text-2xl leading-none" aria-label="Close">×</button>
             </div>
             <div className="p-4 space-y-3">
               <Input
                 label="Place name"
-                placeholder="예: 우리집, Marina Hotel"
+                placeholder={t('placeNamePlaceholder')}
                 value={draft.event_place || ''}
                 onChange={(e) => setDraft({ event_place: e.target.value })}
               />
               <Input
                 label="Address"
-                placeholder="도로명 주소 또는 지도 링크"
+                placeholder={t('addressPlaceholder')}
                 value={draft.map_url || ''}
                 onChange={(e) => setDraft({ map_url: e.target.value })}
               />
               <p className="text-[11px] text-hydrangea-400 leading-relaxed">
-                장소 이름과 주소(또는 Google Maps 링크)를 입력하세요. 주소는 카드에서 클릭 시 지도로 연결됩니다.
+                {t('placeHint')}
               </p>
             </div>
             <div className="p-3 flex border-t border-hydrangea-100">
               <button type="button" onClick={() => setPlaceModalOpen(false)}
                 className="flex-1 px-4 py-2.5 rounded-xl bg-hydrangea-500 text-white text-sm font-semibold hover:bg-hydrangea-600 transition"
-              >완료</button>
+              >{tCommon('done')}</button>
             </div>
           </div>
         </div>
@@ -1878,7 +1879,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                 <Input
                   label={textEditField.label}
                   placeholder={textEditField.key === 'greeting_oneliner' ? meta.fields.subtitlePlaceholder
-                    : textEditField.key === 'contact_name' ? '예: Jane Doe / 홍길동' : ''}
+                    : textEditField.key === 'contact_name' ? t('contactNameExample') : ''}
                   value={(draft[textEditField.key] as string) || ''}
                   onChange={(e) => setDraft({ [textEditField.key]: e.target.value } as any)}
                 />
@@ -1887,7 +1888,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
             <div className="p-3 flex border-t border-hydrangea-100">
               <button type="button" onClick={() => setTextEditField(null)}
                 className="flex-1 px-4 py-2.5 rounded-xl bg-hydrangea-500 text-white text-sm font-semibold hover:bg-hydrangea-600 transition"
-              >완료</button>
+              >{tCommon('done')}</button>
             </div>
           </div>
         </div>
@@ -1901,7 +1902,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
         >
           <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
             <div className="px-4 py-3 flex items-center justify-between border-b border-hydrangea-100">
-              <div className="text-sm font-semibold text-hydrangea-700">추가 정보 입력</div>
+              <div className="text-sm font-semibold text-hydrangea-700">{t('extraInfoTitle')}</div>
               <button type="button" onClick={() => setExtraInfoModalOpen(false)}
                 className="text-hydrangea-400 hover:text-hydrangea-700 text-2xl leading-none" aria-label="Close">×</button>
             </div>
@@ -1914,13 +1915,13 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                 rows={4}
               />
               <p className="text-[11px] text-hydrangea-400 leading-relaxed">
-                드레스 코드, 주차 안내, 특별 요청 등 카드 하단에 표시할 추가 안내사항을 입력하세요.
+                {t('extraInfoHint')}
               </p>
             </div>
             <div className="p-3 flex border-t border-hydrangea-100">
               <button type="button" onClick={() => setExtraInfoModalOpen(false)}
                 className="flex-1 px-4 py-2.5 rounded-xl bg-hydrangea-500 text-white text-sm font-semibold hover:bg-hydrangea-600 transition"
-              >완료</button>
+              >{tCommon('done')}</button>
             </div>
           </div>
         </div>
@@ -1937,7 +1938,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
             onClick={(e) => e.stopPropagation()}
           >
             <div className="px-4 py-3 flex items-center justify-between border-b border-hydrangea-100">
-              <div className="text-sm font-semibold text-hydrangea-700">전화번호 입력</div>
+              <div className="text-sm font-semibold text-hydrangea-700">{t('phoneTitle')}</div>
               <button type="button" onClick={() => setPhoneModalOpen(false)}
                 className="text-hydrangea-400 hover:text-hydrangea-700 text-2xl leading-none" aria-label="Close">×</button>
             </div>
@@ -1947,13 +1948,15 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                 onChange={(phone) => setDraft({ contact_phone: phone })}
               />
               <p className="text-[11px] text-hydrangea-400 mt-2 leading-relaxed">
-                지역 번호를 선택하고 숫자를 입력하면 자동으로 <code className="bg-hydrangea-50 px-1 rounded">0000-0000</code> 형식으로 포맷됩니다.
+                {t.rich('phoneHint', {
+                  code: (chunks) => <code className="bg-hydrangea-50 px-1 rounded">{chunks}</code>
+                })}
               </p>
             </div>
             <div className="p-3 flex border-t border-hydrangea-100">
               <button type="button" onClick={() => setPhoneModalOpen(false)}
                 className="flex-1 px-4 py-2.5 rounded-xl bg-hydrangea-500 text-white text-sm font-semibold hover:bg-hydrangea-600 transition"
-              >완료</button>
+              >{tCommon('done')}</button>
             </div>
           </div>
         </div>
@@ -1987,9 +1990,9 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
               </motion.div>
             </motion.div>
             <div className="text-base font-bold text-hydrangea-700 mb-1 tracking-tight">
-              {isEditMode || (publishedSlug && editingSlug !== publishedSlug) ? '저장되었습니다' : '초대장이 발행되었습니다'}
+              {isEditMode || (publishedSlug && editingSlug !== publishedSlug) ? t('savedTitle') : t('publishedTitle')}
             </div>
-            <div className="text-[11px] text-hydrangea-400">My cards로 이동합니다…</div>
+            <div className="text-[11px] text-hydrangea-400">{t('redirectMyCards')}</div>
           </motion.div>
         </div>
       )}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { ChevronDown, ExternalLink, Settings, Pencil, Check, Send, Users, ThumbsUp, ThumbsDown, TrendingUp, X, Maximize2, RotateCcw, RefreshCw } from 'lucide-react';
 import { getCardStats } from '@/lib/actions/getCardStats';
 import { getEventTypeMeta } from '@/lib/eventType';
@@ -22,7 +23,7 @@ interface CardStats {
 function fmtDate(iso?: string | null) {
   if (!iso) return '';
   try {
-    return new Date(iso).toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' });
+    return new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
   } catch { return ''; }
 }
 
@@ -36,6 +37,7 @@ export default function RecentCardSelector({
   /** admin 전용 — 카드별 소유자 정보 (cardId → { name?, email? }) */
   owners?: Record<string, { name?: string | null; email?: string | null }>;
 }) {
+  const t = useTranslations('RecentCards');
   const [liveStats, setLiveStats] = useState<Record<string, CardStats>>(stats);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -112,10 +114,10 @@ export default function RecentCardSelector({
         <div className="flex-1 min-w-0 text-left">
           <div className="text-[10px] font-medium opacity-80 mb-0.5 flex items-center gap-1">
             <span>✨</span>
-            <span>{c.id === cards[0].id ? '가장 최근 작업한 초청장' : '선택된 초청장'}</span>
+            <span>{c.id === cards[0].id ? t('mostRecent') : t('selected')}</span>
           </div>
           <div className="text-lg font-extrabold uppercase tracking-wide truncate drop-shadow-sm">
-            {c.title || '(제목 없음)'}
+            {c.title || t('untitled')}
           </div>
           {owners && (owners[c.id]?.name || owners[c.id]?.email) && (
             <div className="text-[10px] opacity-90 mt-0.5 truncate">
@@ -127,12 +129,12 @@ export default function RecentCardSelector({
           )}
           {(c.updated_at || c.created_at) && (
             <div className="text-[10px] opacity-75 mt-0.5">
-              최종작성일 {fmtDate(c.updated_at || c.created_at)}
+              {t('lastEdited', { date: fmtDate(c.updated_at || c.created_at) })}
             </div>
           )}
         </div>
         <span className="flex-shrink-0 text-[10px] bg-white/20 px-2 py-1 rounded-full font-semibold">
-          총 {cards.length}개
+          {t('totalCount', { n: cards.length })}
         </span>
         <ChevronDown className={`flex-shrink-0 w-5 h-5 transition-transform ${open ? 'rotate-180' : ''}`} strokeWidth={2.5} />
       </button>
@@ -155,8 +157,8 @@ export default function RecentCardSelector({
                 <span className="text-base flex-shrink-0">{cMeta.emoji}</span>
                 <div className="flex-1 min-w-0">
                   <div className="truncate">
-                    {idx === 0 && <span className="text-[10px] text-hydrangea-400 mr-1">최근</span>}
-                    {card.title || '(제목 없음)'}
+                    {idx === 0 && <span className="text-[10px] text-hydrangea-400 mr-1">{t('recentBadge')}</span>}
+                    {card.title || t('untitled')}
                   </div>
                   {owners && (owners[card.id]?.name || owners[card.id]?.email) && (
                     <div className="text-[10px] text-hydrangea-400 truncate font-normal">
@@ -177,7 +179,7 @@ export default function RecentCardSelector({
         type="button"
         onClick={() => setPreviewOpen(true)}
         className="relative aspect-[16/9] bg-hydrangea-50 overflow-hidden w-full cursor-zoom-in group"
-        aria-label="초청장 전체 보기">
+        aria-label={t('viewLargeAria')}>
         {/* 실제 텍스트가 포함된 TemplateCard — title 영역을 줌인해서 보여줌 */}
         <div
           className="absolute left-1/2 top-0 pointer-events-none"
@@ -194,7 +196,7 @@ export default function RecentCardSelector({
         <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
         {/* 클릭 가능 힌트 — hover 시 노출 */}
         <div className="absolute top-3 right-3 z-10 inline-flex items-center gap-1 bg-black/55 backdrop-blur text-white text-[10px] font-semibold px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition">
-          <Maximize2 className="w-3 h-3" /> 크게 보기
+          <Maximize2 className="w-3 h-3" /> {t('viewLarge')}
         </div>
       </button>
 
@@ -204,7 +206,7 @@ export default function RecentCardSelector({
           href={`/cards/${c.slug}/edit`}
           className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-hydrangea-500 text-white text-sm font-semibold hover:bg-hydrangea-600 active:scale-95 transition"
         >
-          <Pencil className="w-4 h-4" /> 수정하기
+          <Pencil className="w-4 h-4" /> {t('edit')}
         </Link>
       </div>
 
@@ -212,16 +214,16 @@ export default function RecentCardSelector({
       <div className="border-t border-hydrangea-100/60 bg-hydrangea-50/30">
         <div className="flex gap-1 px-3 pt-2 -mb-px">
           {([
-            { id: 'stats'      as const, label: '응답 통계',   icon: TrendingUp },
-            { id: 'recipients' as const, label: '수신자 등록', icon: Send }
-          ]).map((t) => {
-            const isActive = tab === t.id;
-            const Icon = t.icon;
+            { id: 'stats'      as const, label: t('tabStats'),      icon: TrendingUp },
+            { id: 'recipients' as const, label: t('tabRecipients'), icon: Send }
+          ]).map((tab2) => {
+            const isActive = tab === tab2.id;
+            const Icon = tab2.icon;
             return (
               <button
-                key={t.id}
+                key={tab2.id}
                 type="button"
-                onClick={() => setTab(t.id)}
+                onClick={() => setTab(tab2.id)}
                 className={`relative flex items-center gap-1 px-3 py-2 text-[11px] font-semibold rounded-t-lg border border-b-0 transition ${
                   isActive
                     ? 'bg-white text-hydrangea-700 border-hydrangea-200 shadow-[0_-2px_4px_rgba(0,0,0,0.04)] z-10'
@@ -229,7 +231,7 @@ export default function RecentCardSelector({
                 }`}
               >
                 <Icon className="w-3 h-3" />
-                {t.label}
+                {tab2.label}
               </button>
             );
           })}
@@ -248,17 +250,17 @@ export default function RecentCardSelector({
         <div className="flex items-center justify-between">
           <div className="flex items-baseline gap-2">
             <h3 className="text-[11px] font-bold text-hydrangea-700 uppercase tracking-wide flex items-center gap-1">
-              <TrendingUp className="w-3.5 h-3.5" /> 응답 통계
+              <TrendingUp className="w-3.5 h-3.5" /> {t('statsTitle')}
             </h3>
             <span className="text-[10px] text-hydrangea-400">
-              {new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })} 기준
+              {t('asOf', { date: new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) })}
             </span>
           </div>
           <button
             type="button"
             onClick={refreshStats}
             disabled={refreshing}
-            title="새로고침"
+            title={t('refresh')}
             className="text-hydrangea-500 hover:text-hydrangea-700 active:scale-95 transition disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
@@ -271,14 +273,14 @@ export default function RecentCardSelector({
           <div className="rounded-xl bg-gradient-to-br from-hydrangea-50 to-hydrangea-100 border border-hydrangea-200 p-3 shadow-sm relative overflow-hidden">
             <Send className="absolute -bottom-2 -right-2 w-12 h-12 text-hydrangea-300/40" strokeWidth={1.5} />
             <div className="relative">
-              <div className="text-[10px] font-semibold text-hydrangea-500 mb-0.5">총 링크 발송</div>
+              <div className="text-[10px] font-semibold text-hydrangea-500 mb-0.5">{t('totalLinksSent')}</div>
               <div className="flex items-baseline gap-0.5">
                 <span className="text-2xl font-extrabold leading-none text-hydrangea-700">{s.totalRecipients}</span>
-                <span className="text-[10px] text-hydrangea-500">건</span>
+                <span className="text-[10px] text-hydrangea-500">{t('unitCount')}</span>
               </div>
               <div className="mt-1">
                 <div className="text-[10px] inline-flex items-center gap-1 bg-hydrangea-500 text-white px-1.5 py-0.5 rounded-full font-semibold">
-                  👁 {s.readRecipients}명 읽음
+                  👁 {t('readCount', { n: s.readRecipients })}
                 </div>
               </div>
             </div>
@@ -288,13 +290,13 @@ export default function RecentCardSelector({
           <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200 p-3 shadow-sm relative overflow-hidden">
             <ThumbsUp className="absolute -bottom-2 -right-2 w-12 h-12 text-emerald-300/40" strokeWidth={1.5} />
             <div className="relative">
-              <div className="text-[10px] font-semibold text-emerald-600 mb-0.5">참석</div>
+              <div className="text-[10px] font-semibold text-emerald-600 mb-0.5">{t('attendingLabel')}</div>
               <div className="flex items-baseline gap-0.5">
                 <span className="text-2xl font-extrabold leading-none text-emerald-700">{s.attendingRecords}</span>
-                <span className="text-[10px] text-emerald-600">건</span>
+                <span className="text-[10px] text-emerald-600">{t('unitCount')}</span>
               </div>
               <div className="text-[10px] mt-1 inline-flex items-center gap-1 bg-emerald-500 text-white px-1.5 py-0.5 rounded-full font-semibold">
-                <Users className="w-2.5 h-2.5" /> 총 {s.attendingTotal}명
+                <Users className="w-2.5 h-2.5" /> {t('totalPeople', { n: s.attendingTotal })}
               </div>
             </div>
           </div>
@@ -303,10 +305,10 @@ export default function RecentCardSelector({
           <div className="rounded-xl bg-gradient-to-br from-rose-50 to-rose-100 border border-rose-200 p-3 shadow-sm relative overflow-hidden">
             <ThumbsDown className="absolute -bottom-2 -right-2 w-12 h-12 text-rose-300/40" strokeWidth={1.5} />
             <div className="relative">
-              <div className="text-[10px] font-semibold text-rose-600 mb-0.5">불참</div>
+              <div className="text-[10px] font-semibold text-rose-600 mb-0.5">{t('declinedLabel')}</div>
               <div className="flex items-baseline gap-0.5">
                 <span className="text-2xl font-extrabold leading-none text-rose-700">{s.declinedRecords}</span>
-                <span className="text-[10px] text-rose-600">건</span>
+                <span className="text-[10px] text-rose-600">{t('unitCount')}</span>
               </div>
             </div>
           </div>
@@ -316,9 +318,9 @@ export default function RecentCardSelector({
         {s.totalRecipients > 0 && (
           <div>
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] font-semibold text-hydrangea-600">응답률</span>
+              <span className="text-[10px] font-semibold text-hydrangea-600">{t('responseRate')}</span>
               <span className="text-[11px] font-bold text-hydrangea-700">
-                응답 {totalReplies}건 / 발송 {s.totalRecipients}건
+                {t('replyVsSend', { replies: totalReplies, total: s.totalRecipients })}
                 <span className="text-hydrangea-400 font-medium ml-1">({replyRate}%)</span>
               </span>
             </div>
@@ -327,28 +329,28 @@ export default function RecentCardSelector({
                 <div
                   className="bg-emerald-500 h-full"
                   style={{ width: `${attendPct}%` }}
-                  title={`참석 ${s.attendingRecords}`}
+                  title={t('attendingTitle', { n: s.attendingRecords })}
                 />
               )}
               {s.declinedRecords > 0 && (
                 <div
                   className="bg-rose-400 h-full"
                   style={{ width: `${declinePct}%` }}
-                  title={`불참 ${s.declinedRecords}`}
+                  title={t('declinedTitle', { n: s.declinedRecords })}
                 />
               )}
             </div>
             <div className="flex items-center gap-3 mt-1.5 text-[9px] text-hydrangea-500">
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> 참석</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-400" /> 불참</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-hydrangea-100 border border-hydrangea-200" /> 미응답</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> {t('attendingLabel')}</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-400" /> {t('declinedLabel')}</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-hydrangea-100 border border-hydrangea-200" /> {t('noRespondent')}</span>
             </div>
           </div>
         )}
 
         {s.totalRecipients === 0 && (
           <div className="text-center py-2 text-[11px] text-hydrangea-400">
-            아직 발송된 초청장이 없습니다.
+            {t('emptyStats')}
           </div>
         )}
       </div>
@@ -368,7 +370,7 @@ export default function RecentCardSelector({
             <button
               type="button"
               onClick={() => setPreviewOpen(false)}
-              aria-label="닫기"
+              aria-label={t('closeAria')}
               className="absolute top-3 right-3 z-20 w-10 h-10 rounded-full bg-white/90 text-hydrangea-700 shadow-lg flex items-center justify-center hover:bg-white active:scale-95 transition"
             >
               <X className="w-5 h-5" strokeWidth={2.5} />
@@ -378,7 +380,7 @@ export default function RecentCardSelector({
               <iframe
                 key={`${c.slug}-${iframeKey}`}
                 src={`/i/${c.slug}?preview_name=${encodeURIComponent('Ms. Avery')}`}
-                title={`${c.title} 미리보기`}
+                title={t('previewTitle', { title: c.title })}
                 className="w-full h-full border-0"
                 scrolling="auto"
                 onLoad={() => setShowReload(true)}
@@ -389,7 +391,7 @@ export default function RecentCardSelector({
                   type="button"
                   onClick={cardOpened ? handleReload : undefined}
                   disabled={!cardOpened}
-                  aria-label={cardOpened ? '다시 재생' : 'Sample preview'}
+                  aria-label={cardOpened ? t('replayAria') : 'Sample preview'}
                   className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-white/30 backdrop-blur-md border border-white/40 text-hydrangea-700 flex flex-col items-center justify-center gap-0.5 shadow-lg transition opacity-60 ${
                     cardOpened
                       ? 'hover:bg-white/50 hover:opacity-100 active:scale-95 cursor-pointer'
@@ -399,7 +401,7 @@ export default function RecentCardSelector({
                   {cardOpened ? (
                     <>
                       <RotateCcw className="w-6 h-6" strokeWidth={2.5} />
-                      <span className="text-[10px] font-semibold tracking-wide">다시보기</span>
+                      <span className="text-[10px] font-semibold tracking-wide">{t('replay')}</span>
                     </>
                   ) : (
                     <>

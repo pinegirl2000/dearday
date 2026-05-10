@@ -28,7 +28,7 @@ export default async function NewCardPage() {
   const templateColors: Record<string, TemplateColors> = {};
   colorsMap.forEach((v, k) => { templateColors[k] = v; });
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">로딩...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
       <SinglePageWizard
         templateConfigs={configs}
         eventOrders={eventOrders}

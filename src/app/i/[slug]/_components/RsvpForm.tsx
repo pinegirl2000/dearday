@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, X, Minus, Plus, Heart } from 'lucide-react';
 import { toast } from 'sonner';
@@ -43,6 +44,7 @@ const ENVELOPE_PALETTE: Record<string, { primary: string; soft: string; deep: st
 };
 
 export default function RsvpForm({ card, theme, recipientId, recipientName, existingRsvp, compact = false, templateColorOverride }: Props) {
+  const t = useTranslations('Invitation');
   const hasExisting = !!existingRsvp;
   // 응답 수정 잠금 — card.rsvp_allow_change=false + 이미 응답한 사용자는 변경 불가
   const locked = hasExisting && card.rsvp_allow_change === false;
@@ -103,7 +105,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
 
   const handleSubmit = (overrideAttend?: boolean) => {
     if (locked) {
-      toast.error('이 초청장은 응답 수정을 허용하지 않습니다');
+      toast.error(t('rsvpDenied'));
       return;
     }
     const attendVal = overrideAttend !== undefined ? overrideAttend : attend;
@@ -170,9 +172,12 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
         <h3 className={`font-semibold ${compact ? 'text-sm' : 'text-lg'}`} style={{ color: ACCENT }}>Will you join us?</h3>
         {hasExisting && locked && (
           <p className={`mt-1 font-semibold ${compact ? 'text-[11px]' : 'text-sm'}`} style={{ color: ACCENT_DEEP }}>
-            ✓ 이미 <span style={{ color: existingRsvp!.attend ? '#059669' : '#e11d48' }}>{existingRsvp!.attend ? '참석' : '불참'}</span>으로 응답하셨습니다
+            {t.rich('alreadyReplied', {
+              status: existingRsvp!.attend ? t('alreadyAttend') : t('alreadyDecline'),
+              attend: (chunks) => <span style={{ color: existingRsvp!.attend ? '#059669' : '#e11d48' }}>{chunks}</span>
+            })}
             <span className={compact ? 'block text-[9px] opacity-70 mt-0.5 font-normal' : 'block text-xs opacity-70 mt-0.5 font-normal'}>
-              이 초청장은 응답 변경을 허용하지 않습니다
+              {t('noChange')}
             </span>
           </p>
         )}
