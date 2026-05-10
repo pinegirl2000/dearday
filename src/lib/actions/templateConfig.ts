@@ -25,6 +25,8 @@ export interface TemplateColors {
   color_box_text: string | null;
   box_bg_top: string | null;
   box_bg_bottom: string | null;
+  color_title_accent: string | null;
+  rsvp_button_color: string | null;
 }
 
 /** 모든 템플릿 설정을 가져와 Map으로 반환 (template_id → allowed_layouts) */
@@ -92,18 +94,19 @@ export async function saveTemplateAllowedLayouts(
 export async function getAllTemplateColors(): Promise<Map<string, TemplateColors>> {
   try {
     const { rows } = await pool.query<TemplateColors & { template_id: string }>(
-      'SELECT template_id, color_main, color_sub, color_box_text, box_bg_top, box_bg_bottom FROM dearday_template_config'
+      'SELECT template_id, color_main, color_sub, color_box_text, box_bg_top, box_bg_bottom, color_title_accent, rsvp_button_color FROM dearday_template_config'
     );
     const map = new Map<string, TemplateColors>();
     for (const r of rows) {
-      // 모든 색상이 null이면 굳이 entry 만들지 않음
-      if (r.color_main || r.color_sub || r.color_box_text || r.box_bg_top || r.box_bg_bottom) {
+      if (r.color_main || r.color_sub || r.color_box_text || r.box_bg_top || r.box_bg_bottom || r.color_title_accent || r.rsvp_button_color) {
         map.set(r.template_id, {
           color_main: r.color_main,
           color_sub: r.color_sub,
           color_box_text: r.color_box_text,
           box_bg_top: r.box_bg_top,
-          box_bg_bottom: r.box_bg_bottom
+          box_bg_bottom: r.box_bg_bottom,
+          color_title_accent: r.color_title_accent,
+          rsvp_button_color: r.rsvp_button_color
         });
       }
     }
@@ -129,16 +132,18 @@ export async function saveTemplateColors(
     const norm = (v: string | null | undefined) => (v && v.trim() ? v.trim() : null);
     await pool.query(
       `INSERT INTO dearday_template_config
-        (template_id, allowed_layouts, color_main, color_sub, color_box_text, box_bg_top, box_bg_bottom, updated_at, updated_by)
-       VALUES ($1, '{}', $2, $3, $4, $5, $6, NOW(), $7)
+        (template_id, allowed_layouts, color_main, color_sub, color_box_text, box_bg_top, box_bg_bottom, color_title_accent, rsvp_button_color, updated_at, updated_by)
+       VALUES ($1, '{}', $2, $3, $4, $5, $6, $7, $8, NOW(), $9)
        ON CONFLICT (template_id) DO UPDATE SET
          color_main = $2,
          color_sub = $3,
          color_box_text = $4,
          box_bg_top = $5,
          box_bg_bottom = $6,
+         color_title_accent = $7,
+         rsvp_button_color = $8,
          updated_at = NOW(),
-         updated_by = $7`,
+         updated_by = $9`,
       [
         templateId,
         norm(colors.color_main),
@@ -146,6 +151,8 @@ export async function saveTemplateColors(
         norm(colors.color_box_text),
         norm(colors.box_bg_top),
         norm(colors.box_bg_bottom),
+        norm(colors.color_title_accent),
+        norm(colors.rsvp_button_color),
         session?.user?.email || null
       ]
     );

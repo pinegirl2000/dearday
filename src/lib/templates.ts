@@ -310,6 +310,17 @@ export const TEMPLATES: TemplateMeta[] = [
     // colorMain/colorSub/infoBox는 DB(dearday_template_config)에 저장됨 — admin에서 수정 가능
     recommendEvents: ['birthday', 'opening', 'etc'],
     draft: true
+  },
+  {
+    id: 'tpl-iris-hearts',
+    name: 'Iris & Hearts',
+    description: 'Pink background with purple irises and heart macarons — thank/love themed',
+    bg_id: 'bg-img-20',
+    layout_id: 'thank_classic',
+    colorMain: '#5B3F8F',
+    colorSub: '#FCE4EC',
+    recommendEvents: ['wedding', 'birthday', 'etc'],
+    draft: true
   }
 ];
 

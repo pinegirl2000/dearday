@@ -4,6 +4,7 @@ import type { ThemeMeta } from '@/lib/theme';
 
 export type LayoutId =
   | 'layout-classic'
+  | 'thank_classic'
   | 'layout-3'
   | 'layout-4'
   | 'layout-5'
@@ -12,6 +13,11 @@ export type LayoutId =
   | 'layout-topcenter'
   | 'layout-rightbottom'
   | 'layout-center';
+
+/** thank-card 전용 layout인지 (id가 'thank_'로 시작) */
+export function isThankLayout(layoutId: string | null | undefined): boolean {
+  return !!layoutId && layoutId.startsWith('thank_');
+}
 
 export interface TextField {
   /** 0-100% (left/top) */

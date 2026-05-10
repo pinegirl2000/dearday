@@ -51,11 +51,16 @@ export default function PrivacyPage() {
           <p className="mt-2">Each provider has its own privacy policy and data handling practices.</p>
         </Section>
 
-        <Section title="4. Data retention">
+        <Section title="4. Data retention & automatic deletion">
           <p>
-            We keep your account and invitation data while your account is active. You may delete
-            individual invitations at any time from the management page. Deleting an invitation
-            also removes all related recipients and RSVP records.
+            <strong>Cards are kept only from the day they are created until the event date, and are
+            automatically deleted afterwards.</strong> Cards without an event date (thank/congrats)
+            are deleted 30 days after creation. Deleting a card also removes all related recipients,
+            RSVP records, and uploaded images. Deleted data cannot be recovered.
+          </p>
+          <p className="mt-2">
+            You may also delete individual invitations at any time from the management page before
+            the automatic deletion date.
           </p>
         </Section>
 

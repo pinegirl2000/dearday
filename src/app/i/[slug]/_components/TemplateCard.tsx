@@ -33,7 +33,12 @@ interface Props {
     color_box_text?: string | null;
     box_bg_top?: string | null;
     box_bg_bottom?: string | null;
+    color_title_accent?: string | null;
+    rsvp_button_color?: string | null;
   };
+  /** 카드 타입 — 'thankcard' / 'congrats'면 eventLabel("YOU'RE INVITED") 숨김 */
+  eventCardType?: 'invitation' | 'thankcard' | 'congrats';
+  onPhotoClick?: () => void;
 }
 
 function formatDate(iso?: string | null) {
@@ -184,7 +189,8 @@ function FieldText({ field, children, delay = 0 }: { field: TextField; children:
   );
 }
 
-export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverlay, editable, onFieldEdit, onFieldClick, highlightedField, templateColorOverride }: Props) {
+export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverlay, editable, onFieldEdit, onFieldClick, highlightedField, templateColorOverride, eventCardType, onPhotoClick }: Props) {
+  const hideEventLabel = eventCardType === 'thankcard' || eventCardType === 'congrats';
   // 편집 모드: 텍스트 클릭 시 모달 트리거. highlightedField만 점선 박스로 텍스트 영역 표시.
   const Editable = ({ fieldKey, children }: { fieldKey: 'title' | 'greeting_oneliner' | 'body' | 'event_place' | 'contact_name' | 'extra_info' | 'event_label'; children: React.ReactNode; multiline?: boolean }) => {
     if (!editable) return <>{children}</>;
@@ -219,26 +225,31 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
       return <VintageScriptCard
         card={card} recipientName={recipientName} background={bg} rsvpSlot={rsvpSlot}
         guideOverlay={guideOverlay} editable={editable} onFieldEdit={onFieldEdit} onFieldClick={onFieldClick} highlightedField={highlightedField}
+        templateColorOverride={templateColorOverride} eventCardType={eventCardType}
       />;
     }
-    return <ClassicTemplateCard card={card} recipientName={recipientName} background={bg} rsvpSlot={rsvpSlot} guideOverlay={guideOverlay} editable={editable} onFieldEdit={onFieldEdit} onFieldClick={onFieldClick} highlightedField={highlightedField} />;
+    return <ClassicTemplateCard card={card} recipientName={recipientName} background={bg} rsvpSlot={rsvpSlot} guideOverlay={guideOverlay} editable={editable} onFieldEdit={onFieldEdit} onFieldClick={onFieldClick} highlightedField={highlightedField} templateColorOverride={templateColorOverride} eventCardType={eventCardType} onPhotoClick={onPhotoClick} />;
   }
 
   // 페어링된 템플릿 색상으로 layout 필드 색상 override
   // DB override(templateColorOverride) 우선 → 없으면 코드 default(tpl.colorMain 등)
   const tplMain = templateColorOverride?.color_main || tpl?.colorMain;
+  // title 전용 포인트 색상 (있으면 우선) — 없으면 메인 폰트 색상으로 fallback
+  const tplTitle = templateColorOverride?.color_title_accent || tplMain;
   const tplSub = templateColorOverride?.color_sub || tpl?.colorSub;
-  // infoBox: DB에 box_bg_top(포인트색) 또는 color_box_text가 있으면 합성, 없으면 코드 infoBox
-  // box_bg_top은 단일 색 — rgba로 반투명 또는 solid 색상으로 사용
-  const dbAccent = templateColorOverride?.box_bg_top;
+  // infoBox: DB에 box_bg_top/box_bg_bottom(반투명박스 그라디언트)이나 color_box_text가 있으면 합성
+  const dbBoxTop = templateColorOverride?.box_bg_top;
+  const dbBoxBottom = templateColorOverride?.box_bg_bottom;
   const dbBoxText = templateColorOverride?.color_box_text;
-  const tplInfoBox = (dbAccent || dbBoxText)
-    ? {
-        bg: dbAccent || tpl?.infoBox?.bg || '',
-        textColor: dbBoxText || tpl?.infoBox?.textColor,
-        borderColor: tpl?.infoBox?.borderColor
-      }
-    : tpl?.infoBox;
+  // top/bottom 모두 있으면 gradient, 한쪽만 있으면 단색, 둘 다 비면 투명 (DB가 source of truth)
+  const dbBoxBg = (dbBoxTop && dbBoxBottom)
+    ? `linear-gradient(180deg, ${dbBoxTop} 0%, ${dbBoxBottom} 100%)`
+    : (dbBoxTop || dbBoxBottom || 'transparent');
+  const tplInfoBox = {
+    bg: dbBoxBg,
+    textColor: dbBoxText || tpl?.infoBox?.textColor,
+    borderColor: tpl?.infoBox?.borderColor
+  };
   const withColor = (field: TextField | undefined, color?: string): TextField | undefined => {
     if (!field || !color) return field;
     return { ...field, color };
@@ -247,7 +258,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
   const f = {
     ...baseFields,
     eventLabel: withColor(baseFields.eventLabel, tplMain),
-    title: withColor(baseFields.title, tplMain) || baseFields.title,
+    title: withColor(baseFields.title, tplTitle) || baseFields.title,
     // greeting_oneliner(subtitle)도 메인 색상 사용
     subtitle: withColor(baseFields.subtitle, tplMain),
     body: withColor(baseFields.body, tplMain),
@@ -275,7 +286,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
           draggable={false}
         />
       )}
-      {f.eventLabel && (
+      {f.eventLabel && !hideEventLabel && (
         <FieldText field={f.eventLabel} delay={0.05}>
           <Editable fieldKey="event_label">
             {card.event_label
@@ -309,7 +320,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
       {(card.greeting_oneliner || editable) && f.subtitle && <FieldText field={f.subtitle} delay={0.1}><Editable fieldKey="greeting_oneliner">{applyName(card.greeting_oneliner || '', recipientName)}</Editable></FieldText>}
       <FieldText field={f.title} delay={0.2}><Editable fieldKey="title">{applyName(card.title, recipientName)}</Editable></FieldText>
       {/* Side Text + Center Text: 하단 date+place 영역 정보 박스 — 템플릿 sub 색상 톤 (없으면 흰색) */}
-      {((layout.id === 'layout-5' || layout.id === 'layout-rightbottom') || layout.id === 'layout-6') && (card.event_date || card.event_place) && f.date && f.place && (() => {
+      {!hideEventLabel && ((layout.id === 'layout-5' || layout.id === 'layout-rightbottom') || layout.id === 'layout-6') && (card.event_date || card.event_place) && f.date && f.place && (() => {
         // 우선순위: 1) tpl.infoBox (template별 명시) 2) tplSub 기반 default 3) 흰색 default
         const hasInfoBox = !!tplInfoBox;
         const hasSub = !!tplSub;
@@ -319,9 +330,12 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
           : (hasSub
               ? `linear-gradient(180deg, rgba(255,255,255,0.82) 0%, rgba(255,255,255,0.68) 100%), ${subTint}`
               : 'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.82) 100%)');
-        const border = hasInfoBox && tplInfoBox!.borderColor
-          ? `1px solid ${tplInfoBox!.borderColor}`
-          : (hasSub ? `1px solid ${subTint}55` : '1px solid rgba(255,255,255,0.85)');
+        // 테두리 — 메인 폰트 색상(DB override 또는 코드 default) 우선
+        const border = tplMain
+          ? `1px solid ${tplMain}`
+          : (hasInfoBox && tplInfoBox!.borderColor
+              ? `1px solid ${tplInfoBox!.borderColor}`
+              : (hasSub ? `1px solid ${subTint}55` : '1px solid rgba(255,255,255,0.85)'));
         const shadow = hasInfoBox
           ? '0 8px 18px rgba(0,0,0,0.18)'
           : (hasSub
@@ -403,7 +417,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
         </div>
       )}
       {/* Vintage Script 전용: 날짜/장소 영역을 감싸는 반투명 흰색 정보 박스 */}
-      {layout.id === 'layout-4' && (card.event_date || card.event_place) && f.date && f.place && (
+      {!hideEventLabel && layout.id === 'layout-4' && (card.event_date || card.event_place) && f.date && f.place && (
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -415,10 +429,11 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
             right: '8%',
             top: `calc(${Math.min(f.date.y, f.place.y) - 3}% )`,
             bottom: `calc(${100 - (f.place.y + 5)}%)`,
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.30) 100%)',
+            background: tplInfoBox?.bg
+              || 'linear-gradient(180deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.30) 100%)',
             backdropFilter: 'blur(8px)',
             WebkitBackdropFilter: 'blur(8px)',
-            border: '1px solid rgba(255,255,255,0.55)',
+            border: `1px solid ${tplMain || tplInfoBox?.borderColor || 'rgba(255,255,255,0.55)'}`,
             borderRadius: 16,
             boxShadow: '0 8px 22px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.7)',
             zIndex: 0

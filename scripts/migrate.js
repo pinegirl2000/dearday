@@ -167,6 +167,8 @@ ALTER TABLE dearday_template_config ADD COLUMN IF NOT EXISTS color_sub TEXT;
 ALTER TABLE dearday_template_config ADD COLUMN IF NOT EXISTS color_box_text TEXT;
 ALTER TABLE dearday_template_config ADD COLUMN IF NOT EXISTS box_bg_top TEXT;
 ALTER TABLE dearday_template_config ADD COLUMN IF NOT EXISTS box_bg_bottom TEXT;
+ALTER TABLE dearday_template_config ADD COLUMN IF NOT EXISTS color_title_accent TEXT;
+ALTER TABLE dearday_template_config ADD COLUMN IF NOT EXISTS rsvp_button_color TEXT;
 
 -- 이벤트별 템플릿 노출 순서 (admin drag&drop으로 지정)
 CREATE TABLE IF NOT EXISTS dearday_template_event_order (
@@ -190,6 +192,59 @@ CREATE TABLE IF NOT EXISTS dearday_template_event_exclude (
 );
 CREATE INDEX IF NOT EXISTS idx_dearday_template_event_exclude_event
   ON dearday_template_event_exclude(event_id);
+
+-- 이벤트별 템플릿 추가 포함 (admin이 코드의 recommendEvents에 없는 템플릿을 명시 추가)
+CREATE TABLE IF NOT EXISTS dearday_template_event_include (
+  event_id TEXT NOT NULL,
+  template_id TEXT NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_by TEXT,
+  PRIMARY KEY (event_id, template_id)
+);
+CREATE INDEX IF NOT EXISTS idx_dearday_template_event_include_event
+  ON dearday_template_event_include(event_id);
+
+-- 커스텀 이벤트 (admin이 추가) — 코드의 EVENT_TYPES 외 추가 이벤트 (deprecated, dearday_event로 마이그레이션)
+CREATE TABLE IF NOT EXISTS dearday_event_custom (
+  id TEXT PRIMARY KEY,
+  label TEXT NOT NULL,
+  emoji TEXT NOT NULL DEFAULT '🎉',
+  sort_order INT DEFAULT 100,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  created_by TEXT
+);
+
+-- 통합 이벤트 테이블 — 코드 default 6개 + 커스텀 모두 DB 관리
+CREATE TABLE IF NOT EXISTS dearday_event (
+  id TEXT PRIMARY KEY,
+  label TEXT NOT NULL,
+  emoji TEXT NOT NULL DEFAULT '🎉',
+  sort_order INT DEFAULT 100,
+  is_default BOOLEAN DEFAULT false,
+  card_type TEXT DEFAULT 'invitation' CHECK (card_type IN ('invitation', 'thankcard', 'congrats')),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  created_by TEXT
+);
+-- 마이그레이션: 기존 테이블에도 컬럼 추가
+ALTER TABLE dearday_event ADD COLUMN IF NOT EXISTS card_type TEXT DEFAULT 'invitation';
+-- congrats 추가 — 기존 CHECK 제약 갱신
+ALTER TABLE dearday_event DROP CONSTRAINT IF EXISTS dearday_event_card_type_check;
+ALTER TABLE dearday_event ADD CONSTRAINT dearday_event_card_type_check CHECK (card_type IN ('invitation', 'thankcard', 'congrats'));
+-- 코드 default 6개 시드
+INSERT INTO dearday_event (id, label, emoji, sort_order, is_default) VALUES
+  ('wedding', 'Wedding', '💒', 10, true),
+  ('birthday', 'Birthday', '🎂', 20, true),
+  ('baptism', 'Baptism', '🕊️', 30, true),
+  ('meeting', 'Gathering', '🤝', 40, true),
+  ('opening', 'Opening', '🎉', 50, true),
+  ('etc', 'Other', '✉️', 60, true)
+ON CONFLICT (id) DO NOTHING;
+-- 기존 커스텀 데이터 마이그레이션
+INSERT INTO dearday_event (id, label, emoji, sort_order, is_default, created_at, created_by)
+SELECT id, label, emoji, sort_order, false, created_at, created_by FROM dearday_event_custom
+ON CONFLICT (id) DO NOTHING;
 
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_dearday_card_slug ON dearday_card(slug);

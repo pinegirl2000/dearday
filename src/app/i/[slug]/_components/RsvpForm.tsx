@@ -19,6 +19,16 @@ interface Props {
   existingRsvp?: MyRsvp | null;
   /** 카드 안 오버레이 등 좁은 공간용 — 버튼/폰트/패딩 축소 */
   compact?: boolean;
+  /** DB에 저장된 template별 색상 override — RSVP 버튼 배경색 등 */
+  templateColorOverride?: {
+    color_main?: string | null;
+    color_sub?: string | null;
+    color_box_text?: string | null;
+    box_bg_top?: string | null;
+    box_bg_bottom?: string | null;
+    color_title_accent?: string | null;
+    rsvp_button_color?: string | null;
+  };
 }
 
 /** 봉투(envelope_anim) 메인 배경색에 어울리는 RSVP 버튼 색상 팔레트 */
@@ -32,7 +42,7 @@ const ENVELOPE_PALETTE: Record<string, { primary: string; soft: string; deep: st
   'none':       { primary: '#7B5EA7', soft: '#E8DFF3', deep: '#5A3D7A' }
 };
 
-export default function RsvpForm({ card, theme, recipientId, recipientName, existingRsvp, compact = false }: Props) {
+export default function RsvpForm({ card, theme, recipientId, recipientName, existingRsvp, compact = false, templateColorOverride }: Props) {
   const hasExisting = !!existingRsvp;
   // 응답 수정 잠금 — card.rsvp_allow_change=false + 이미 응답한 사용자는 변경 불가
   const locked = hasExisting && card.rsvp_allow_change === false;
@@ -53,9 +63,10 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
   // 템플릿 페어링 색상 우선 — main(텍스트) / sub(버튼 배경). 없으면 envelope 팔레트 fallback.
   const tpl = findTemplateByPair(card.bg_id, card.layout_id);
   const envPalette = ENVELOPE_PALETTE[card.envelope_anim] || ENVELOPE_PALETTE['envelope-1'];
-  const ACCENT = tpl?.colorMain || envPalette.primary;        // 텍스트/이름/Reply 버튼 배경
-  const ACCENT_SOFT = tpl?.colorSub || envPalette.soft;       // Attend/Decline 버튼 배경
-  const ACCENT_DEEP = tpl?.colorMain || envPalette.deep;       // 텍스트 진한 색상
+  // DB override 우선 → 코드 default. rsvp_button_color = RSVP 버튼 배경/테두리 전용
+  const ACCENT = templateColorOverride?.color_main || tpl?.colorMain || envPalette.primary;        // 텍스트/이름/Reply 버튼 배경
+  const ACCENT_SOFT = templateColorOverride?.rsvp_button_color || templateColorOverride?.color_sub || tpl?.colorSub || envPalette.soft;       // Attend/Decline 버튼 배경
+  const ACCENT_DEEP = templateColorOverride?.color_main || tpl?.colorMain || envPalette.deep;       // 텍스트 진한 색상
 
   const adjustAdult = (delta: number) => {
     const next = Math.max(0, Math.min(max - childCount, adultCount + delta));

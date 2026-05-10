@@ -1,6 +1,7 @@
 // 레이아웃 카탈로그 — 배경(backgrounds.ts)과 독립적으로 선택
 
 import { LAYOUT_CLASSIC } from './layoutClassic';
+import { LAYOUT_THANK_CLASSIC } from './layoutThankClassic';
 import { LAYOUT_3 } from './layout3';
 import { LAYOUT_4 } from './layout4';
 import { LAYOUT_5 } from './layout5';
@@ -16,6 +17,7 @@ export { templateToTheme, formatGreeting, applyName } from './types';
 
 export const LAYOUTS: LayoutMeta[] = [
   LAYOUT_CLASSIC,
+  LAYOUT_THANK_CLASSIC,
   LAYOUT_7,
   LAYOUT_4,
   LAYOUT_3,

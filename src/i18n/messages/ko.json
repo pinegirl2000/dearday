@@ -18,8 +18,8 @@
   "Home": {
     "tagline": "소중한 날을 초대하다",
     "subTagline": "결혼 · 생일 · 개업 · 모임",
-    "createButton": "초대장 만들기",
-    "myInvitations": "발행한 초대장 보기",
+    "createButton": "내 카드 만들기",
+    "myInvitations": "내 카드 보기",
     "previewEnvelopes": "디자인 페어링 추천",
     "askEvent": "어떤 날을 초대하시나요?",
     "feature1Title": "4가지 봉투",
@@ -48,7 +48,7 @@
     "etc": "기타"
   },
   "Wizard": {
-    "headerTitle": "초대장 만들기",
+    "headerTitle": "내 카드 만들기",
     "stepEvent": "이벤트",
     "stepDetails": "내용",
     "stepDesign": "디자인",

@@ -19,12 +19,15 @@ import EventBrowser from './_EventBrowser';
 import TemplateBrowser from './_TemplateBrowser';
 import { getAllTemplateEventOrders } from '@/lib/actions/templateOrder';
 import { getAllTemplateEventExcludes } from '@/lib/actions/templateEventExclude';
+import { getAllTemplateEventIncludes } from '@/lib/actions/templateEventInclude';
+import { getAllEvents } from '@/lib/actions/events';
+import EventSetup from './_EventSetup';
 
 export const dynamic = 'force-dynamic';
 
 const ALL_EVENT_IDS: EventType[] = EVENT_TYPES.map((e) => e.id);
 
-type ViewTab = 'template' | 'event' | 'layout';
+type ViewTab = 'template' | 'event' | 'layout' | 'event-setup';
 
 interface PageProps {
   searchParams?: { event?: string; layout?: string; view?: string };
@@ -47,7 +50,9 @@ export default async function TemplatesAdminPage({ searchParams }: PageProps) {
     ? 'event'
     : searchParams?.view === 'layout'
       ? 'layout'
-      : 'template';
+      : searchParams?.view === 'event-setup'
+        ? 'event-setup'
+        : 'template';
   const eventParam = searchParams?.event;
   const selectedEvent: EventType | null = eventParam && ALL_EVENT_IDS.includes(eventParam as EventType)
     ? (eventParam as EventType)
@@ -62,7 +67,7 @@ export default async function TemplatesAdminPage({ searchParams }: PageProps) {
   const colorOverrides: Record<string, TemplateColors> = {};
   colorOverridesMap.forEach((v, k) => { colorOverrides[k] = v; });
 
-  const tab = (key: 'template' | 'event' | 'layout', label: string) => (
+  const tab = (key: ViewTab, label: string) => (
     <Link
       href={`/admin/templates?view=${key}`}
       className={`px-4 py-2 text-sm font-semibold rounded-lg transition active:scale-95 ${
@@ -75,10 +80,11 @@ export default async function TemplatesAdminPage({ searchParams }: PageProps) {
     </Link>
   );
   const ViewTabs = (
-    <div className="flex gap-2 mb-4">
+    <div className="flex flex-wrap gap-2 mb-4">
       {tab('template', 'Template별')}
       {tab('event', 'Event별')}
       {tab('layout', 'Layout별')}
+      {tab('event-setup', 'Event 설정')}
     </div>
   );
 
@@ -111,6 +117,28 @@ export default async function TemplatesAdminPage({ searchParams }: PageProps) {
         <div className="px-4 pt-3 pb-12">
           {ViewTabs}
           <EventBrowser configs={configs} eventOrders={eventOrdersObj} eventExcludes={eventExcludesObj} />
+        </div>
+      </PageContainer>
+    );
+  }
+
+  // ===== Event 설정 — 이벤트별 템플릿 토글 =====
+  if (view === 'event-setup') {
+    const [includesMap, excludesMap, events] = await Promise.all([
+      getAllTemplateEventIncludes(),
+      getAllTemplateEventExcludes(),
+      getAllEvents()
+    ]);
+    const includesObj: Record<string, string[]> = {};
+    includesMap.forEach((v, k) => { includesObj[k] = v; });
+    const excludesObj: Record<string, string[]> = {};
+    excludesMap.forEach((v, k) => { excludesObj[k] = v; });
+    return (
+      <PageContainer noPadding>
+        <MobileHeader title="템플릿 관리" back />
+        <div className="px-4 pt-3 pb-12">
+          {ViewTabs}
+          <EventSetup includes={includesObj} excludes={excludesObj} events={events} />
         </div>
       </PageContainer>
     );

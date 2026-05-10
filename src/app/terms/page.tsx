@@ -81,21 +81,31 @@ export default function TermsPage() {
           </p>
         </Section>
 
-        <Section title="8. Termination">
+        <Section title="8. Data retention & automatic deletion">
+          <p>
+            <strong>Cards are kept only from the day they are created until the event date,
+            and are automatically deleted afterwards.</strong> For cards without an event date
+            (thank/congrats), the card and its associated data (recipients, RSVPs, uploaded images)
+            are deleted 30 days after creation. Once deleted, data cannot be recovered. Always keep
+            your own copy of any information you may need later (guest names, RSVP results).
+          </p>
+        </Section>
+
+        <Section title="9. Termination">
           <p>
             You may delete your invitations at any time from the management page. We may suspend or
             terminate accounts that violate these Terms or applicable law.
           </p>
         </Section>
 
-        <Section title="9. Governing law">
+        <Section title="10. Governing law">
           <p>
             These Terms are governed by the laws of Singapore. Disputes shall be resolved in the
             courts of Singapore.
           </p>
         </Section>
 
-        <Section title="10. Contact">
+        <Section title="11. Contact">
           <p>
             Questions about these Terms? Visit our{' '}
             <Link href="/contact" className="text-hydrangea-500 underline">contact page</Link>.

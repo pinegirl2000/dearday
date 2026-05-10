@@ -18,8 +18,8 @@
   "Home": {
     "tagline": "Invite the dearest day",
     "subTagline": "Wedding · Birthday · Opening · Gathering",
-    "createButton": "Create Invitation",
-    "myInvitations": "My invitations",
+    "createButton": "Create your card",
+    "myInvitations": "My cards",
     "previewEnvelopes": "Recommended template pairings",
     "askEvent": "What day are you inviting?",
     "feature1Title": "4 Envelopes",
@@ -48,7 +48,7 @@
     "etc": "Other"
   },
   "Wizard": {
-    "headerTitle": "Create Invitation",
+    "headerTitle": "Create your card",
     "stepEvent": "Event",
     "stepDetails": "Details",
     "stepDesign": "Design",

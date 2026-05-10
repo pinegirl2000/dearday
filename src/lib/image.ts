@@ -13,6 +13,13 @@ export const IMAGE_LIMITS = {
     maxWidthOrHeight: 1080,
     fileType: 'image/webp' as const,
     initialQuality: 0.75
+  },
+  // thank_* 레이아웃 상단 원형 포토 — 20KB 미만, 작은 사이즈
+  thankPhoto: {
+    maxSizeMB: 0.02,           // 20KB
+    maxWidthOrHeight: 320,
+    fileType: 'image/webp' as const,
+    initialQuality: 0.7
   }
 } as const;
 

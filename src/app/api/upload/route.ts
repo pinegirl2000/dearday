@@ -6,6 +6,7 @@ const nano = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 16);
 
 const MAX_BG = 500 * 1024;        // 500KB
 const MAX_ATTACH = 100 * 1024;    // 100KB
+const MAX_THANK = 20 * 1024;      // 20KB — thank/congrats 상단 원형 포토
 const ALLOWED = ['image/webp', 'image/jpeg', 'image/png'];
 
 export async function POST(req: NextRequest) {
@@ -18,7 +19,7 @@ export async function POST(req: NextRequest) {
     if (!file || !kind) return NextResponse.json({ error: '파일/종류 누락' }, { status: 400 });
     if (!ALLOWED.includes(file.type)) return NextResponse.json({ error: '지원 이미지 형식이 아닙니다 (JPG/PNG/WebP)' }, { status: 400 });
 
-    const max = kind === 'background' ? MAX_BG : MAX_ATTACH;
+    const max = kind === 'background' ? MAX_BG : kind === 'thankPhoto' ? MAX_THANK : MAX_ATTACH;
     if (file.size > max) {
       return NextResponse.json({ error: `파일이 너무 큽니다 (최대 ${max / 1024}KB)` }, { status: 413 });
     }

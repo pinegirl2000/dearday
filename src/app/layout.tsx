@@ -8,6 +8,7 @@ import { Toaster } from 'sonner';
 import { authOptions } from '@/lib/auth';
 import SessionProvider from '@/components/auth/SessionProvider';
 import TopBar from '@/components/layout/TopBar';
+import InAppBrowserBanner from '@/components/layout/InAppBrowserBanner';
 import './globals.css';
 
 const ADSENSE_CLIENT = 'ca-pub-1846879536072566';
@@ -99,6 +100,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="font-sans bg-hydrangea-50">
         <SessionProvider session={session}>
           <NextIntlClientProvider messages={messages} locale={locale}>
+            <InAppBrowserBanner />
             <TopBar />
             {children}
           </NextIntlClientProvider>

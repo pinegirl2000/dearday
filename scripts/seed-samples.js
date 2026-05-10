@@ -170,6 +170,86 @@ const SAMPLES = [
     event_place: '88 Orchid Lane, #12-34',
     contact_name: '— Tom & Lisa —', contact_phone: '+65-9876-5432',
     extra_info: 'Casual · please come hungry', sort_order: 2
+  },
+
+  // ===== Mother's Day (thankcard) — 날짜/장소 없음, 메시지 중심 =====
+  {
+    event_type: 'mothers-day', label: 'Heartfelt Thanks',
+    title: 'To the World\'s Best Mom', greeting_oneliner: 'With all my love',
+    body: 'Thank you for every sacrifice,\nevery hug, and every quiet moment of love.\nI carry your kindness in everything I do.',
+    contact_name: '— Your loving child —', sort_order: 1
+  },
+  {
+    event_type: 'mothers-day', label: 'Korean Style',
+    title: '엄마, 사랑해요', greeting_oneliner: '감사한 마음을 담아',
+    body: '항상 곁에서 지켜봐 주시고\n사랑으로 키워주셔서 감사합니다.\n오늘은 엄마의 날이에요.',
+    contact_name: '— 사랑하는 자녀 올림 —', sort_order: 2
+  },
+  {
+    event_type: 'mothers-day', label: 'Short & Sweet',
+    title: 'Happy Mother\'s Day', greeting_oneliner: 'You are everything',
+    body: 'For all you do,\nfor all you are —\nthank you, Mom. ♥',
+    contact_name: '— Love always —', sort_order: 3
+  },
+
+  // ===== Teacher's Day (thankcard) =====
+  {
+    event_type: 'teachers-day', label: 'Heartfelt Gratitude',
+    title: 'Thank You, Teacher', greeting_oneliner: 'A note of gratitude',
+    body: 'Your patience taught us to think,\nyour passion showed us to dream.\nWe carry your lessons with us, always.',
+    contact_name: '— Your students —', sort_order: 1
+  },
+  {
+    event_type: 'teachers-day', label: 'From the Class',
+    title: 'To Mr. Lee', greeting_oneliner: 'With our deepest thanks',
+    body: 'You believed in us when we couldn\'t.\nYou listened when no one else did.\nThank you for everything, sir.',
+    contact_name: '— Class of 6A —', sort_order: 2
+  },
+  {
+    event_type: 'teachers-day', label: 'Korean Style',
+    title: '선생님, 감사합니다', greeting_oneliner: '존경하는 마음을 담아',
+    body: '늘 따뜻한 가르침과 지혜로\n저희를 이끌어 주셔서 감사합니다.\n선생님의 사랑을 잊지 않겠습니다.',
+    contact_name: '— 제자 일동 —', sort_order: 3
+  },
+
+  // ===== Father's Day (thankcard) =====
+  {
+    event_type: 'fathers-day', label: 'Heartfelt Thanks',
+    title: 'To My Dad, My Hero', greeting_oneliner: 'With all my love',
+    body: 'Thank you for the strength you gave me,\nthe lessons you taught me,\nand the love that never wavered.',
+    contact_name: '— Your loving child —', sort_order: 1
+  },
+  {
+    event_type: 'fathers-day', label: 'Short & Strong',
+    title: 'Happy Father\'s Day', greeting_oneliner: 'The best dad ever',
+    body: 'For every late-night chat,\nevery quiet sacrifice —\nthank you, Dad.',
+    contact_name: '— With love —', sort_order: 2
+  },
+  {
+    event_type: 'fathers-day', label: 'Korean Style',
+    title: '아버지, 사랑합니다', greeting_oneliner: '존경과 사랑을 담아',
+    body: '말없이 지켜봐 주시고\n든든한 울타리가 되어 주셔서 감사합니다.\n오늘은 아버지의 날이에요.',
+    contact_name: '— 사랑하는 자녀 올림 —', sort_order: 3
+  },
+
+  // ===== Graduation (congrats) =====
+  {
+    event_type: 'graduation', label: 'Heartfelt Congrats',
+    title: 'Congratulations, Graduate!', greeting_oneliner: 'A new chapter begins',
+    body: 'You worked hard, you dreamed big,\nand today you stand tall.\nThe world is yours — go shine.',
+    contact_name: '— With pride and joy —', sort_order: 1
+  },
+  {
+    event_type: 'graduation', label: 'Short & Bright',
+    title: 'You did it!', greeting_oneliner: 'So proud of you',
+    body: 'Caps off, hearts full.\nHere\'s to everything you\'ve achieved\nand all the adventures ahead.',
+    contact_name: '— Cheering you on —', sort_order: 2
+  },
+  {
+    event_type: 'graduation', label: 'Korean Style',
+    title: '졸업을 축하합니다', greeting_oneliner: '새로운 시작을 응원하며',
+    body: '오랜 노력과 인내로 이루어 낸\n오늘의 결실을 진심으로 축하합니다.\n앞날에 큰 행복이 함께하기를 바랍니다.',
+    contact_name: '— 축하하는 마음으로 —', sort_order: 3
   }
 ];
 

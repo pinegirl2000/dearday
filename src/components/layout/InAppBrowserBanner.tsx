@@ -1,0 +1,105 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { ExternalLink, AlertTriangle, X } from 'lucide-react';
+import { toast } from 'sonner';
+
+/**
+ * 카카오톡/인스타그램/페이스북 등 in-app webview에서 진입 시 외부 브라우저 열기 안내.
+ * Google OAuth가 'disallowed_useragent' (403)으로 차단되기 때문.
+ *
+ * - Android: intent:// 스킴으로 Chrome 직접 열기 시도
+ * - iOS: 시스템 share 안내 (자동 강제 불가)
+ * - 한 번 닫으면 sessionStorage에 기록 → 같은 세션에서 재표시 X
+ */
+
+function detectInAppBrowser(): { isInApp: boolean; appName: string | null; isAndroid: boolean; isIOS: boolean } {
+  if (typeof navigator === 'undefined') return { isInApp: false, appName: null, isAndroid: false, isIOS: false };
+  const ua = navigator.userAgent || '';
+  const isAndroid = /Android/i.test(ua);
+  const isIOS = /iPhone|iPad|iPod/i.test(ua);
+  let appName: string | null = null;
+  if (/KAKAOTALK/i.test(ua)) appName = '카카오톡';
+  else if (/Instagram/i.test(ua)) appName = '인스타그램';
+  else if (/FBAN|FBAV/i.test(ua)) appName = '페이스북';
+  else if (/Line\//i.test(ua)) appName = '라인';
+  else if (/NAVER/i.test(ua)) appName = '네이버';
+  else if (/MicroMessenger/i.test(ua)) appName = '위챗';
+  return { isInApp: !!appName, appName, isAndroid, isIOS };
+}
+
+export default function InAppBrowserBanner() {
+  const [info, setInfo] = useState<{ isInApp: boolean; appName: string | null; isAndroid: boolean; isIOS: boolean }>({
+    isInApp: false, appName: null, isAndroid: false, isIOS: false
+  });
+  const [dismissed, setDismissed] = useState(false);
+
+  useEffect(() => {
+    setInfo(detectInAppBrowser());
+    if (typeof window !== 'undefined' && sessionStorage.getItem('dearday:inapp-dismissed') === '1') {
+      setDismissed(true);
+    }
+  }, []);
+
+  const openExternal = () => {
+    const currentUrl = window.location.href;
+    if (info.isAndroid) {
+      // Chrome으로 강제 열기
+      const intentUrl = currentUrl.replace(/^https?:\/\//, '').split('?')[0];
+      const params = currentUrl.includes('?') ? currentUrl.split('?')[1] : '';
+      const intent = `intent://${intentUrl}${params ? `?${params}` : ''}#Intent;scheme=https;package=com.android.chrome;end`;
+      window.location.href = intent;
+    } else if (info.isIOS) {
+      // iOS는 webview에서 강제 외부 브라우저 호출 불가 — 안내 토스트
+      navigator.clipboard?.writeText(currentUrl).catch(() => {});
+      toast.message('링크가 복사되었습니다. Safari를 직접 열고 붙여넣기 해주세요.', { duration: 6000 });
+    }
+  };
+
+  const handleDismiss = () => {
+    setDismissed(true);
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('dearday:inapp-dismissed', '1');
+    }
+  };
+
+  if (!info.isInApp || dismissed) return null;
+
+  return (
+    <div className="fixed top-0 left-0 right-0 z-[60] bg-amber-50 border-b border-amber-300 px-3 py-2.5 shadow-sm">
+      <div className="max-w-md mx-auto flex items-start gap-2">
+        <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+        <div className="flex-1 min-w-0">
+          <div className="text-[12px] font-semibold text-amber-900 leading-snug">
+            {info.appName} 내부 브라우저에서는 Google 로그인이 차단됩니다
+          </div>
+          <div className="text-[11px] text-amber-700 mt-0.5 leading-snug">
+            {info.isAndroid
+              ? 'Chrome에서 열어주세요'
+              : info.isIOS
+                ? '우상단 ⋯ 메뉴 → "Safari로 열기" 또는 다른 브라우저로 열어주세요'
+                : '외부 브라우저(Chrome/Safari)에서 열어주세요'}
+          </div>
+          {(info.isAndroid || info.isIOS) && (
+            <button
+              type="button"
+              onClick={openExternal}
+              className="mt-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-amber-600 text-white text-[11px] font-semibold hover:bg-amber-700 active:scale-95 transition"
+            >
+              <ExternalLink className="w-3 h-3" />
+              {info.isAndroid ? 'Chrome으로 열기' : '링크 복사 (Safari에 붙여넣기)'}
+            </button>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={handleDismiss}
+          aria-label="닫기"
+          className="flex-shrink-0 p-1 rounded text-amber-700 hover:bg-amber-100 transition"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    </div>
+  );
+}

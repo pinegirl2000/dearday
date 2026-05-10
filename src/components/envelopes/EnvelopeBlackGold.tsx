@@ -271,11 +271,12 @@ function FrontFace({
             textAlign: 'center',
             color: PALETTE.ink,
             fontFamily: "'Cormorant Garamond', 'Playfair Display', 'Noto Serif KR', serif",
-            fontSize: Math.max(14, Math.round(width * 0.064)),
+            fontSize: Math.max(12, Math.round(width * 0.055)),
             fontWeight: 500,
             fontVariant: 'small-caps',
             letterSpacing: '0.12em',
-            textShadow: '0 1px 2px rgba(0,0,0,0.35)',
+            // midnight/onyx만 그림자로 깊이감 — 그 외 밝은 봉투는 번짐 방지 위해 그림자 없음
+            textShadow: (palette.id === 'midnight' || palette.id === 'onyx') ? '0 1px 2px rgba(0,0,0,0.35)' : 'none',
             pointerEvents: 'none'
           }}
         >

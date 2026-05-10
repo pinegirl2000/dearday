@@ -5,8 +5,10 @@ import { toast } from 'sonner';
 import { Trash2 } from 'lucide-react';
 import { TEMPLATES, getTemplateLayouts } from '@/lib/templates';
 import { LAYOUTS, getLayout } from '@/lib/layouts';
-import { saveTemplateAllowedLayouts } from '@/lib/actions/templateConfig';
+import { saveTemplateAllowedLayouts, saveTemplateColors } from '@/lib/actions/templateConfig';
 import TemplateCard from '@/app/i/[slug]/_components/TemplateCard';
+import RsvpForm from '@/app/i/[slug]/_components/RsvpForm';
+import { getTheme } from '@/lib/theme';
 import TemplateInfoPanel from './_TemplateInfoPanel';
 import TemplateColorEditor from './_TemplateColorEditor';
 import type { BaseCard, LayoutId } from '@/types/card';
@@ -62,8 +64,13 @@ function effectiveLayouts(t: (typeof TEMPLATES)[number], configs?: Record<string
   return getTemplateLayouts(t);
 }
 
+// thank_* 레이아웃 admin 미리보기용 sample 사진 — public/samples/mom-thank.png
+const THANK_SAMPLE_PHOTO = '/samples/mom-thank.png';
+
 function buildPreview(t: (typeof TEMPLATES)[number], layoutId: LayoutId): BaseCard {
-  const ev = t.recommendEvents[0] || 'etc';
+  const isThank = layoutId.startsWith('thank_');
+  // thank 레이아웃이면 mothers-day(thank) sample 강제 사용 — 메시지 톤이 어울림
+  const ev: any = isThank ? 'mothers-day' : (t.recommendEvents[0] || 'etc');
   const sample = SAMPLE_BY_EVENT[ev] || SAMPLE_BY_EVENT.etc;
   return {
     id: 'preview',
@@ -74,16 +81,22 @@ function buildPreview(t: (typeof TEMPLATES)[number], layoutId: LayoutId): BaseCa
     envelope_anim: 'envelope-1',
     theme: 'hydrangea',
     font_family: 'serif',
+    // thank_* 레이아웃은 상단 사각 사진 영역 sample로 채움 (테두리 색상 = colorMain)
+    custom_bg_url: isThank ? THANK_SAMPLE_PHOTO : null,
     title: sample.title || '',
     greeting_oneliner: sample.greeting_oneliner ?? null,
     body: sample.body ?? null,
-    event_date: sample.event_date ?? null,
-    event_place: sample.event_place ?? null,
-    map_url: 'https://maps.google.com',
+    event_date: isThank ? null : (sample.event_date ?? null),
+    event_place: isThank ? null : (sample.event_place ?? null),
+    map_url: isThank ? null : 'https://maps.google.com',
     contact_name: sample.contact_name ?? null,
-    contact_phone: sample.contact_phone ?? null,
-    extra_info: sample.extra_info ?? null,
-    rsvp_enabled: false,
+    contact_phone: isThank ? null : (sample.contact_phone ?? null),
+    extra_info: isThank ? null : (sample.extra_info ?? null),
+    rsvp_enabled: !isThank,
+    rsvp_max_per_card: 4,
+    rsvp_collect_names: false,
+    rsvp_allow_oneliner: false,
+    rsvp_allow_change: true,
     plan: 'free'
   } as BaseCard;
 }
@@ -94,6 +107,7 @@ export default function TemplateBrowser({ configs, colorOverrides }: Props) {
   const [pending, startTransition] = useTransition();
   // 로컬 override — DB 저장 후 즉시 UI 반영 (server props 갱신 전)
   const [localConfigs, setLocalConfigs] = useState<Record<string, string[]>>(() => ({ ...(configs || {}) }));
+  const [localColors, setLocalColors] = useState<Record<string, TemplateColors>>(() => ({ ...(colorOverrides || {}) }));
 
   const selectedTpl = TEMPLATES.find((t) => t.id === tplId) || TEMPLATES[0];
   const allowedLayouts = useMemo(
@@ -173,22 +187,38 @@ export default function TemplateBrowser({ configs, colorOverrides }: Props) {
         </div>
       </div>
 
+      {/* 색상 override (DB) — 템플릿 미리보기 위에 위치. 템플릿 바뀌면 key로 강제 remount */}
+      <TemplateColorEditor
+        key={selectedTpl.id}
+        templateId={selectedTpl.id}
+        codeDefaults={{
+          colorMain: selectedTpl.colorMain,
+          colorSub: selectedTpl.colorSub,
+          boxBg: selectedTpl.infoBox?.bg,
+          boxTextColor: selectedTpl.infoBox?.textColor
+        }}
+        initial={localColors[selectedTpl.id] || null}
+        onSaved={(colors) => setLocalColors((s) => ({ ...s, [selectedTpl.id]: colors }))}
+      />
+
       {activeLayoutId && (
         <>
           <div className="bg-hydrangea-50/40 rounded-2xl p-3">
-            <TemplateCard card={buildPreview(selectedTpl, activeLayoutId)} />
+            {(() => {
+              const previewCard = buildPreview(selectedTpl, activeLayoutId);
+              const previewTheme = getTheme(previewCard.theme);
+              return (
+                <TemplateCard
+                  card={previewCard}
+                  templateColorOverride={localColors[selectedTpl.id]}
+                  rsvpSlot={
+                    <RsvpForm card={previewCard} theme={previewTheme} compact templateColorOverride={localColors[selectedTpl.id]} />
+                  }
+                />
+              );
+            })()}
           </div>
           <TemplateInfoPanel template={selectedTpl} layoutId={activeLayoutId} />
-          <TemplateColorEditor
-            templateId={selectedTpl.id}
-            codeDefaults={{
-              colorMain: selectedTpl.colorMain,
-              colorSub: selectedTpl.colorSub,
-              boxBg: selectedTpl.infoBox?.bg,
-              boxTextColor: selectedTpl.infoBox?.textColor
-            }}
-            initial={colorOverrides?.[selectedTpl.id] || null}
-          />
         </>
       )}
     </div>

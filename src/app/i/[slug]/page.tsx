@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { getCardBySlug } from '@/lib/db/cards';
 import { getTheme } from '@/lib/theme';
 import { getAllTemplateColors } from '@/lib/actions/templateConfig';
+import { getEventCardType } from '@/lib/actions/events';
 import { findTemplateByPair } from '@/lib/templates';
 import { getBackground } from '@/lib/backgrounds';
 import InvitationView from './_components/InvitationView';
@@ -54,8 +55,9 @@ export default async function InvitationPage({ params, searchParams }: Props) {
   const templateColorOverride = tpl ? colorsMap.get(tpl.id) : undefined;
   // 미리보기 모드 — preview_name으로 봉투에 표시할 sample 이름 전달
   const previewName = (searchParams?.preview_name || '').trim() || undefined;
+  const eventCardType = await getEventCardType(card.event_type);
   return (
-    <InvitationView card={card} recipientName={previewName} templateColorOverride={templateColorOverride} />
+    <InvitationView card={card} recipientName={previewName} templateColorOverride={templateColorOverride} eventCardType={eventCardType} />
   );
 }
 

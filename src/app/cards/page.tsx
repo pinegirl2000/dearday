@@ -73,7 +73,7 @@ export default async function CardsListPage() {
 
   return (
     <PageContainer noPadding>
-      <MobileHeader title="My invitations" back />
+      <MobileHeader title="My cards" back />
 
       {!session ? (
         <LoginPrompt />
@@ -84,7 +84,7 @@ export default async function CardsListPage() {
             href="/cards/new"
             className="inline-block px-5 py-2.5 rounded-full bg-hydrangea-500 text-white text-sm font-medium"
           >
-            Create invitation
+            Create your card
           </Link>
         </div>
       ) : (

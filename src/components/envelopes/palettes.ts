@@ -94,7 +94,7 @@ export const COLOR_PALETTES: Record<EnvelopeColorId, EnvelopePalette> = {
     id: 'rose', label: 'Rose Petal',
     flap:'#F0BAC8', flapShadow:'#D993A5',
     body:'#F4C5D2', bodyDark:'#C982A0', bodyMid:'#F0BAC8', bodyTint:'#FAD8E1',
-    inner:'#FFF6F8', paper:'#FFFFFF', accent:'#C97796', ink:'#5A2840',
+    inner:'#FFF6F8', paper:'#FFFFFF', accent:'#C97796', ink:'#8B6075',
     petals:['#FAD8E1','#F4C5D2','#F0BAC8','#E5A5BA','#FFE4EC','#FFCCD8'],
     // 핑크와 어울리는 밝은 크림 톤 — 거의 흰색에 가까운 ivory cream
     goldHighlight:'#FFFCF6', goldLight:'#FBF6EC', gold:'#F5EBD8', goldDeep:'#DDD0B8', goldShadow:'#A89880'

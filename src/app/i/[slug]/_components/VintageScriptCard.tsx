@@ -18,6 +18,16 @@ interface Props {
   onFieldEdit?: (key: 'title' | 'greeting_oneliner' | 'body' | 'event_place' | 'contact_name' | 'extra_info' | 'event_label' | 'event_date', value: string) => void;
   onFieldClick?: (key: 'title' | 'greeting_oneliner' | 'body' | 'event_place' | 'contact_name' | 'extra_info' | 'event_label' | 'event_date' | 'contact_phone') => void;
   highlightedField?: string | null;
+  templateColorOverride?: {
+    color_main?: string | null;
+    color_sub?: string | null;
+    color_box_text?: string | null;
+    box_bg_top?: string | null;
+    box_bg_bottom?: string | null;
+    color_title_accent?: string | null;
+    rsvp_button_color?: string | null;
+  };
+  eventCardType?: 'invitation' | 'thankcard' | 'congrats';
 }
 
 const SCRIPT = "'Playfair Display', 'Cormorant Garamond', 'Noto Serif KR', serif";
@@ -70,11 +80,21 @@ function isUrl(s?: string | null): s is string {
 
 export default function VintageScriptCard({
   card, recipientName, background, rsvpSlot,
-  guideOverlay, editable, onFieldEdit, onFieldClick, highlightedField
+  guideOverlay, editable, onFieldEdit, onFieldClick, highlightedField, templateColorOverride, eventCardType
 }: Props) {
+  const hideEventLabel = eventCardType === 'thankcard' || eventCardType === 'congrats';
   const tpl = findTemplateByPair(card.bg_id, card.layout_id);
-  const main = tpl?.colorMain || '#1A2A3A';
-  const sub = tpl?.colorSub || main;
+  const main = templateColorOverride?.color_main || tpl?.colorMain || '#1A2A3A';
+  const sub = templateColorOverride?.color_sub || tpl?.colorSub || main;
+  // 반투명박스 — DB box_bg_top/bottom 우선, 없으면 흰색 그라디언트
+  const dbBoxTop = templateColorOverride?.box_bg_top;
+  const dbBoxBottom = templateColorOverride?.box_bg_bottom;
+  const dbBoxText = templateColorOverride?.color_box_text;
+  // 둘 다 입력 → gradient / 한쪽만 → 단색 / 비어있음 → 투명
+  const boxBg = (dbBoxTop && dbBoxBottom)
+    ? `linear-gradient(180deg, ${dbBoxTop} 0%, ${dbBoxBottom} 100%)`
+    : (dbBoxTop || dbBoxBottom || 'transparent');
+  const boxTextColor = dbBoxText || main;
   const hasBgImage = !!background?.imageUrl;
   const evMeta = getEventTypeMeta(card.event_type);
   const ph = evMeta.fields;
@@ -124,8 +144,8 @@ export default function VintageScriptCard({
         />
       )}
       <div style={{ position: 'relative', padding: '32px 24px 60px', zIndex: 1, textAlign: 'center' }}>
-        {/* 1. 상단 라벨 — baptism은 십자가 아이콘, 그 외는 event_label 텍스트 */}
-        <FadeUp delay={0.1}>
+        {/* 1. 상단 라벨 — baptism은 십자가 아이콘, 그 외는 event_label 텍스트. thank/congrats는 숨김 */}
+        {!hideEventLabel && <FadeUp delay={0.1}>
           {card.event_type === 'baptism' && !card.event_label ? (
             <div style={{
               color: main, fontFamily: 'serif',
@@ -143,7 +163,7 @@ export default function VintageScriptCard({
               </Editable>
             </div>
           )}
-        </FadeUp>
+        </FadeUp>}
 
         {/* 2. Subtitle (greeting_oneliner) — main 색상 + 가독성 확보 (opacity 제거) */}
         {(card.greeting_oneliner || editable) && (
@@ -204,13 +224,13 @@ export default function VintageScriptCard({
         )}
 
         {/* 6. 정보 박스 (반투명 흰색) — date + place */}
-        {(card.event_date || card.event_place || card.map_url || editable) && (
+        {!hideEventLabel && (card.event_date || card.event_place || card.map_url || editable) && (
           <FadeUp delay={0.3}>
             <div style={{
               maxWidth: 280, margin: '0 auto 18px', padding: '16px 18px',
-              background: 'linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.35) 100%)',
+              background: boxBg,
               backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
-              border: '1px solid rgba(255,255,255,0.7)',
+              border: `1px solid ${main}`,
               borderRadius: 14,
               boxShadow: '0 8px 22px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9)',
               display: 'flex', flexDirection: 'column', gap: 12, position: 'relative'
@@ -233,8 +253,8 @@ export default function VintageScriptCard({
                     transition: 'all 0.15s'
                   }}>
                   {card.event_date
-                    ? <SplitDate iso={card.event_date} color={main} />
-                    : (editable && <div style={{ fontSize: 13, color: main, opacity: 0.6, padding: '12px 0' }}>클릭해서 날짜/시간 입력</div>)
+                    ? <SplitDate iso={card.event_date} color={boxTextColor} />
+                    : (editable && <div style={{ fontSize: 13, color: boxTextColor, opacity: 0.6, padding: '12px 0' }}>클릭해서 날짜/시간 입력</div>)
                   }
                 </div>
               )}
@@ -243,7 +263,7 @@ export default function VintageScriptCard({
               {(card.event_place || card.map_url || editable) && (
                 <div style={{
                   display: 'inline-flex', alignItems: 'baseline', justifyContent: 'center',
-                  gap: 8, flexWrap: 'wrap', fontSize: 12, color: main,
+                  gap: 8, flexWrap: 'wrap', fontSize: 12, color: boxTextColor,
                   letterSpacing: '0.16em', fontFamily: SERIF
                 }}>
                   {(card.event_place || editable) && (

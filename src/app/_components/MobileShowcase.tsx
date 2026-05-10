@@ -7,6 +7,8 @@ import { Sparkles, ArrowRight } from 'lucide-react';
 
 const GOLD = '#C4A36A';
 
+type LayoutStyle = 'centered' | 'rightside' | 'bottombox' | 'topstack' | 'centerdown';
+
 interface Sample {
   id: string;
   emoji: string;
@@ -20,6 +22,7 @@ interface Sample {
   bg: string;
   main: string;
   sub: string;
+  style: LayoutStyle;
 }
 
 // 화려한 actual template 배경 이미지 5종
@@ -36,35 +39,53 @@ const SAMPLES: Sample[] = [
     host: '— The Round Cafe Team —',
     bg: "url('/templates/template-19-bg.png') center/cover",
     main: '#F5E29A',
-    sub: '#D4A943'
+    sub: '#D4A943',
+    style: 'bottombox'
   },
   {
-    id: 'pink-castle',
-    emoji: '🏰',
+    id: 'pink-teddy',
+    emoji: '🧸',
     event: 'BIRTHDAY',
     title: "Avery's 1st Birthday",
-    subtitle: 'A magical first year',
-    body: 'Step into our little princess\'s\nfairytale celebration.',
+    subtitle: 'A precious first year',
+    body: 'Come celebrate with our\nlittle one and a sky full of balloons.',
     date: 'SUN 5 JUL · 11 AM',
     place: 'The Lounge Function Room',
     host: '— Love, the Family —',
-    bg: "url('/templates/template-13-bg.png') center/cover",
-    main: '#C97796',
-    sub: '#E89AA0'
+    bg: "url('/templates/template-6-bg.png') center/cover",
+    main: '#8E5A4D',
+    sub: '#E89AA0',
+    style: 'centered'
   },
   {
-    id: 'rose-gold',
-    emoji: '🎈',
-    event: 'SWEET SIXTEEN',
-    title: 'Hello, Sixteen',
-    subtitle: 'Celebrate with us',
-    body: 'A special day deserves\na sparkle-filled night.',
-    date: 'SAT 18 OCT · 6 PM',
-    place: 'Garden Terrace, Marina Hotel',
-    host: '— Love, Mom & Dad —',
-    bg: "url('/templates/template-17-bg.png') center/cover",
-    main: '#C97766',
-    sub: '#E89A8C'
+    id: 'pink-ribbon-arch',
+    emoji: '🎀',
+    event: 'BAPTISM',
+    title: "Avery's Baptism Day",
+    subtitle: 'A blessed first step',
+    body: 'Please join us as we celebrate\nAvery\'s baptism in the Lord.',
+    date: 'SUN 3 MAY · 10 AM',
+    place: 'Grace Church, Main Sanctuary',
+    host: '— Love, David & Rachel —',
+    bg: "url('/templates/template-8-bg.png') center/cover",
+    main: '#A65A6F',
+    sub: '#E89AA0',
+    style: 'topstack'
+  },
+  {
+    id: 'eucalyptus-gold',
+    emoji: '🌿',
+    event: 'WEDDING',
+    title: 'James ♥ Sophie',
+    subtitle: 'Two hearts, one journey',
+    body: 'Join us for a garden ceremony\nunder the eucalyptus arch.',
+    date: 'SAT 11 OCT · 4 PM',
+    place: 'Botanic Gardens, Symphony Lawn',
+    host: '— With our families —',
+    bg: "url('/templates/template-10-bg.png') center/cover",
+    main: '#A07C2C',
+    sub: '#7A9B6E',
+    style: 'rightside'
   },
   {
     id: 'pressed-flowers',
@@ -78,7 +99,8 @@ const SAMPLES: Sample[] = [
     host: '— Daniel & Olivia —',
     bg: "url('/templates/template-15-bg.png') center/cover",
     main: '#7A5E2E',
-    sub: '#B89456'
+    sub: '#B89456',
+    style: 'centered'
   },
   {
     id: 'watercolor-purple',
@@ -92,7 +114,8 @@ const SAMPLES: Sample[] = [
     host: '— From the Hosts —',
     bg: "url('/templates/template-2-bg.png') center/cover",
     main: '#5A3D7A',
-    sub: '#7B5EA7'
+    sub: '#7B5EA7',
+    style: 'centerdown'
   }
 ];
 
@@ -126,72 +149,138 @@ function PhoneFrame({ children }: { children: React.ReactNode }) {
 }
 
 function CardPreview({ sample }: { sample: Sample }) {
+  const titleStyle = {
+    fontFamily: "var(--font-cormorant), 'Cormorant Garamond', serif",
+    fontWeight: 600,
+    color: sample.main,
+    letterSpacing: '0.04em',
+    lineHeight: 1.15
+  } as const;
+  const eventChip = (
+    <div className="flex items-center gap-2 opacity-80">
+      <span className="block w-6 h-px" style={{ background: GOLD, opacity: 0.7 }} />
+      <span className="text-[9px] tracking-[0.4em] font-semibold" style={{ color: GOLD }}>
+        {sample.event}
+      </span>
+      <span className="block w-6 h-px" style={{ background: GOLD, opacity: 0.7 }} />
+    </div>
+  );
+
+  // ── style별 레이아웃 분기 ──────────────────────────────────────────────
+  if (sample.style === 'rightside') {
+    // 우측 세로 텍스트 + 좌측 빈 영역 (mimics layout-5)
+    return (
+      <div className="absolute inset-0 flex" style={{ background: sample.bg }}>
+        <div className="w-[40%]" />
+        <div className="flex-1 flex flex-col justify-center pr-5 pl-2 py-8 text-right">
+          {eventChip}
+          <p className="text-[9px] tracking-[0.3em] uppercase mt-3 mb-1" style={{ color: sample.main, opacity: 0.85 }}>
+            {sample.subtitle}
+          </p>
+          <h3 className="mb-2" style={{ ...titleStyle, fontSize: 22 }}>{sample.title}</h3>
+          <p className="text-[9px] whitespace-pre-line mb-3" style={{ color: sample.main, opacity: 0.75, lineHeight: 1.5 }}>
+            {sample.body}
+          </p>
+          <div className="rounded-lg px-3 py-2 mb-2" style={{ background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(4px)' }}>
+            <p className="text-[9px] tracking-[0.18em] font-semibold" style={{ color: sample.main }}>{sample.date}</p>
+            <p className="text-[8px] mt-0.5" style={{ color: sample.sub }}>{sample.place}</p>
+          </div>
+          <p className="text-[8px] italic" style={{ color: sample.sub, opacity: 0.85 }}>{sample.host}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (sample.style === 'bottombox') {
+    // 상단 제목 + 하단 정보박스 (mimics layout-6)
+    return (
+      <div className="absolute inset-0 flex flex-col px-5 py-7 text-center" style={{ background: sample.bg }}>
+        <div className="flex flex-col items-center mt-2">
+          {eventChip}
+          <p className="text-[10px] tracking-[0.3em] uppercase mt-3 mb-1" style={{ color: sample.main, opacity: 0.85 }}>
+            {sample.subtitle}
+          </p>
+          <h3 className="mb-2" style={{ ...titleStyle, fontSize: 26 }}>{sample.title}</h3>
+        </div>
+        <div className="flex-1" />
+        <div
+          className="rounded-xl px-3 py-3 mb-3 backdrop-blur-md"
+          style={{
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.10) 100%)',
+            border: `1px solid ${sample.main}55`
+          }}
+        >
+          <p className="text-[10px] tracking-[0.18em] font-semibold mb-0.5" style={{ color: sample.main }}>{sample.date}</p>
+          <p className="text-[9px]" style={{ color: sample.sub }}>{sample.place}</p>
+        </div>
+        <p className="text-[9px] italic" style={{ color: sample.sub, opacity: 0.85 }}>{sample.host}</p>
+      </div>
+    );
+  }
+
+  if (sample.style === 'topstack') {
+    // 상단 집중형 (mimics layout-7)
+    return (
+      <div className="absolute inset-0 flex flex-col px-6 py-8 text-center" style={{ background: sample.bg }}>
+        {eventChip}
+        <p className="text-[10px] tracking-[0.3em] uppercase mt-3 mb-1" style={{ color: sample.main, opacity: 0.85 }}>
+          {sample.subtitle}
+        </p>
+        <h3 className="mb-3" style={{ ...titleStyle, fontSize: 28 }}>{sample.title}</h3>
+        <p className="text-[10px] whitespace-pre-line mb-4" style={{ color: sample.main, opacity: 0.75, lineHeight: 1.55 }}>
+          {sample.body}
+        </p>
+        <div className="flex-1" />
+        <p className="text-[10px] tracking-[0.18em] font-semibold mb-0.5" style={{ color: sample.main }}>{sample.date}</p>
+        <p className="text-[9px] mb-1" style={{ color: sample.sub }}>{sample.place}</p>
+        <p className="text-[9px] italic" style={{ color: sample.sub, opacity: 0.85 }}>{sample.host}</p>
+      </div>
+    );
+  }
+
+  if (sample.style === 'centerdown') {
+    // 정중앙 큰 제목 + 그 아래 몰림 (mimics layout-classic with centered emphasis)
+    return (
+      <div className="absolute inset-0 flex flex-col items-center justify-center px-5 py-8 text-center" style={{ background: sample.bg }}>
+        {eventChip}
+        <p className="text-[10px] tracking-[0.3em] uppercase mt-3" style={{ color: sample.main, opacity: 0.85 }}>
+          {sample.subtitle}
+        </p>
+        <h3 className="my-2" style={{ ...titleStyle, fontSize: 30 }}>{sample.title}</h3>
+        <div className="flex items-center gap-2 my-2">
+          <span className="block w-8 h-px" style={{ background: sample.main, opacity: 0.4 }} />
+          <span className="text-base" style={{ color: sample.main, opacity: 0.7 }}>✦</span>
+          <span className="block w-8 h-px" style={{ background: sample.main, opacity: 0.4 }} />
+        </div>
+        <p className="text-[10px] tracking-[0.18em] font-semibold mt-1" style={{ color: sample.main }}>{sample.date}</p>
+        <p className="text-[9px] mt-0.5" style={{ color: sample.sub }}>{sample.place}</p>
+        <p className="text-[9px] italic mt-1" style={{ color: sample.sub, opacity: 0.85 }}>{sample.host}</p>
+      </div>
+    );
+  }
+
+  // ── default: centered ─────────────────────────────────────────────
   return (
     <div
       className="absolute inset-0 flex flex-col items-center justify-center px-6 py-8 text-center"
       style={{ background: sample.bg }}
     >
-      {/* event label with dividers */}
-      <div className="flex items-center gap-2 mb-3 opacity-80">
-        <span className="block w-6 h-px" style={{ background: GOLD, opacity: 0.7 }} />
-        <span className="text-[9px] tracking-[0.4em] font-semibold" style={{ color: GOLD }}>
-          {sample.event}
-        </span>
-        <span className="block w-6 h-px" style={{ background: GOLD, opacity: 0.7 }} />
-      </div>
-
-      {/* subtitle */}
-      <p
-        className="text-[10px] tracking-[0.3em] uppercase mb-2"
-        style={{ color: sample.main, fontWeight: 500, opacity: 0.85 }}
-      >
+      {eventChip}
+      <p className="text-[10px] tracking-[0.3em] uppercase mt-3 mb-2" style={{ color: sample.main, opacity: 0.85 }}>
         {sample.subtitle}
       </p>
-
-      {/* title */}
-      <h3
-        className="mb-3"
-        style={{
-          fontFamily: "var(--font-cormorant), 'Cormorant Garamond', serif",
-          fontSize: 26,
-          fontWeight: 600,
-          color: sample.main,
-          letterSpacing: '0.04em',
-          lineHeight: 1.15
-        }}
-      >
-        {sample.title}
-      </h3>
-
-      {/* body */}
-      <p
-        className="text-[10px] mb-4 whitespace-pre-line"
-        style={{ color: sample.main, opacity: 0.75, lineHeight: 1.6 }}
-      >
+      <h3 className="mb-3" style={{ ...titleStyle, fontSize: 26 }}>{sample.title}</h3>
+      <p className="text-[10px] mb-4 whitespace-pre-line" style={{ color: sample.main, opacity: 0.75, lineHeight: 1.6 }}>
         {sample.body}
       </p>
-
-      {/* divider with icon */}
       <div className="flex items-center gap-2 mb-3">
         <span className="block w-8 h-px" style={{ background: sample.main, opacity: 0.4 }} />
         <span className="text-base" style={{ color: sample.main, opacity: 0.7 }}>✦</span>
         <span className="block w-8 h-px" style={{ background: sample.main, opacity: 0.4 }} />
       </div>
-
-      {/* date */}
-      <p
-        className="text-[10px] tracking-[0.18em] mb-1"
-        style={{ color: sample.main, fontWeight: 500 }}
-      >
-        {sample.date}
-      </p>
-      {/* place */}
-      <p className="text-[9px] mb-2" style={{ color: sample.sub }}>
-        {sample.place}
-      </p>
-      <p className="text-[9px] italic" style={{ color: sample.sub, opacity: 0.85 }}>
-        {sample.host}
-      </p>
+      <p className="text-[10px] tracking-[0.18em] mb-1" style={{ color: sample.main, fontWeight: 500 }}>{sample.date}</p>
+      <p className="text-[9px] mb-2" style={{ color: sample.sub }}>{sample.place}</p>
+      <p className="text-[9px] italic" style={{ color: sample.sub, opacity: 0.85 }}>{sample.host}</p>
     </div>
   );
 }

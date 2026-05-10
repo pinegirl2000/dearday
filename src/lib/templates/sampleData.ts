@@ -39,8 +39,32 @@ export const SAMPLE_BY_EVENT: Record<string, Partial<BaseCard>> = {
     body: "We'd love for you to share\nthis special moment with us.",
     event_date: '2026-08-10T18:00:00.000Z', event_place: 'Sample Venue, City',
     contact_name: 'From the Host', contact_phone: '+65-1000-2000'
+  },
+  // Thank cards — 날짜/장소 없음, 메시지 중심
+  'mothers-day': {
+    title: "To the World's Best Mom", greeting_oneliner: 'With all my love',
+    body: 'Thank you for every sacrifice,\nevery hug, and every quiet moment of love.',
+    contact_name: '— Your loving child —'
+  },
+  'fathers-day': {
+    title: 'To My Dad, My Hero', greeting_oneliner: 'With all my love',
+    body: 'Thank you for the strength you gave me,\nthe lessons you taught me.',
+    contact_name: '— Your loving child —'
+  },
+  'teachers-day': {
+    title: 'Thank You, Teacher', greeting_oneliner: 'A note of gratitude',
+    body: 'Your patience taught us to think,\nyour passion showed us to dream.',
+    contact_name: '— Your students —'
+  },
+  // Congrats cards
+  graduation: {
+    title: 'Congratulations, Graduate!', greeting_oneliner: 'A new chapter begins',
+    body: 'You worked hard, you dreamed big,\nand today you stand tall.',
+    contact_name: '— With pride and joy —'
   }
 };
+// 메시지 카드 (thank/congrats) — 날짜/장소가 의미 없는 이벤트 ID 화이트리스트
+const MESSAGE_CARD_EVENTS = new Set(['mothers-day', 'fathers-day', 'teachers-day', 'graduation']);
 
 interface TplLite {
   id: string;
@@ -58,6 +82,7 @@ export function buildSamplePreviewCard(
 ): BaseCard {
   const eventId = ev || (t.recommendEvents[0] as EventType) || 'etc';
   const sample = SAMPLE_BY_EVENT[eventId] || SAMPLE_BY_EVENT.etc;
+  const isMessageCard = MESSAGE_CARD_EVENTS.has(eventId as string);
   // 1) admin DB override 우선 → 2) 코드 default getTemplateLayouts
   const dbOverride = templateConfigs?.[t.id];
   const allowed = (dbOverride && dbOverride.length > 0)
@@ -77,11 +102,11 @@ export function buildSamplePreviewCard(
     title: sample.title || '',
     greeting_oneliner: sample.greeting_oneliner ?? null,
     body: sample.body ?? null,
-    event_date: sample.event_date ?? null,
-    event_place: sample.event_place ?? null,
-    map_url: 'https://maps.google.com',
+    event_date: isMessageCard ? null : (sample.event_date ?? null),
+    event_place: isMessageCard ? null : (sample.event_place ?? null),
+    map_url: isMessageCard ? null : 'https://maps.google.com',
     contact_name: sample.contact_name ?? null,
-    contact_phone: sample.contact_phone ?? null,
+    contact_phone: isMessageCard ? null : (sample.contact_phone ?? null),
     extra_info: sample.extra_info ?? null,
     rsvp_enabled: false,
     plan: 'free'

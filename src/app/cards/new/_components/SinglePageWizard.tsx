@@ -10,6 +10,7 @@ import { Check, ChevronDown, ChevronUp, Minus, Plus, Sparkles, Calendar, RotateC
 import { PageContainer } from '@/components/layout/PageContainer';
 import { MobileHeader } from '@/components/layout/MobileHeader';
 import { Input, Textarea, Button, PhoneInput } from '@/components/ui';
+import { ImageUploader } from '@/components/domain/ImageUploader';
 import { useWizardStore } from '@/stores/wizardStore';
 import { EVENT_TYPES, getEventTypeMeta } from '@/lib/eventType';
 import { getBackground } from '@/lib/backgrounds';
@@ -161,6 +162,10 @@ interface SinglePageWizardProps {
   eventOrders?: Record<string, string[]>;
   /** admin이 DB에 저장한 이벤트별 제외된 템플릿 (event_id → template_id[]) */
   eventExcludes?: Record<string, string[]>;
+  /** admin이 DB에 추가 포함시킨 (event_id → template_id[]) — 코드의 recommendEvents 외 */
+  eventIncludes?: Record<string, string[]>;
+  /** DB가 source of truth인 모든 이벤트 (default + 커스텀) — 없으면 코드 EVENT_TYPES fallback */
+  allEvents?: Array<{ id: string; label: string; emoji: string; card_type?: 'invitation' | 'thankcard' | 'congrats' }>;
   /** admin이 DB에 저장한 템플릿별 색상 override (template_id → 5 colors) */
   templateColors?: Record<string, {
     color_main?: string | null;
@@ -171,7 +176,11 @@ interface SinglePageWizardProps {
   }>;
 }
 
-export default function SinglePageWizard({ skipRehydrate, initialOpen, templateConfigs, eventOrders, eventExcludes, templateColors }: SinglePageWizardProps = {}) {
+export default function SinglePageWizard({ skipRehydrate, initialOpen, templateConfigs, eventOrders, eventExcludes, eventIncludes, templateColors, allEvents }: SinglePageWizardProps = {}) {
+  // DB가 source of truth — 없으면(SSR 초기, 미로드 등) 코드 EVENT_TYPES fallback
+  const ALL_EVENT_TYPES = (allEvents && allEvents.length > 0)
+    ? allEvents
+    : EVENT_TYPES.map((e) => ({ id: e.id as string, label: e.label, emoji: e.emoji, card_type: 'invitation' as const }));
   const router = useRouter();
   const params = useSearchParams();
   const { status: sessionStatus } = useSession();
@@ -240,6 +249,28 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
     initialOpen ? 2 : 0
   );
   const [pending, startTransition] = useTransition();
+  // thank_* 상단 원형 사진 업로드 — 카드 미리보기 클릭 시 file picker 트리거
+  const thankPhotoInputRef = useRef<HTMLInputElement>(null);
+  const handleThankPhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    e.target.value = '';
+    if (!f) return;
+    try {
+      const { compressImage } = await import('@/lib/image');
+      const compressed = await compressImage(f, 'thankPhoto');
+      const form = new FormData();
+      form.append('file', compressed);
+      form.append('kind', 'thankPhoto');
+      const res = await fetch('/api/upload', { method: 'POST', body: form });
+      const json = await res.json();
+      if (!res.ok || !json.ok) throw new Error(json.error || '업로드 실패');
+      setDraft({ custom_bg_url: json.url });
+      toast.success('사진이 업로드되었어요');
+    } catch (err: any) {
+      toast.error(err.message || '업로드 중 오류');
+    }
+  };
+  const triggerThankPhotoUpload = () => thankPhotoInputRef.current?.click();
   // Section 3 Preview는 봉투부터 보여줌 — 사용자가 봉투를 클릭해서 카드를 펼치도록
   const [envelopeOpen, setEnvelopeOpen] = useState(false);
   const [envelopeOpening, setEnvelopeOpening] = useState(false);
@@ -370,10 +401,14 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
     if (id === 2) {
       const recipientOk = draft.recipient_template === null
         || (typeof draft.recipient_template === 'string' && draft.recipient_template.trim().length > 0);
+      // layout이 date/place 필드를 정의하지 않는 경우(thank-classic 등)는 검증 skip
+      const layoutFields = getLayout(draft.layout_id).fields;
+      const dateOk = !layoutFields.date || !!draft.event_date;
+      const placeOk = !layoutFields.place || !!(draft.event_place && draft.event_place.trim());
       return !!(
         draft.title && draft.title.trim() &&
-        draft.event_date &&
-        draft.event_place && draft.event_place.trim() &&
+        dateOk &&
+        placeOk &&
         recipientOk &&
         draft.body && draft.body.trim()
       );
@@ -419,6 +454,10 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
     if (sampleAutoFilledFor.current === draft.event_type) return;
     sampleAutoFilledFor.current = draft.event_type;
 
+    // 현재 이벤트 카드 타입 — thank/congrats는 날짜·장소 없는 메시지 카드
+    const evMetaForSample = (allEvents || []).find((e) => e.id === draft.event_type);
+    const isMessageCard = evMetaForSample?.card_type === 'thankcard' || evMetaForSample?.card_type === 'congrats';
+
     listSamplesByEventType(draft.event_type).then((samples) => {
       if (!samples || samples.length === 0) {
         // DB에 samples 없으면 폴백: SAMPLE_BY_EVENT 하드코딩 사용
@@ -427,9 +466,11 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
           title: sample.title || meta.fields.titlePlaceholder,
           greeting_oneliner: sample.greeting_oneliner ?? null,
           body: sample.body || meta.fields.bodyPlaceholder,
-          event_place: sample.event_place ?? null,
+          event_date: isMessageCard ? null : (sample.event_date ?? null),
+          event_place: isMessageCard ? null : (sample.event_place ?? null),
+          map_url: isMessageCard ? null : null,
           contact_name: sample.contact_name ?? null,
-          contact_phone: sample.contact_phone ?? null,
+          contact_phone: isMessageCard ? null : (sample.contact_phone ?? null),
           extra_info: sample.extra_info ?? null,
           theme: meta.recommendTheme as any
         });
@@ -444,16 +485,19 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, draft.event_type]);
 
-  // sample 하나를 draft에 적용
+  // sample 하나를 draft에 적용 (thank/congrats 카드는 날짜·장소·전화 비움)
   const applySample = (s: SampleData) => {
+    const evMetaForApply = (allEvents || []).find((e) => e.id === draft.event_type);
+    const isMessageCard = evMetaForApply?.card_type === 'thankcard' || evMetaForApply?.card_type === 'congrats';
     setDraft({
       title: s.title || '',
       greeting_oneliner: s.greeting_oneliner,
       body: s.body || '',
-      event_place: s.event_place,
-      map_url: s.map_url,
+      event_date: isMessageCard ? null : (draft.event_date ?? null),
+      event_place: isMessageCard ? null : s.event_place,
+      map_url: isMessageCard ? null : s.map_url,
       contact_name: s.contact_name,
-      contact_phone: s.contact_phone,
+      contact_phone: isMessageCard ? null : s.contact_phone,
       extra_info: s.extra_info,
       theme: meta.recommendTheme as any
     });
@@ -470,6 +514,12 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
     event_type: draft.event_type || 'etc'
   } as BaseCard;
 
+  // 현재 선택한 이벤트의 card_type (invitation/thankcard/congrats) — preview에 전달해 eventLabel 숨김
+  const currentEventCardType: 'invitation' | 'thankcard' | 'congrats' = (() => {
+    const meta = (allEvents || []).find((e) => e.id === draft.event_type);
+    const ct = meta?.card_type;
+    return ct === 'thankcard' || ct === 'congrats' ? ct : 'invitation';
+  })();
   const bgMeta = getBackground(draft.bg_id);
   const layoutMeta = getLayout(draft.layout_id);
 
@@ -528,10 +578,13 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
   const detailsCanProceed = (() => {
     const recipientOk = draft.recipient_template === null
       || (typeof draft.recipient_template === 'string' && draft.recipient_template.trim().length > 0);
+    const layoutFields = getLayout(draft.layout_id).fields;
+    const dateOk = !layoutFields.date || !!draft.event_date;
+    const placeOk = !layoutFields.place || !!(draft.event_place && draft.event_place.trim());
     return !!(
       draft.title && draft.title.trim() &&
-      draft.event_date &&
-      draft.event_place && draft.event_place.trim() &&
+      dateOk &&
+      placeOk &&
       recipientOk &&
       draft.body && draft.body.trim()
     );
@@ -546,6 +599,15 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
   return (
     <PageContainer noPadding>
       <MobileHeader title={isEditMode ? 'Edit Invitation' : t('headerTitle')} back />
+
+      {/* thank_* 상단 사진 업로드용 hidden input — 카드 미리보기의 원형 placeholder 클릭으로 트리거 */}
+      <input
+        ref={thankPhotoInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/heic"
+        onChange={handleThankPhotoSelect}
+        className="hidden"
+      />
 
       {/* 상단 단계 표시 (sticky) — 작은 점/숫자 + 가는 connector. 현재 단계 라벨은 아래 SectionShell에 노출 */}
       <div className="sticky top-0 z-20 bg-white/95 backdrop-blur border-b border-hydrangea-100/70 px-4 py-3">
@@ -623,13 +685,16 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
         >
           {(() => {
             const activeEvent = (draft.event_type as EventType) || 'meeting';
-            // draft 템플릿이라도 admin이 DB에 layout을 등록했으면 노출
+            // 최종 노출 = (recommendEvents UNION include) MINUS exclude. draft 템플릿은 layout 등록된 것만
             const excludedSet = new Set(eventExcludes?.[activeEvent] || []);
-            const baseTpls = TEMPLATES.filter((t) =>
-              t.recommendEvents.includes(activeEvent) &&
-              !excludedSet.has(t.id) &&
-              (!t.draft || (templateConfigs && templateConfigs[t.id] && templateConfigs[t.id].length > 0))
-            );
+            const includedSet = new Set(eventIncludes?.[activeEvent] || []);
+            const baseTpls = TEMPLATES.filter((t) => {
+              const codeOrIncluded = t.recommendEvents.includes(activeEvent) || includedSet.has(t.id);
+              if (!codeOrIncluded) return false;
+              if (excludedSet.has(t.id)) return false;
+              if (t.draft && !(templateConfigs && templateConfigs[t.id] && templateConfigs[t.id].length > 0)) return false;
+              return true;
+            });
             // admin DB에 저장된 순서 적용 — 저장된 ID 우선, 미저장은 default 순서로 뒤에
             const order = eventOrders?.[activeEvent];
             const tpls = order && order.length > 0
@@ -642,17 +707,19 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
               : baseTpls;
             return (
               <div className="space-y-3 mt-2">
-                {/* 이벤트 선택 */}
+                {/* 이벤트 선택 — invitation / thankcard 두 그룹으로 분리 */}
                 <h4 className="text-xs font-semibold text-hydrangea-700 mb-2 flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" strokeWidth={2} /> Event</h4>
-                <div className="grid grid-cols-6 gap-1">
-                  {EVENT_TYPES.map((e) => {
+                {(() => {
+                  const renderEventBtn = (e: typeof ALL_EVENT_TYPES[number]) => {
                     const selected = activeEvent === e.id;
+                    const isCodeDefault = EVENT_TYPES.some((ce) => ce.id === e.id);
+                    const displayLabel = isCodeDefault ? tEvent(e.id) : e.label;
                     return (
                       <button
                         key={e.id}
                         type="button"
                         onClick={() => {
-                          setEventType(e.id);
+                          setEventType(e.id as EventType);
                           setDraft({ bg_id: undefined, layout_id: undefined } as any);
                         }}
                         className={`relative flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 rounded-lg transition min-w-0 ${
@@ -662,7 +729,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                         }`}
                       >
                         <span className="text-base leading-none">{e.emoji}</span>
-                        <span className="text-[9px] font-medium tracking-tight truncate max-w-full">{tEvent(e.id)}</span>
+                        <span className="text-[9px] font-medium tracking-tight truncate max-w-full">{displayLabel}</span>
                         {selected && (
                           <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-hydrangea-500 border border-white flex items-center justify-center shadow-sm">
                             <Check className="w-2.5 h-2.5 text-white" strokeWidth={3.5} />
@@ -670,13 +737,51 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                         )}
                       </button>
                     );
-                  })}
-                </div>
+                  };
+                  const invitationEvents = ALL_EVENT_TYPES.filter((e) => (e.card_type || 'invitation') === 'invitation');
+                  const thankEvents = ALL_EVENT_TYPES.filter((e) => e.card_type === 'thankcard');
+                  const congratsEvents = ALL_EVENT_TYPES.filter((e) => e.card_type === 'congrats');
+                  return (
+                    <div className="space-y-3">
+                      <div>
+                        <div className="text-[10px] font-semibold text-hydrangea-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                          <span>📅</span><span>Invitation</span>
+                          <span className="text-[9px] text-hydrangea-400 font-normal normal-case tracking-normal">· 날짜/장소 포함</span>
+                        </div>
+                        <div className="grid grid-cols-6 gap-1">
+                          {invitationEvents.map(renderEventBtn)}
+                        </div>
+                      </div>
+                      {thankEvents.length > 0 && (
+                        <div>
+                          <div className="text-[10px] font-semibold text-amber-600 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                            <span>💌</span><span>Thank Card</span>
+                            <span className="text-[9px] text-hydrangea-400 font-normal normal-case tracking-normal">· 감사·답례</span>
+                          </div>
+                          <div className="grid grid-cols-6 gap-1">
+                            {thankEvents.map(renderEventBtn)}
+                          </div>
+                        </div>
+                      )}
+                      {congratsEvents.length > 0 && (
+                        <div>
+                          <div className="text-[10px] font-semibold text-pink-600 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                            <span>🎉</span><span>Congrats</span>
+                            <span className="text-[9px] text-hydrangea-400 font-normal normal-case tracking-normal">· 축하 메시지</span>
+                          </div>
+                          <div className="grid grid-cols-6 gap-1">
+                            {congratsEvents.map(renderEventBtn)}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 {/* 활성 이벤트의 템플릿 그리드 */}
                 <div>
                   <h4 className="text-xs font-semibold text-hydrangea-700 mb-2">
-                    🎨 Templates for {(EVENT_TYPES.find((e) => e.id === activeEvent)?.label) || 'Invitation'}
+                    🎨 Templates for {(ALL_EVENT_TYPES.find((e) => e.id === activeEvent)?.label) || 'Invitation'}
                   </h4>
                   {tpls.length === 0 ? (
                     <div className="text-center py-8 text-sm text-hydrangea-400">
@@ -807,17 +912,24 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
             };
             const flowPos = curLayout.id === 'layout-4' ? flowPosCompact : flowPosClassic;
             // 큰 폰트 필드(title 등)는 텍스트가 field.y 아래로 길게 그려져서 배지가 텍스트 위로 떠 보임 — yOffset으로 보정
+            // thank_classic 등 날짜/장소 없는 레이아웃 또는 thank/congrats 카드는 Date·Place 배지 숨김
+            const hasDate = !!lf.date && currentEventCardType === 'invitation';
+            const hasPlace = !!lf.place && currentEventCardType === 'invitation';
             const mapToField: Array<{ key: keyof typeof draft | 'event_time_only' | 'rsvp_section'; label: string; field?: { x: number; y: number; align?: string; w?: number; fontSize?: number }; yOffset?: number }> = [
               { key: 'greeting_oneliner', label: 'Subtitle', field: lf.subtitle as any },
               { key: 'title', label: 'Title', field: lf.title as any, yOffset: 4 },
               { key: 'body', label: 'Message', field: lf.body as any, yOffset: 4 },
-              { key: 'event_date', label: 'Date & Time', field: lf.date as any },
-              { key: 'event_place', label: 'Place', field: lf.place as any },
-              { key: 'contact_name', label: 'Host', field: lf.place as any },
-              { key: 'contact_phone', label: 'Phone', field: lf.place as any },
-              { key: 'extra_info', label: 'Extra info', field: lf.extra as any },
-              // RSVP는 enabled일 때만 노출
-              ...(draft.rsvp_enabled
+              ...(hasDate ? [{ key: 'event_date' as const, label: 'Date & Time', field: lf.date as any }] : []),
+              ...(hasPlace ? [{ key: 'event_place' as const, label: 'Place', field: lf.place as any }] : []),
+              { key: 'contact_name', label: currentEventCardType === 'invitation' ? 'Host' : 'From', field: (lf.place || lf.extra) as any },
+              ...(currentEventCardType === 'invitation'
+                ? [
+                    { key: 'contact_phone' as const, label: 'Phone', field: (lf.place || lf.extra) as any },
+                    { key: 'extra_info' as const, label: 'Extra info', field: lf.extra as any }
+                  ]
+                : []),
+              // RSVP는 invitation + enabled일 때만 노출
+              ...(draft.rsvp_enabled && currentEventCardType === 'invitation'
                 ? [{ key: 'rsvp_section' as any, label: 'RSVP', field: (lf.extra || lf.place) as any }]
                 : [])
             ];
@@ -912,6 +1024,19 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
               else if (tpl) allowed = getTemplateLayouts(tpl);
               else if (draft.layout_id) allowed = [draft.layout_id as LayoutId];
               else allowed = ['layout-classic'] as LayoutId[];
+              // 이벤트 카드 타입 기반 layout 필터링:
+              // - thankcard / congrats 이벤트 → 'thank_'로 시작하는 layout만 (둘 다 날짜/장소 없음)
+              // - invitation 이벤트 → 'thank_' 외 layout만
+              const evMeta = (allEvents || []).find((e) => e.id === draft.event_type);
+              const eventCardType = (evMeta as any)?.card_type;
+              const isMessageCard = eventCardType === 'thankcard' || eventCardType === 'congrats';
+              if (isMessageCard) {
+                allowed = allowed.filter((id) => id.startsWith('thank_'));
+                if (allowed.length === 0) allowed = ['thank_classic'] as LayoutId[];
+              } else {
+                allowed = allowed.filter((id) => !id.startsWith('thank_'));
+                if (allowed.length === 0) allowed = ['layout-classic'] as LayoutId[];
+              }
               const SHORT_DESC: Record<string, string> = {
                 'layout-classic': 'Top-down flow',
                 'layout-7': 'Top-down + center',
@@ -972,7 +1097,9 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
               <TemplateCard
                 card={previewCard}
                 recipientName="John"
-                rsvpSlot={draft.rsvp_enabled ? (() => {
+                eventCardType={currentEventCardType}
+                onPhotoClick={triggerThankPhotoUpload}
+                rsvpSlot={(draft.rsvp_enabled && currentEventCardType === 'invitation') ? (() => {
                   const isRsvpHighlighted = fieldsOrder.find((f) => f.no === flashFieldNo)?.key === 'rsvp_section';
                   return (
                     <div
@@ -1022,7 +1149,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                   if (key === 'greeting_oneliner' || key === 'title' || key === 'body' || key === 'contact_name' || key === 'event_label') {
                     const labelMap: Record<string, string> = {
                       greeting_oneliner: 'Subtitle', title: 'Title', body: 'Message',
-                      contact_name: 'Host', event_label: 'Event label'
+                      contact_name: currentEventCardType === 'invitation' ? 'Host' : 'From', event_label: 'Event label'
                     };
                     setTextEditField({
                       key: key as any,
@@ -1054,28 +1181,30 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                                   el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                                   return;
                                 }
-                                // 필드가 비어있으면 모달 즉시 열기 (입력 도와주기)
-                                const empty = isEmpty(fld.key);
-                                if (empty) {
-                                  const k = fld.key;
-                                  if (k === 'event_date') { setDateTimeModalOpen(true); return; }
-                                  if (k === 'contact_phone') { setPhoneModalOpen(true); return; }
-                                  if (k === 'event_place') { setPlaceModalOpen(true); return; }
-                                  if (k === 'extra_info') { setExtraInfoModalOpen(true); return; }
-                                  if (k === 'greeting_oneliner' || k === 'title' || k === 'body' || k === 'contact_name') {
-                                    const labelMap: Record<string, string> = {
-                                      greeting_oneliner: 'Subtitle', title: 'Title', body: 'Message', contact_name: 'Host'
-                                    };
-                                    setTextEditField({
-                                      key: k as any,
-                                      label: labelMap[k] || k,
-                                      multiline: k === 'body' || k === 'title'
-                                    });
-                                    return;
-                                  }
+                                // 두 번 탭 패턴: 1번 → 라벨 펼침(highlight), 2번(같은 배지) → 입력 모달
+                                const alreadyFlashing = flashFieldNo === fld.no;
+                                if (!alreadyFlashing) {
+                                  setFlashFieldNo(fld.no);
+                                  return;
                                 }
-                                // 값이 있으면 highlight 토글
-                                setFlashFieldNo((cur) => (cur === fld.no ? null : fld.no));
+                                const k = fld.key;
+                                if (k === 'event_date') { setDateTimeModalOpen(true); return; }
+                                if (k === 'contact_phone') { setPhoneModalOpen(true); return; }
+                                if (k === 'event_place') { setPlaceModalOpen(true); return; }
+                                if (k === 'extra_info') { setExtraInfoModalOpen(true); return; }
+                                if (k === 'greeting_oneliner' || k === 'title' || k === 'body' || k === 'contact_name') {
+                                  const labelMap: Record<string, string> = {
+                                    greeting_oneliner: 'Subtitle', title: 'Title', body: 'Message', contact_name: currentEventCardType === 'invitation' ? 'Host' : 'From'
+                                  };
+                                  setTextEditField({
+                                    key: k as any,
+                                    label: labelMap[k] || k,
+                                    multiline: k === 'body' || k === 'title'
+                                  });
+                                  return;
+                                }
+                                // 그 외(event_label 등) — 두번째 탭이지만 모달 없는 경우 highlight 해제
+                                setFlashFieldNo(null);
                               }}
                               style={{
                                 background: (active || isFlashing) ? GUIDE : 'rgba(255,255,255,0.95)',
@@ -1100,7 +1229,19 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
               />
             </div>
 
-            <div id="dearday-rsvp-section" className="pt-3 border-t border-hydrangea-100/60 scroll-mt-24">
+            {draft.layout_id?.startsWith('thank_') && (
+              <div className="pt-3 border-t border-hydrangea-100/60">
+                <h4 className="text-xs font-semibold text-hydrangea-700 mb-2">상단 사진 (선택)</h4>
+                <ImageUploader
+                  kind="thankPhoto"
+                  value={draft.custom_bg_url || undefined}
+                  onChange={(url) => setDraft({ custom_bg_url: url })}
+                  hint="원형 하이라이트로 카드 상단에 표시됩니다 (최대 20KB, 자동 압축)"
+                />
+              </div>
+            )}
+
+            {currentEventCardType === 'invitation' && <div id="dearday-rsvp-section" className="pt-3 border-t border-hydrangea-100/60 scroll-mt-24">
               <h4 className="text-xs font-semibold text-hydrangea-700 mb-2">RSVP options</h4>
               <div className="space-y-2">
                 <div className="flex items-center justify-between p-3 rounded-xl bg-white border border-hydrangea-100/60">
@@ -1192,7 +1333,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                   </>
                 )}
               </div>
-            </div>
+            </div>}
 
             <Button onClick={() => advance(3)} disabled={!detailsCanProceed} full size="md">
               Next
@@ -1263,7 +1404,8 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                                 <TemplateCard
                                   card={previewCard}
                                   recipientName="John"
-                                  rsvpSlot={draft.rsvp_enabled ? (
+                                  eventCardType={currentEventCardType}
+                                  rsvpSlot={(draft.rsvp_enabled && currentEventCardType === 'invitation') ? (
                                     <RsvpForm card={previewCard} theme={getTheme(previewCard.theme)} compact />
                                   ) : null}
                                 />
@@ -1445,7 +1587,8 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                         <TemplateCard
                           card={previewCard}
                           recipientName="John"
-                          rsvpSlot={draft.rsvp_enabled ? (
+                          eventCardType={currentEventCardType}
+                          rsvpSlot={(draft.rsvp_enabled && currentEventCardType === 'invitation') ? (
                             <RsvpForm card={previewCard} theme={getTheme(previewCard.theme)} compact />
                           ) : null}
                         />
@@ -1561,7 +1704,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                 >×</button>
               </div>
               <div className="p-3 max-h-[70vh] overflow-y-auto bg-hydrangea-50/30">
-                <TemplateCard card={sampleCard} recipientName="John" />
+                <TemplateCard card={sampleCard} recipientName="John" eventCardType={currentEventCardType} />
               </div>
               <div className="p-3 flex gap-2 border-t border-hydrangea-100">
                 <button
@@ -1846,7 +1989,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
             <div className="text-base font-bold text-hydrangea-700 mb-1 tracking-tight">
               {isEditMode || (publishedSlug && editingSlug !== publishedSlug) ? '저장되었습니다' : '초대장이 발행되었습니다'}
             </div>
-            <div className="text-[11px] text-hydrangea-400">My Invitations로 이동합니다…</div>
+            <div className="text-[11px] text-hydrangea-400">My cards로 이동합니다…</div>
           </motion.div>
         </div>
       )}

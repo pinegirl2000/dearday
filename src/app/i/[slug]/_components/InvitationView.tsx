@@ -56,10 +56,12 @@ interface Props {
     color_box_text?: string | null;
     box_bg_top?: string | null;
     box_bg_bottom?: string | null;
+    color_title_accent?: string | null;
   };
+  eventCardType?: 'invitation' | 'thankcard' | 'congrats';
 }
 
-export default function InvitationView({ card, feed, recipientName, recipientId, existingRsvp, templateColorOverride }: Props) {
+export default function InvitationView({ card, feed, recipientName, recipientId, existingRsvp, templateColorOverride, eventCardType }: Props) {
   // 봉투 'none'이면 봉투 단계 건너뛰고 바로 카드 표시
   const [open, setOpen] = useState(card.envelope_anim === 'none');
   const [opening, setOpening] = useState(false);
@@ -266,7 +268,7 @@ export default function InvitationView({ card, feed, recipientName, recipientId,
                   transform: 'rotate(90deg) scale(0.467, 0.543)',
                   transformOrigin: 'center'
                 }}>
-                  <TemplateCard card={card} recipientName={recipientName} templateColorOverride={templateColorOverride} />
+                  <TemplateCard card={card} recipientName={recipientName} templateColorOverride={templateColorOverride} eventCardType={eventCardType} />
                 </div>
               </div>
             ) : undefined}
@@ -352,8 +354,9 @@ export default function InvitationView({ card, feed, recipientName, recipientId,
                 card={card}
                 recipientName={recipientName}
                 templateColorOverride={templateColorOverride}
-                rsvpSlot={card.rsvp_enabled ? (
-                  <RsvpForm card={card} theme={theme} recipientId={recipientId} recipientName={recipientName} existingRsvp={existingRsvp} compact />
+                eventCardType={eventCardType}
+                rsvpSlot={card.rsvp_enabled && eventCardType !== 'thankcard' && eventCardType !== 'congrats' ? (
+                  <RsvpForm card={card} theme={theme} recipientId={recipientId} recipientName={recipientName} existingRsvp={existingRsvp} compact templateColorOverride={templateColorOverride} />
                 ) : null}
               />
             </motion.div>
@@ -396,8 +399,9 @@ export default function InvitationView({ card, feed, recipientName, recipientId,
           card={card}
           recipientName={recipientName}
           templateColorOverride={templateColorOverride}
-          rsvpSlot={card.rsvp_enabled ? (
-            <RsvpForm card={card} theme={theme} recipientId={recipientId} recipientName={recipientName} existingRsvp={existingRsvp} compact />
+          eventCardType={eventCardType}
+          rsvpSlot={card.rsvp_enabled && eventCardType !== 'thankcard' && eventCardType !== 'congrats' ? (
+            <RsvpForm card={card} theme={theme} recipientId={recipientId} recipientName={recipientName} existingRsvp={existingRsvp} compact templateColorOverride={templateColorOverride} />
           ) : null}
         />
       </div>
