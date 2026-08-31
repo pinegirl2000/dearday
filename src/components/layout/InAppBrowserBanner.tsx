@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { ExternalLink, AlertTriangle, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
@@ -29,8 +30,14 @@ function detectInAppBrowser(): { isInApp: boolean; appKey: string | null; isAndr
   return { isInApp: !!appKey, appKey, isAndroid, isIOS };
 }
 
+// 배너를 띄우지 않을 경로 — 수신자가 로그인 없이 보는 화면(초대장 열람)
+function isGuestRoute(pathname: string | null): boolean {
+  return !!pathname && pathname.startsWith('/i/');
+}
+
 export default function InAppBrowserBanner() {
   const t = useTranslations('InAppBrowser');
+  const pathname = usePathname();
   const [info, setInfo] = useState<{ isInApp: boolean; appKey: string | null; isAndroid: boolean; isIOS: boolean }>({
     isInApp: false, appKey: null, isAndroid: false, isIOS: false
   });
@@ -65,7 +72,8 @@ export default function InAppBrowserBanner() {
     }
   };
 
-  if (!info.isInApp || dismissed) return null;
+  // 초대장 열람 페이지에서는 Google 로그인이 필요 없으므로 배너 자체를 띄우지 않음
+  if (isGuestRoute(pathname) || !info.isInApp || dismissed) return null;
 
   return (
     <div className="fixed top-0 left-0 right-0 z-[60] bg-amber-50 border-b border-amber-300 px-3 py-2.5 shadow-sm">
