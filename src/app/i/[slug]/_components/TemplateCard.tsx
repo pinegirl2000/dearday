@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
+import { imgUrl } from '@/lib/imgUrl';
 import { Phone, MapPin } from 'lucide-react';
 // NOTE: framer-motion의 whileInView는 장식용 fade-in에만 사용. 본문/연락처처럼
 // "반드시 보여야 하는" 정보는 whileInView로 감싸지 말 것 — IntersectionObserver
@@ -282,7 +283,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
     >
       {bg.imageUrl && (
         <img
-          src={bg.imageUrl}
+          src={imgUrl(bg.imageUrl)}
           alt={bg.name}
           className="absolute inset-0 w-full h-full object-cover"
           draggable={false}

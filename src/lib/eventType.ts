@@ -20,23 +20,6 @@ export interface EventTypeMeta {
 
 export const EVENT_TYPES: EventTypeMeta[] = [
   {
-    id: 'wedding',
-    emoji: '💒',
-    label: 'Wedding',
-    defaultTitle: '○○ ♥ ○○',
-    recommendTheme: 'hydrangea',
-    recommendEnvelope: 'envelope-1',
-    recommendBackgrounds: ['bg-2', 'bg-3', 'bg-4', 'bg-1', 'bg-none'],
-    fields: {
-      titleLabel: 'Main title',
-      titlePlaceholder: 'e.g. Together with our families, we invite you to celebrate our union.',
-      subtitlePlaceholder: 'e.g. The Wedding of [Name] & [Name]',
-      placePlaceholder: 'e.g. The Grand Ballroom at St. Regis, 2 East 55th St, New York, NY',
-      bodyPlaceholder: 'e.g. Together with our families, we invite you to celebrate our union.',
-      memoPlaceholder: 'e.g. Kindly RSVP by August 1st. Formal attire requested.'
-    }
-  },
-  {
     id: 'birthday',
     emoji: '🎂',
     label: 'Birthday',
@@ -124,7 +107,7 @@ export const EVENT_TYPES: EventTypeMeta[] = [
 ];
 
 export function getEventTypeMeta(id: EventType): EventTypeMeta {
-  return EVENT_TYPES.find((e) => e.id === id) || EVENT_TYPES[5];
+  return EVENT_TYPES.find((e) => e.id === id) || EVENT_TYPES[EVENT_TYPES.length - 1];
 }
 
 /**
@@ -132,7 +115,6 @@ export function getEventTypeMeta(id: EventType): EventTypeMeta {
  * layout.fields.eventLabel 위치에 caps 스타일로 표시 (layout-classic 등).
  */
 const EVENT_LABEL_TEXT: Record<EventType, string> = {
-  wedding: 'WEDDING INVITATION',
   birthday: "YOU'RE INVITED",
   opening: "YOU'RE INVITED",
   baptism: "YOU'RE INVITED",
@@ -145,7 +127,6 @@ const EVENT_LABEL_TEXT: Record<EventType, string> = {
  * layout-4(Vintage Script)처럼 우아한 스크립트가 어울리는 레이아웃에서 사용.
  */
 const EVENT_LABEL_SCRIPT: Record<EventType, string> = {
-  wedding: 'The Wedding',
   birthday: 'Birthday Party',
   opening: 'Grand Opening',
   baptism: 'Baptism Day',

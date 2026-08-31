@@ -19,16 +19,16 @@ export async function generateMetadata({ params }: Props) {
     const t = await getTranslations('Invitation');
     return { title: t('metaTitle') };
   }
-  const description = card.greeting_oneliner || undefined;
-  // og:image — 카드의 template 배경 이미지를 미리보기로 사용 (있으면)
+  // 메신저(카카오톡 등) 공유 시 subtitle(부제) 노출 금지 — title + image만 노출
   const bg = getBackground(card.bg_id);
-  const ogImage = bg.imageUrl ? bg.imageUrl : undefined;
+  const ogImage = bg.imageUrl ? bg.imageUrl.replace(/\.png(\?|$)/i, '.webp$1') : undefined;
   return {
     title: card.title,
-    description,
+    // 수신자가 없는 공용 링크 — subtitle 없음 (root layout description 상속 차단)
+    description: null,
     openGraph: {
       title: card.title,
-      description,
+      description: null,
       type: 'website',
       siteName: 'DearDay',
       ...(ogImage && { images: [{ url: ogImage }] })
@@ -36,7 +36,6 @@ export async function generateMetadata({ params }: Props) {
     twitter: {
       card: ogImage ? 'summary_large_image' : 'summary',
       title: card.title,
-      description,
       ...(ogImage && { images: [ogImage] })
     }
   };

@@ -9,7 +9,7 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: '*',
         allow: ['/'],
         // 개인 초대장 페이지 / 관리 페이지는 인덱싱 제외
-        disallow: ['/i/', '/cards/', '/admin/', '/api/']
+        disallow: ['/i/', '/cards/', '/admin/', '/api/', '/pricing', '/billing/', '/reminders']
       }
     ],
     sitemap: `${BASE_URL}/sitemap.xml`

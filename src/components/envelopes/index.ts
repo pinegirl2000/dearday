@@ -5,6 +5,7 @@ export { default as EnvelopeCoral } from './EnvelopeCoral';
 export { default as EnvelopeBlue } from './EnvelopeBlue';
 export { default as EnvelopeBlackGold } from './EnvelopeBlackGold';
 export { default as SwayEnvelope } from './SwayEnvelope';
+export { default as RibbonEnvelope } from './RibbonEnvelope';
 export { default as NoneEnvelope } from './NoneEnvelope';
 export { COLOR_PALETTES, COLOR_IDS, type EnvelopeColorId, type EnvelopePalette } from './palettes';
 export type { EnvelopeProps } from './FoldEnvelope';

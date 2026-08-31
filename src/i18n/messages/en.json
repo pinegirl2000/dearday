@@ -44,7 +44,6 @@
     "demoDesc": "Pick an event — see your design instantly, no sign-up required."
   },
   "EventTypes": {
-    "wedding": "Wedding",
     "birthday": "Birthday",
     "opening": "Opening",
     "baptism": "Baptism",
@@ -122,6 +121,7 @@
     "rsvpDeadlineHint": "Must be before the event start time. After this date, recipients can't RSVP.",
     "envFlipDesc": "The envelope rotates to show its back, the flap opens, and the invitation unfolds inside.",
     "envSwayDesc": "The envelope sways gently; click to open and watch petals scatter as it unfolds.",
+    "envRibbonDesc": "An elegant ribbon and bow untie themselves before the envelope opens, with petals scattering as the card unfolds.",
     "replay": "Replay",
     "replayAria": "Replay",
     "dateTimeTitle": "Date & Time",
@@ -177,6 +177,7 @@
     "noChange": "This invitation does not allow reply changes",
     "deadlineSuffix": "by {date}",
     "rsvpDenied": "This invitation does not allow reply changes",
+    "rsvpClosed": "RSVP is closed",
     "rsvpFailed": "Reply failed",
     "feedAgo": "{n} min ago",
     "feedAgoH": "{n} h ago",
@@ -236,6 +237,11 @@
     "viewLargeAria": "View full invitation",
     "viewLarge": "View larger",
     "edit": "Edit",
+    "duplicateAndResend": "Duplicate & Resend",
+    "duplicating": "Duplicating…",
+    "duplicated": "Duplicated — edit your new card",
+    "duplicateFailed": "Duplicate failed",
+    "lockedHint": "Locked — a recipient has opened this card",
     "tabStats": "Reply stats",
     "tabRecipients": "Recipients",
     "statsTitle": "Reply stats",
@@ -259,6 +265,8 @@
     "replay": "Replay"
   },
   "Send": {
+    "smartCopyLabel": "Copy with message + link",
+    "smartLinkOnly": "Link only",
     "modeLabel": "Send method",
     "linkOnly": "Link only",
     "linkOnlyDesc": "Generate a personal link and send it yourself via messenger.",
@@ -289,6 +297,8 @@
     "sortName": "By name",
     "exportButton": "Export list+links",
     "exportTitle": "Save attendee list as text file",
+    "exportRsvpButton": "Export rsvp only",
+    "exportRsvpTitle": "Save RSVP responses only (no links)",
     "sendAll": "Send all ({n})",
     "noRecipients": "No recipients yet",
     "editNameTitle": "Click to edit name",

@@ -39,7 +39,7 @@ export async function addCustomEvent(
   if (!ID_RE.test(cleanId)) return { ok: false, error: 'id는 영문/숫자/-/_ 만 사용 (1~30자)' };
   if (!cleanLabel) return { ok: false, error: 'label 누락' };
   // 코드 EVENT_TYPES와 충돌 방지
-  const reserved = ['wedding', 'birthday', 'baptism', 'meeting', 'opening', 'etc'];
+  const reserved = ['birthday', 'baptism', 'meeting', 'opening', 'etc'];
   if (reserved.includes(cleanId)) return { ok: false, error: '예약된 id입니다' };
   try {
     await pool.query(

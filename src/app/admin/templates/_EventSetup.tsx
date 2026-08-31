@@ -22,7 +22,7 @@ interface Props {
  * 최종 노출 = (recommendEvents UNION include) MINUS exclude
  */
 export default function EventSetup({ includes, excludes, events }: Props) {
-  const [eventId, setEventId] = useState<string>(events[0]?.id || 'wedding');
+  const [eventId, setEventId] = useState<string>(events[0]?.id || 'birthday');
   const [pending, startTransition] = useTransition();
   const [localIncludes, setLocalIncludes] = useState<Record<string, string[]>>({ ...includes });
   const [localExcludes, setLocalExcludes] = useState<Record<string, string[]>>({ ...excludes });
@@ -94,7 +94,7 @@ export default function EventSetup({ includes, excludes, events }: Props) {
       const res = await deleteEvent(id);
       if (!res.ok) { toast.error(res.error || '삭제 실패'); return; }
       setLocalEvents((s) => s.filter((e) => e.id !== id));
-      if (eventId === id) setEventId(localEvents[0]?.id || 'wedding');
+      if (eventId === id) setEventId(localEvents[0]?.id || 'birthday');
       toast.success('삭제됨');
     });
   };

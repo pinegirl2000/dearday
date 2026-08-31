@@ -113,7 +113,7 @@ function SortableButton({ tpl }: { tpl: Tpl }) {
 }
 
 export default function EventBrowser({ configs, eventOrders, eventExcludes }: Props) {
-  const [eventId, setEventId] = useState<EventType>('wedding');
+  const [eventId, setEventId] = useState<EventType>('birthday');
   const [tplId, setTplId] = useState<string | null>(null);
   const [reorderMode, setReorderMode] = useState(false);
   const [pending, startTransition] = useTransition();

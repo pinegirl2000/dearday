@@ -64,7 +64,7 @@ export const TEMPLATES: TemplateMeta[] = [
     layout_id: 'layout-classic',
     colorMain: '#7B5EA7',
     colorSub: '#FFFFFF',
-    recommendEvents: ['wedding', 'baptism', 'meeting', 'etc'],
+    recommendEvents: ['baptism', 'meeting', 'etc'],
     allowedLayouts: ['layout-classic'],
     badge: 'Wedding'
   },
@@ -76,7 +76,7 @@ export const TEMPLATES: TemplateMeta[] = [
     layout_id: 'layout-classic',
     colorMain: '#8C6F4A',
     colorSub: '#FFFFFF',
-    recommendEvents: ['wedding', 'baptism', 'meeting', 'etc'],
+    recommendEvents: ['baptism', 'meeting', 'etc'],
     allowedLayouts: ['layout-classic']
   },
   {
@@ -87,7 +87,7 @@ export const TEMPLATES: TemplateMeta[] = [
     layout_id: 'layout-classic',
     colorMain: '#7B5EA7',
     colorSub: '#5A3D7A',
-    recommendEvents: ['wedding', 'meeting', 'etc'],
+    recommendEvents: ['meeting', 'etc'],
     allowedLayouts: ['layout-classic', 'layout-4'],
     badge: 'Romantic'
   },
@@ -99,7 +99,7 @@ export const TEMPLATES: TemplateMeta[] = [
     layout_id: 'layout-classic',
     colorMain: '#7B5EA7',
     colorSub: '#EFE7F8',
-    recommendEvents: ['wedding', 'baptism', 'meeting', 'etc'],
+    recommendEvents: ['baptism', 'meeting', 'etc'],
     allowedLayouts: ['layout-classic', 'layout-4', 'layout-7']
   },
   {
@@ -154,7 +154,7 @@ export const TEMPLATES: TemplateMeta[] = [
     layout_id: 'layout-classic',
     colorMain: '#A07C2C',
     colorSub: '#F4E9CC',
-    recommendEvents: ['wedding', 'opening', 'etc'],
+    recommendEvents: ['opening', 'etc'],
     allowedLayouts: ['layout-classic', 'layout-3']
   },
   {
@@ -187,7 +187,7 @@ export const TEMPLATES: TemplateMeta[] = [
     layout_id: 'layout-classic',
     colorMain: '#A65A6F',
     colorSub: '#E89AA0',
-    recommendEvents: ['wedding', 'birthday', 'baptism', 'etc'],
+    recommendEvents: ['birthday', 'baptism', 'etc'],
     allowedLayouts: ['layout-classic', 'layout-4']
   },
   {
@@ -209,7 +209,7 @@ export const TEMPLATES: TemplateMeta[] = [
     layout_id: 'layout-classic',
     colorMain: '#A07C2C',
     colorSub: '#D4E0CC',
-    recommendEvents: ['wedding', 'opening', 'meeting', 'etc'],
+    recommendEvents: ['opening', 'meeting', 'etc'],
     allowedLayouts: ['layout-classic', 'layout-3']
   },
   {
@@ -265,7 +265,7 @@ export const TEMPLATES: TemplateMeta[] = [
     layout_id: 'layout-classic',
     colorMain: '#B89456',
     colorSub: '#7A5E2E',
-    recommendEvents: ['wedding', 'meeting', 'opening', 'etc'],
+    recommendEvents: ['meeting', 'opening', 'etc'],
     draft: true
   },
   {
@@ -287,7 +287,7 @@ export const TEMPLATES: TemplateMeta[] = [
     layout_id: 'layout-classic',
     colorMain: '#C97766',
     colorSub: '#FCE5DD',
-    recommendEvents: ['birthday', 'wedding', 'etc'],
+    recommendEvents: ['birthday', 'etc'],
     draft: true
   },
   {
@@ -298,7 +298,7 @@ export const TEMPLATES: TemplateMeta[] = [
     layout_id: 'layout-classic',
     colorMain: '#A07C2C',
     colorSub: '#F5EFE0',
-    recommendEvents: ['wedding', 'opening', 'meeting', 'etc'],
+    recommendEvents: ['opening', 'meeting', 'etc'],
     draft: true
   },
   {
@@ -319,7 +319,7 @@ export const TEMPLATES: TemplateMeta[] = [
     layout_id: 'thank_classic',
     colorMain: '#5B3F8F',
     colorSub: '#FCE4EC',
-    recommendEvents: ['wedding', 'birthday', 'etc'],
+    recommendEvents: ['birthday', 'etc'],
     draft: true
   }
 ];

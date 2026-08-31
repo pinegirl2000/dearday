@@ -4,10 +4,16 @@ import { useEffect } from 'react';
 import { useWizardStore } from '@/stores/wizardStore';
 import SinglePageWizard from '@/app/cards/new/_components/SinglePageWizard';
 import type { BaseCard } from '@/types/card';
+import type { TemplateColors } from '@/lib/actions/templateConfig';
 
 interface Props {
   card: BaseCard;
   templateConfigs?: Record<string, string[]>;
+  eventOrders?: Record<string, string[]>;
+  eventExcludes?: Record<string, string[]>;
+  eventIncludes?: Record<string, string[]>;
+  templateColors?: Record<string, TemplateColors>;
+  allEvents?: Array<{ id: string; label: string; emoji: string; card_type?: 'invitation' | 'thankcard' | 'congrats' }>;
 }
 
 /**
@@ -20,7 +26,7 @@ interface Props {
  *   cleanup이 loadForEdit으로 채운 데이터를 지워버리는 문제 때문.
  *   reset은 handlePublish 성공 시 호출됨. 그 외 잔존은 다음 마법사 진입 시 정리.
  */
-export default function EditCardClient({ card, templateConfigs }: Props) {
+export default function EditCardClient({ card, templateConfigs, eventOrders, eventExcludes, eventIncludes, templateColors, allEvents }: Props) {
   const loadForEdit = useWizardStore((s) => s.loadForEdit);
 
   useEffect(() => {
@@ -62,5 +68,16 @@ export default function EditCardClient({ card, templateConfigs }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [card.slug]);
 
-  return <SinglePageWizard skipRehydrate initialOpen={1} templateConfigs={templateConfigs} />;
+  return (
+    <SinglePageWizard
+      skipRehydrate
+      initialOpen={1}
+      templateConfigs={templateConfigs}
+      eventOrders={eventOrders}
+      eventExcludes={eventExcludes}
+      eventIncludes={eventIncludes}
+      templateColors={templateColors}
+      allEvents={allEvents}
+    />
+  );
 }

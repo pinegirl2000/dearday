@@ -31,32 +31,6 @@ const pool = new Pool({
 });
 
 const SAMPLES = [
-  // ===== Wedding =====
-  {
-    event_type: 'wedding', label: 'Classic Together',
-    title: 'Daniel ♥ Olivia', greeting_oneliner: 'Together with our families',
-    body: 'We invite you to share in\nthe joy of our wedding day.',
-    event_place: 'The Grand Ballroom, Marina Hotel',
-    map_url: 'https://maps.google.com',
-    contact_name: '— From Daniel & Olivia —', contact_phone: '+65-1234-5678',
-    extra_info: 'Reception to follow', sort_order: 1
-  },
-  {
-    event_type: 'wedding', label: 'Romantic Garden',
-    title: 'Sarah & James', greeting_oneliner: 'Two hearts, one journey',
-    body: 'Join us for an intimate garden ceremony\nas we say "I do".',
-    event_place: 'The Botanic Garden Pavilion',
-    contact_name: '— Sarah & James —', contact_phone: '+65-9999-1234',
-    extra_info: 'Garden party reception · semi-formal attire', sort_order: 2
-  },
-  {
-    event_type: 'wedding', label: 'Modern Minimal',
-    title: 'L & M', greeting_oneliner: 'Forever begins here',
-    body: 'Please join us as we celebrate\nour marriage and the start of our new life together.',
-    event_place: 'Skyline Rooftop, 45F',
-    contact_name: '— Lena & Marcus —', contact_phone: '+65-8888-2222',
-    sort_order: 3
-  },
 
   // ===== Birthday — 중성적·현대적 이름 (Avery, Riley, Quinn, Sage 등) =====
   {
@@ -250,6 +224,197 @@ const SAMPLES = [
     title: '졸업을 축하합니다', greeting_oneliner: '새로운 시작을 응원하며',
     body: '오랜 노력과 인내로 이루어 낸\n오늘의 결실을 진심으로 축하합니다.\n앞날에 큰 행복이 함께하기를 바랍니다.',
     contact_name: '— 축하하는 마음으로 —', sort_order: 3
+  },
+
+  // ===== Baby Full Month (invitation — Singapore Chinese 문화) =====
+  {
+    event_type: 'baby-full-month', label: 'Welcome Baby',
+    title: 'Welcome, Baby Avery!', greeting_oneliner: 'Our little blessing turns one month',
+    body: 'Join us as we celebrate baby Avery\'s\nfull month with red eggs and joy.',
+    event_place: 'The Lounge, Marina Bay',
+    contact_name: '— David & Rachel —', contact_phone: '+65-9111-2222',
+    extra_info: 'Traditional red eggs & ginger will be served', sort_order: 1
+  },
+  {
+    event_type: 'baby-full-month', label: 'Mandarin Style',
+    title: '满月之喜 · Avery 满月', greeting_oneliner: 'A blessed first month',
+    body: '我们诚邀您参加 Avery 的满月喜宴\n共同分享这份喜悦。',
+    event_place: 'Crystal Jade Restaurant', contact_name: '— The Tan Family —',
+    contact_phone: '+65-9333-4444', sort_order: 2
+  },
+
+  // ===== 1st Birthday (invitation) =====
+  {
+    event_type: 'first-birthday', label: "Avery's 1st",
+    title: "Avery's 1st Birthday", greeting_oneliner: 'A precious first year',
+    body: 'One year of giggles, one year of joy.\nCome celebrate with cake and balloons!',
+    event_place: 'The Garden Pavilion',
+    contact_name: '— Love, Avery\'s family —', contact_phone: '+65-9555-6666',
+    extra_info: 'Light lunch + cake cutting at 12 noon', sort_order: 1
+  },
+
+  // ===== Housewarming (invitation) =====
+  {
+    event_type: 'housewarming', label: 'Open House',
+    title: 'Our New Home', greeting_oneliner: 'Come share our joy',
+    body: 'We\'ve moved!\nDrop by anytime to see our new home\nand share a meal with us.',
+    event_place: '88 Orchid Lane, #12-34',
+    contact_name: '— Tom & Lisa —', contact_phone: '+65-9876-5432',
+    extra_info: 'Casual · please come hungry', sort_order: 1
+  },
+
+  // ===== Engagement (invitation) =====
+  {
+    event_type: 'engagement', label: 'Engagement Party',
+    title: 'Sarah ♥ James', greeting_oneliner: 'A new chapter begins',
+    body: 'Join us as we celebrate our engagement\nwith family and close friends.',
+    event_place: 'The Rooftop, Andaz Singapore',
+    contact_name: '— Sarah & James —', contact_phone: '+65-9000-1111',
+    extra_info: 'Cocktail attire', sort_order: 1
+  },
+
+  // ===== Thank you (general) =====
+  {
+    event_type: 'thank-you', label: 'Heartfelt',
+    title: 'Thank you', greeting_oneliner: 'From the bottom of my heart',
+    body: 'Your kindness made my day brighter.\nI\'ll never forget what you did.\nThank you, truly.',
+    contact_name: '— With gratitude —', sort_order: 1
+  },
+  {
+    event_type: 'thank-you', label: 'Short & Warm',
+    title: 'Thanks a million', greeting_oneliner: 'You\'re the best',
+    body: 'Just a little note to say —\nyou made all the difference. ♥',
+    contact_name: '— Your friend —', sort_order: 2
+  },
+  {
+    event_type: 'thank-you', label: 'Korean Style',
+    title: '진심으로 감사해요', greeting_oneliner: '마음 깊이 감사를',
+    body: '당신의 따뜻한 마음 덕분에\n많은 힘이 되었습니다.\n진심으로 감사드립니다.',
+    contact_name: '— 감사한 마음으로 —', sort_order: 3
+  },
+
+  // ===== Get well =====
+  {
+    event_type: 'get-well', label: 'Heartfelt',
+    title: 'Get well soon', greeting_oneliner: 'Sending healing thoughts',
+    body: 'Wishing you rest, recovery,\nand brighter days ahead.\nWe\'re thinking of you. ♥',
+    contact_name: '— With care —', sort_order: 1
+  },
+  {
+    event_type: 'get-well', label: 'Short',
+    title: 'Speedy recovery', greeting_oneliner: 'Hope you feel better soon',
+    body: 'Take all the time you need to rest.\nThe world can wait — your health can\'t.',
+    contact_name: '— Wishing you well —', sort_order: 2
+  },
+
+  // ===== Sorry =====
+  {
+    event_type: 'sorry', label: 'Sincere',
+    title: 'I\'m sorry', greeting_oneliner: 'With a heavy heart',
+    body: 'I know I hurt you,\nand I\'m truly sorry.\nI hope you can forgive me.',
+    contact_name: '— With sincere apology —', sort_order: 1
+  },
+
+  // ===== Promotion · New Job =====
+  {
+    event_type: 'promotion', label: 'Congrats',
+    title: 'Congratulations!', greeting_oneliner: 'A well-deserved milestone',
+    body: 'You worked hard, and it shows.\nWishing you success in this exciting\nnew chapter.',
+    contact_name: '— Cheering you on —', sort_order: 1
+  },
+  {
+    event_type: 'promotion', label: 'Korean Style',
+    title: '승진을 축하해요', greeting_oneliner: '진심으로 축하드립니다',
+    body: '그동안의 노력이 결실을 맺으셨네요.\n앞으로의 새로운 여정도\n응원하겠습니다.',
+    contact_name: '— 축하하는 마음으로 —', sort_order: 2
+  },
+
+  // ===== Wedding Anniversary =====
+  {
+    event_type: 'wedding-anniversary', label: 'To my love',
+    title: 'Happy Anniversary', greeting_oneliner: 'Another year, more love',
+    body: 'Every year with you is a gift.\nThank you for being my favorite person.\nHere\'s to many more. ♥',
+    contact_name: '— Forever yours —', sort_order: 1
+  },
+  {
+    event_type: 'wedding-anniversary', label: "To another couple",
+    title: 'Cheers to {n} years!', greeting_oneliner: 'Celebrating your love',
+    body: 'Watching your love grow over the years\nhas been such a joy.\nCongratulations!',
+    contact_name: '— With love and admiration —', sort_order: 2
+  },
+
+  // ===== CNY (Chinese New Year) =====
+  {
+    event_type: 'cny', label: 'Prosperity',
+    title: '恭喜发财', greeting_oneliner: 'Happy Chinese New Year',
+    body: 'Wishing you a year of\nprosperity, health, and happiness.\n万事如意, 心想事成!',
+    contact_name: '— From our family —', sort_order: 1
+  },
+  {
+    event_type: 'cny', label: 'English Warm',
+    title: 'Happy Lunar New Year', greeting_oneliner: 'May this year bring joy',
+    body: 'Wishing you abundance, health,\nand happiness in the year ahead. 🧧',
+    contact_name: '— Warmest wishes —', sort_order: 2
+  },
+
+  // ===== Hari Raya =====
+  {
+    event_type: 'hari-raya', label: 'Selamat Hari Raya',
+    title: 'Selamat Hari Raya', greeting_oneliner: 'Maaf zahir dan batin',
+    body: 'Wishing you and your family\na blessed Hari Raya filled with\nlove, peace, and joy.',
+    contact_name: '— With warmest wishes —', sort_order: 1
+  },
+
+  // ===== Deepavali =====
+  {
+    event_type: 'deepavali', label: 'Festival of Lights',
+    title: 'Happy Deepavali', greeting_oneliner: 'May light fill your home',
+    body: 'Wishing you and your loved ones\na Deepavali filled with light,\nlove, and laughter. 🪔',
+    contact_name: '— With warm wishes —', sort_order: 1
+  },
+
+  // ===== Mid-Autumn =====
+  {
+    event_type: 'mid-autumn', label: 'Mooncake Wishes',
+    title: 'Happy Mid-Autumn', greeting_oneliner: '中秋节快乐',
+    body: 'Under the same full moon,\nwishing you and your family\nreunion and happiness. 🥮',
+    contact_name: '— With heartfelt wishes —', sort_order: 1
+  },
+
+  // ===== Christmas =====
+  {
+    event_type: 'christmas', label: 'Warm Christmas',
+    title: 'Merry Christmas', greeting_oneliner: 'Joy to you and yours',
+    body: 'Wishing you a Christmas\nfilled with warmth, love,\nand all the things that make you smile. 🎄',
+    contact_name: '— With love —', sort_order: 1
+  },
+  {
+    event_type: 'christmas', label: 'Short & Sweet',
+    title: 'Season\'s greetings', greeting_oneliner: 'Wishing you joy',
+    body: 'May your holidays sparkle\nwith moments of love and laughter.\nMerry Christmas! 🎄',
+    contact_name: '— Warmly —', sort_order: 2
+  },
+
+  // ===== National Day Singapore =====
+  {
+    event_type: 'national-day', label: 'Majulah Singapura',
+    title: 'Happy National Day', greeting_oneliner: 'Onward Singapore',
+    body: 'Celebrating our island home\nand everything that makes\nthis little red dot special. 🇸🇬',
+    contact_name: '— Proudly Singaporean —', sort_order: 1
+  },
+
+  // ===== Valentine's =====
+  {
+    event_type: 'valentines', label: 'To my love',
+    title: 'Happy Valentine\'s', greeting_oneliner: 'My one and only',
+    body: 'Every day with you feels like\na love story.\nHappy Valentine\'s Day, my love. ❤️',
+    contact_name: '— Yours always —', sort_order: 1
+  },
+  {
+    event_type: 'valentines', label: 'To a friend',
+    title: 'You\'re loved', greeting_oneliner: 'Sending love your way',
+    body: 'Not just on Valentine\'s,\nbut every day —\nyou\'re appreciated. ♥',
+    contact_name: '— With love —', sort_order: 2
   }
 ];
 

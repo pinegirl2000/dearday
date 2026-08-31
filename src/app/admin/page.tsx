@@ -5,14 +5,15 @@ import { authOptions } from '@/lib/auth';
 import { isAdminEmail } from '@/lib/admin';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { MobileHeader } from '@/components/layout/MobileHeader';
-import { ChevronRight, Mail, Layers, FileText } from 'lucide-react';
+import { ChevronRight, Mail, Layers, FileText, BarChart3 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
 const ITEMS = [
   { href: '/admin/cards', icon: FileText, title: 'All Invitations', desc: '발행된 모든 초대장 / 사용자별 카드 관리' },
   { href: '/admin/envelopes', icon: Mail, title: '봉투 관리', desc: '사용 가능한 봉투 5종 카탈로그' },
-  { href: '/admin/templates', icon: Layers, title: '템플릿 관리', desc: '배경 + 레이아웃 페어링 카탈로그' }
+  { href: '/admin/templates', icon: Layers, title: '템플릿 관리', desc: '배경 + 레이아웃 페어링 카탈로그' },
+  { href: '/admin/evaluation', icon: BarChart3, title: 'Site Evaluation', desc: '4 영역 평가 점수 (Unlighthouse · Semgrep · manual) 누적 로그' }
 ];
 
 export default async function AdminHomePage() {

@@ -122,7 +122,7 @@ export default function ManageClient({ slug, cardTitle }: Props) {
   };
 
   const copyLink = async (num: string) => {
-    const url = `${origin}/i/${slug}/${num}?v=4`;
+    const url = `${origin}/i/${slug}/${num}`;
     await navigator.clipboard.writeText(url);
     setCopiedNum(num);
     toast.success(t('linkCopied'));
@@ -232,7 +232,7 @@ export default function ManageClient({ slug, cardTitle }: Props) {
                 if (bt === -1) return -1;
                 return bt - at;
               }).map((r, idx) => {
-                const link = `${origin}/i/${slug}/${r.num}?v=4`;
+                const link = `${origin}/i/${slug}/${r.num}`;
                 const copied = copiedNum === r.num;
                 const expanded = expandedNames === r.id;
                 const hasNames = !!r.rsvp_attendee_names && r.rsvp_attendee_names.length > 0;

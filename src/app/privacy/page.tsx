@@ -28,6 +28,14 @@ export default function PrivacyPage() {
             <li><strong>Invitation content</strong>: titles, dates, places, messages, recipient names you enter</li>
             <li><strong>RSVP responses</strong>: attendance status, attendee names, replies submitted by recipients</li>
             <li><strong>Usage data</strong>: page views, device type, browser, approximate location (via Vercel Analytics and Google Analytics, if enabled)</li>
+            <li>
+              <strong>Card open status</strong>: when a recipient opens the personal card link sent
+              to them, we record the timestamp of the first open. This data is visible only to the
+              sender of the card and is used to provide read-status indication and to "lock" the
+              card after viewing (preserving the version the recipient saw). The recipient is
+              shown a notice on first open. Cards opened without a personal link (e.g. via
+              forwarded URL) do not record reads.
+            </li>
           </ul>
         </Section>
 

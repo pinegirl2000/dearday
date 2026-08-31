@@ -4,12 +4,6 @@ import type { BaseCard, EventType, LayoutId } from '@/types/card';
 import { getTemplateLayouts } from '@/lib/templates';
 
 export const SAMPLE_BY_EVENT: Record<string, Partial<BaseCard>> = {
-  wedding: {
-    title: 'Daniel ♥ Olivia', greeting_oneliner: 'Together with our families',
-    body: 'We invite you to share in\nthe joy of our wedding day.',
-    event_date: '2026-06-14T19:00:00.000Z', event_place: 'The Grand Ballroom, Marina Hotel',
-    contact_name: 'From Daniel & Olivia', contact_phone: '+65-1234-5678', extra_info: 'Reception to follow'
-  },
   birthday: {
     title: "Avery's Birthday Party", greeting_oneliner: 'Cheers to another year!',
     body: "Come share laughter, joy, and cake as we celebrate Avery's special day.",
@@ -90,6 +84,8 @@ export function buildSamplePreviewCard(
     : (getTemplateLayouts(t as any) as LayoutId[]);
   const defaultLayout = allowed[0];
   const layoutId = layoutOverride || defaultLayout;
+  // thank_classic / thank_polaroid는 상단 사진 영역이 있는 layout — sample 사진 자동 채움
+  const needsPhoto = layoutId === 'thank_classic' || layoutId === 'thank_polaroid';
   return {
     id: 'preview',
     slug: 'preview',
@@ -99,6 +95,7 @@ export function buildSamplePreviewCard(
     envelope_anim: 'envelope-1',
     theme: 'hydrangea',
     font_family: 'serif',
+    custom_bg_url: needsPhoto ? '/samples/mom-thank.png' : null,
     title: sample.title || '',
     greeting_oneliner: sample.greeting_oneliner ?? null,
     body: sample.body ?? null,

@@ -137,6 +137,13 @@ export async function addRecipientsWithDetails(
       }
     }
   }
+  // silent count — UI 노출 X
+  if (insertedIds.length > 0) {
+    pool.query(
+      'UPDATE dearday_card SET recipients_added_count = recipients_added_count + $2 WHERE id = $1',
+      [card.id, insertedIds.length]
+    ).catch((e) => console.error('recipients_added_count update failed:', e));
+  }
   revalidatePath(`/cards/${slug}/manage`);
   return { ok: true as const, count: insertedIds.length, recipientIds: insertedIds };
 }
@@ -197,7 +204,7 @@ export async function sendInvitationsToRecipients(
       );
       continue;
     }
-    const url = `${baseUrl}/i/${cardData.slug}/${r.num}?v=4`;
+    const url = `${baseUrl}/i/${cardData.slug}/${r.num}`;
     const result = await sendInvitationEmail({
       to: r.email,
       recipientName: r.name,
@@ -264,6 +271,13 @@ export async function bulkAddRecipients(slug: string, ownerToken: string | null,
         attempt++;
       }
     }
+  }
+  // silent count
+  if (inserted.length > 0) {
+    pool.query(
+      'UPDATE dearday_card SET recipients_added_count = recipients_added_count + $2 WHERE id = $1',
+      [card.id, inserted.length]
+    ).catch((e) => console.error('recipients_added_count update failed:', e));
   }
   revalidatePath(`/cards/${slug}/manage`);
   return { ok: true as const, count: inserted.length };

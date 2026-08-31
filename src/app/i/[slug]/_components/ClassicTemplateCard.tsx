@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
+import { imgUrl } from '@/lib/imgUrl';
 import { CalendarDays, MapPin, Phone, ExternalLink } from 'lucide-react';
 import { formatGreeting, applyName, getLayout } from '@/lib/layouts';
 import { getEventLabelText, getEventTypeMeta } from '@/lib/eventType';
@@ -176,7 +177,7 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
     >
       {hasBgImage && (
         <img
-          src={background!.imageUrl}
+          src={imgUrl(background!.imageUrl)}
           alt=""
           style={{
             position: 'absolute', inset: 0, width: '100%', height: '100%',
@@ -187,12 +188,21 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
           }}
         />
       )}
-      <div style={{ position: 'relative', padding: card.layout_id === 'layout-7' ? '110px 20px 60px' : card.layout_id === 'thank_classic' ? '378px 20px 60px' : '24px 20px 60px', zIndex: 1 }}>
-        {/* thank_* 레이아웃 전용: 상단 사각 하이라이트 사진 — 절대 위치로 고정 (text 양과 무관) */}
-        {card.layout_id?.startsWith('thank_') && (card.custom_bg_url || editable) && (
+      <div style={{
+        position: 'relative',
+        padding:
+          card.layout_id === 'layout-7' ? '110px 20px 60px' :
+          card.layout_id === 'thank_classic' ? '378px 20px 60px' :
+          card.layout_id === 'thank_polaroid' ? '300px 20px 60px' :
+          card.layout_id === 'thank_minimal' ? '120px 20px 60px' :
+          '24px 20px 60px',
+        zIndex: 1
+      }}>
+        {/* thank_classic / thank_polaroid 전용: 상단 사진. thank_minimal은 사진 없음 */}
+        {(card.layout_id === 'thank_classic' || card.layout_id === 'thank_polaroid') && (card.custom_bg_url || editable) && (
           <div style={{
             position: 'absolute',
-            top: 156,
+            top: card.layout_id === 'thank_polaroid' ? 80 : 156,
             left: 0,
             right: 0,
             display: 'flex',
@@ -200,26 +210,46 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
             zIndex: 2,
             pointerEvents: editable ? 'auto' : 'none'
           }}>
+              {/* polaroid 변형: washi tape 장식 (사진 위쪽 가운데) */}
+              {card.layout_id === 'thank_polaroid' && (
+                <div style={{
+                  position: 'absolute',
+                  top: -14,
+                  left: '50%',
+                  transform: 'translateX(-30%) rotate(-6deg)',
+                  width: 80,
+                  height: 22,
+                  background: 'linear-gradient(180deg, #F8E8C8 0%, #EBD5A8 100%)',
+                  opacity: 0.75,
+                  zIndex: 3,
+                  borderRadius: 1,
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.15)'
+                }} />
+              )}
               <div
                 onClick={editable ? (e) => { e.stopPropagation(); onPhotoClick?.(); } : undefined}
                 style={{
                   position: 'relative',
                   marginLeft: 5,
-                  width: '49%',
-                  maxWidth: 195,
+                  width: card.layout_id === 'thank_polaroid' ? '62%' : '49%',
+                  maxWidth: card.layout_id === 'thank_polaroid' ? 240 : 195,
                   aspectRatio: '1 / 1',
-                  borderRadius: 0,
+                  borderRadius: card.layout_id === 'thank_polaroid' ? 4 : 0,
                   overflow: 'hidden',
-                  border: 'none',
-                  boxShadow: `0 2px 6px ${palette.title}33, 0 12px 28px ${palette.title}26`,
+                  border: card.layout_id === 'thank_polaroid' ? '14px solid #ffffff' : 'none',
+                  borderBottomWidth: card.layout_id === 'thank_polaroid' ? 40 : undefined,
+                  boxShadow: card.layout_id === 'thank_polaroid'
+                    ? `0 8px 24px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.1)`
+                    : `0 2px 6px ${palette.title}33, 0 12px 28px ${palette.title}26`,
                   background: '#ffffff',
+                  transform: card.layout_id === 'thank_polaroid' ? 'rotate(-3deg)' : 'none',
                   cursor: editable ? 'pointer' : 'default',
                   pointerEvents: 'auto'
                 }}
               >
                 {card.custom_bg_url ? (
                   <img
-                    src={card.custom_bg_url}
+                    src={imgUrl(card.custom_bg_url)}
                     alt=""
                     style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                   />

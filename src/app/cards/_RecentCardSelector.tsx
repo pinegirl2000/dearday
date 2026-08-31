@@ -1,10 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useTransition } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { ChevronDown, ExternalLink, Settings, Pencil, Check, Send, Users, ThumbsUp, ThumbsDown, TrendingUp, X, Maximize2, RotateCcw, RefreshCw } from 'lucide-react';
+import { toast } from 'sonner';
+import { ChevronDown, ExternalLink, Settings, Pencil, Check, Send, Users, ThumbsUp, ThumbsDown, TrendingUp, X, Maximize2, RotateCcw, RefreshCw, Copy, Lock } from 'lucide-react';
 import { getCardStats } from '@/lib/actions/getCardStats';
+import { duplicateCard } from '@/lib/actions/publishCard';
 import { getEventTypeMeta } from '@/lib/eventType';
 import { getBackground } from '@/lib/backgrounds';
 import TemplateCard from '@/app/i/[slug]/_components/TemplateCard';
@@ -88,6 +91,24 @@ export default function RecentCardSelector({
     setCardOpened(false);
     setIframeKey((k) => k + 1);
   };
+  const router = useRouter();
+  const [duplicating, startDuplicate] = useTransition();
+  const handleDuplicate = (slug: string) => {
+    if (duplicating) return;
+    startDuplicate(async () => {
+      const res = await duplicateCard(slug);
+      if (!res.ok || !res.slug) {
+        toast.error(res.error || t('duplicateFailed'));
+        return;
+      }
+      // owner_token localStorage 저장 (cards/[slug]/edit 진입 시 권한 필요)
+      if (res.ownerToken && typeof window !== 'undefined') {
+        try { localStorage.setItem(`dd_owner_${res.slug}`, res.ownerToken); } catch {}
+      }
+      toast.success(t('duplicated'));
+      router.push(`/cards/${res.slug}/edit`);
+    });
+  };
   const c = cards.find((x) => x.id === selectedId) || cards[0];
   if (!c) return null;
   const meta = getEventTypeMeta(c.event_type);
@@ -96,6 +117,7 @@ export default function RecentCardSelector({
     totalRecipients: 0, todayRecipients: 0, readRecipients: 0,
     attendingRecords: 0, attendingTotal: 0, declinedRecords: 0
   };
+  const isLocked = s.readRecipients > 0;
   const totalReplies = s.attendingRecords + s.declinedRecords;
   // 응답수가 발송수보다 클 수 있어(테스트/직접 RSVP 등) 분모를 max로 보정 → 100% 초과 방지
   const denom = Math.max(s.totalRecipients, totalReplies);
@@ -200,14 +222,34 @@ export default function RecentCardSelector({
         </div>
       </button>
 
-      {/* 수정하기 — 가로 풀 너비 버튼 */}
+      {/* 수정 / 복제 후 재발송 — 첫 수신자 열람 여부에 따라 분기 */}
       <div className="px-3 pt-3 border-t border-hydrangea-100/60">
-        <Link
-          href={`/cards/${c.slug}/edit`}
-          className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-hydrangea-500 text-white text-sm font-semibold hover:bg-hydrangea-600 active:scale-95 transition"
-        >
-          <Pencil className="w-4 h-4" /> {t('edit')}
-        </Link>
+        {!isLocked ? (
+          <Link
+            href={`/cards/${c.slug}/edit`}
+            className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-hydrangea-500 text-white text-sm font-semibold hover:bg-hydrangea-600 active:scale-95 transition"
+          >
+            <Pencil className="w-4 h-4" /> {t('edit')}
+          </Link>
+        ) : (
+          <div className="space-y-1.5">
+            <button
+              type="button"
+              onClick={() => handleDuplicate(c.slug)}
+              disabled={duplicating}
+              className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-hydrangea-500 text-white text-sm font-semibold hover:bg-hydrangea-600 active:scale-95 transition disabled:opacity-60"
+            >
+              {duplicating ? (
+                <><RefreshCw className="w-4 h-4 animate-spin" /> {t('duplicating')}</>
+              ) : (
+                <><Copy className="w-4 h-4" /> {t('duplicateAndResend')}</>
+              )}
+            </button>
+            <p className="text-[10px] text-hydrangea-400 leading-snug flex items-center gap-1 justify-center">
+              <Lock className="w-3 h-3" /> {t('lockedHint')}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* === 노트 탭 — Recipients 관리 / Send 통계 === */}
@@ -267,6 +309,37 @@ export default function RecentCardSelector({
           </button>
         </div>
 
+        {/* thank/congrats 카드 (RSVP 비활성) → 발송·읽음 중심 stat 2 타일 */}
+        {!c.rsvp_enabled ? (
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-xl bg-gradient-to-br from-hydrangea-50 to-hydrangea-100 border border-hydrangea-200 p-3 shadow-sm relative overflow-hidden">
+              <Send className="absolute -bottom-2 -right-2 w-12 h-12 text-hydrangea-300/40" strokeWidth={1.5} />
+              <div className="relative">
+                <div className="text-[10px] font-semibold text-hydrangea-500 mb-0.5">{t('totalLinksSent')}</div>
+                <div className="flex items-baseline gap-0.5">
+                  <span className="text-2xl font-extrabold leading-none text-hydrangea-700">{s.totalRecipients}</span>
+                  <span className="text-[10px] text-hydrangea-500">{t('unitCount')}</span>
+                </div>
+              </div>
+            </div>
+            <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200 p-3 shadow-sm relative overflow-hidden">
+              <span className="absolute -bottom-2 -right-2 text-5xl opacity-20">👁</span>
+              <div className="relative">
+                <div className="text-[10px] font-semibold text-emerald-600 mb-0.5">Opened</div>
+                <div className="flex items-baseline gap-0.5">
+                  <span className="text-2xl font-extrabold leading-none text-emerald-700">{s.readRecipients}</span>
+                  <span className="text-[10px] text-emerald-600">{t('unitCount')}</span>
+                </div>
+                {s.totalRecipients > 0 && (
+                  <div className="text-[10px] mt-1 inline-flex items-center gap-1 bg-emerald-500 text-white px-1.5 py-0.5 rounded-full font-semibold">
+                    {Math.round((s.readRecipients / s.totalRecipients) * 100)}% open rate
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+        <>
         {/* 3개 stat 타일 — 총 링크 / 참석 / 불참 */}
         <div className="grid grid-cols-3 gap-2">
           {/* 총 링크 발송 */}
@@ -352,6 +425,8 @@ export default function RecentCardSelector({
           <div className="text-center py-2 text-[11px] text-hydrangea-400">
             {t('emptyStats')}
           </div>
+        )}
+        </>
         )}
       </div>
       )}

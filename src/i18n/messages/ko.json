@@ -44,7 +44,6 @@
     "demoDesc": "이벤트를 골라보세요 — 가입 없이 디자인을 확인합니다."
   },
   "EventTypes": {
-    "wedding": "결혼식",
     "birthday": "생일·돌",
     "opening": "개업",
     "baptism": "세례식",
@@ -122,6 +121,7 @@
     "rsvpDeadlineHint": "Must be before the event start time. 이 날짜 후에는 카드를 받은 사용자가 RSVP를 할 수 없습니다.",
     "envFlipDesc": "봉투가 회전하며 뒷면이 보이고, 뚜껑이 열리며 안의 초청장이 펼쳐집니다.",
     "envSwayDesc": "봉투가 살랑거리다가 클릭하면 봉투가 열리고 꽃잎이 흩날리며 펼쳐집니다.",
+    "envRibbonDesc": "리본과 보(bow)가 풀리며 봉투가 열리고 꽃잎이 흩날리며 카드가 펼쳐집니다.",
     "replay": "다시보기",
     "replayAria": "다시 재생",
     "dateTimeTitle": "날짜 & 시간",
@@ -177,6 +177,7 @@
     "noChange": "이 초청장은 응답 변경을 허용하지 않습니다",
     "deadlineSuffix": "{date}까지",
     "rsvpDenied": "이 초청장은 응답 수정을 허용하지 않습니다",
+    "rsvpClosed": "RSVP 마감되었습니다",
     "rsvpFailed": "응답 실패",
     "feedAgo": "{n}분 전",
     "feedAgoH": "{n}시간 전",
@@ -236,6 +237,11 @@
     "viewLargeAria": "초청장 전체 보기",
     "viewLarge": "크게 보기",
     "edit": "수정하기",
+    "duplicateAndResend": "복제 후 재발송",
+    "duplicating": "복제 중...",
+    "duplicated": "복제 완료 — 새 카드를 편집하세요",
+    "duplicateFailed": "복제 실패",
+    "lockedHint": "이미 수신자가 카드를 열어봐서 잠겼습니다",
     "tabStats": "응답 통계",
     "tabRecipients": "수신자 등록",
     "statsTitle": "응답 통계",
@@ -259,6 +265,8 @@
     "replay": "다시보기"
   },
   "Send": {
+    "smartCopyLabel": "메시지 + 링크 복사",
+    "smartLinkOnly": "링크만",
     "modeLabel": "발송 방법",
     "linkOnly": "Link only",
     "linkOnlyDesc": "개인 링크 생성 후 메신저를 이용해 직접 링크를 보내는 방식입니다.",
@@ -289,6 +297,8 @@
     "sortName": "이름순",
     "exportButton": "명단-링크 export",
     "exportTitle": "참석자 명단 텍스트 파일로 저장",
+    "exportRsvpButton": "RSVP만 export",
+    "exportRsvpTitle": "RSVP 응답만 텍스트 파일로 저장 (링크 제외)",
     "sendAll": "모두 발송 ({n})",
     "noRecipients": "아직 등록된 수신자가 없습니다",
     "editNameTitle": "클릭해서 이름 수정",

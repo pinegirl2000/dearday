@@ -8,6 +8,7 @@ import { markRecipientRead } from '@/lib/actions/markRecipientRead';
 import { getAllTemplateColors } from '@/lib/actions/templateConfig';
 import { getEventCardType } from '@/lib/actions/events';
 import { findTemplateByPair } from '@/lib/templates';
+import { formatGreeting, toGreeting } from '@/lib/layouts';
 import { getBackground } from '@/lib/backgrounds';
 import InvitationView from '../_components/InvitationView';
 
@@ -25,16 +26,12 @@ export async function generateMetadata({ params }: Props) {
     'SELECT name FROM dearday_recipient WHERE card_id=$1 AND num=$2',
     [card.id, params.num]
   );
-  const recipientName = rows[0]?.name;
-  // 메신저 공유 시 행사 제목이 카드 미리보기에 노출되도록 — recipient명은 description으로
+  // 메신저(카카오톡 등) 공유 시 subtitle은 "To 〇〇〇집사님"만 노출 — 카드 본문/인사말 노출 금지
   const title = card.title;
-  // 이름 그대로 표시 (호칭 추가 없음)
-  const description = recipientName
-    ? (card.greeting_oneliner ? `${recipientName} — ${card.greeting_oneliner}` : recipientName)
-    : (card.greeting_oneliner || undefined);
-  // og:image — 카드 template 배경 이미지를 미리보기로 사용
+  // 이름이 없으면 null — root layout의 마케팅 description 상속 차단
+  const description = toGreeting(formatGreeting(rows[0]?.name, card.recipient_template) || rows[0]?.name) || null;
   const bg = getBackground(card.bg_id);
-  const ogImage = bg.imageUrl ? bg.imageUrl : undefined;
+  const ogImage = bg.imageUrl ? bg.imageUrl.replace(/\.png(\?|$)/i, '.webp$1') : undefined;
   return {
     title,
     description,

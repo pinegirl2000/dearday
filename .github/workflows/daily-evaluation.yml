@@ -1,0 +1,115 @@
+name: Daily Evaluation (Unlighthouse + Semgrep)
+
+on:
+  schedule:
+    - cron: '0 17 * * *'    # 매일 01:00 SGT (UTC 17:00)
+  workflow_dispatch:          # 수동 실행 허용
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Semgrep
+        run: pip install semgrep
+
+      - name: Install Unlighthouse
+        run: npm install -g @unlighthouse/cli puppeteer
+
+      # ─── 1. Unlighthouse — Perfectionist Critic ──────────────────
+      - name: Run Unlighthouse
+        id: unlighthouse
+        continue-on-error: true
+        run: |
+          unlighthouse-ci --site https://dearday.sg \
+            --build-static --output-path .unlighthouse \
+            --budget '{"performance":80,"accessibility":90,"seo":90,"best-practices":90}' \
+            > unlighthouse.log 2>&1 || true
+          # 추출 — Unlighthouse는 ci-result.json 생성
+          if [ -f .unlighthouse/ci-result.json ]; then
+            cat .unlighthouse/ci-result.json
+          fi
+
+      - name: Parse Unlighthouse scores
+        id: parse_lh
+        run: |
+          if [ -f .unlighthouse/ci-result.json ]; then
+            # 평균 점수 계산 (Performance + Accessibility + SEO + Best Practices)
+            node -e "
+              const r = require('./.unlighthouse/ci-result.json');
+              const routes = r.routes || [];
+              const sum = routes.reduce((acc, x) => {
+                const s = x.report?.categories || {};
+                return acc + (s.performance?.score||0) + (s.accessibility?.score||0) + (s.seo?.score||0) + (s['best-practices']?.score||0);
+              }, 0);
+              const total = routes.length * 4;
+              const score = total > 0 ? Math.round((sum / total) * 100) : 0;
+              console.log('PERFECTIONIST_SCORE='+score);
+              const summary = routes.slice(0, 3).map(x => x.route.path + ': ' + JSON.stringify(x.report?.categories||{})).join(' | ');
+              console.log('PERFECTIONIST_NOTES=Routes scanned: '+routes.length+'. '+summary);
+            " >> $GITHUB_OUTPUT
+          else
+            echo "PERFECTIONIST_SCORE=0" >> $GITHUB_OUTPUT
+            echo "PERFECTIONIST_NOTES=Unlighthouse failed to produce output" >> $GITHUB_OUTPUT
+          fi
+
+      # ─── 2. Semgrep — Tech & Security ────────────────────────────
+      - name: Run Semgrep
+        id: semgrep
+        continue-on-error: true
+        run: |
+          semgrep --config=p/owasp-top-ten \
+                  --config=p/nextjs \
+                  --config=p/typescript \
+                  --config=p/secrets \
+                  --json --output=semgrep.json \
+                  --severity ERROR --severity WARNING \
+                  src/ || true
+          cat semgrep.json | head -200
+
+      - name: Parse Semgrep scores
+        id: parse_sg
+        run: |
+          if [ -f semgrep.json ]; then
+            node -e "
+              const r = require('./semgrep.json');
+              const findings = r.results || [];
+              const errors = findings.filter(f => f.extra?.severity === 'ERROR').length;
+              const warnings = findings.filter(f => f.extra?.severity === 'WARNING').length;
+              // 점수 = 100 - (errors*5 + warnings*1), 최저 0
+              const score = Math.max(0, 100 - (errors * 5 + warnings * 1));
+              console.log('TECH_SCORE='+score);
+              const top3 = findings.slice(0, 3).map(f => f.check_id + ' @ ' + f.path).join(' | ');
+              console.log('TECH_NOTES=Findings: '+errors+' errors, '+warnings+' warnings. Top: '+top3);
+            " >> $GITHUB_OUTPUT
+          else
+            echo "TECH_SCORE=0" >> $GITHUB_OUTPUT
+            echo "TECH_NOTES=Semgrep failed" >> $GITHUB_OUTPUT
+          fi
+
+      # ─── 3. Submit to DearDay API ────────────────────────────────
+      - name: Submit evaluation
+        run: |
+          curl -X POST https://dearday.sg/api/evaluation/submit \
+            -H "Authorization: Bearer ${{ secrets.EVAL_SUBMIT_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"perfectionist_score\": ${{ steps.parse_lh.outputs.PERFECTIONIST_SCORE }},
+              \"tech_score\": ${{ steps.parse_sg.outputs.TECH_SCORE }},
+              \"perfectionist_notes\": \"${{ steps.parse_lh.outputs.PERFECTIONIST_NOTES }}\",
+              \"tech_notes\": \"${{ steps.parse_sg.outputs.TECH_NOTES }}\",
+              \"summary\": \"Daily automated evaluation $(date -u +%Y-%m-%d)\"
+            }"

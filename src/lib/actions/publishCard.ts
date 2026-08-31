@@ -119,6 +119,14 @@ export async function publishCard(draft: CardDraft): Promise<PublishResult> {
       ]
     );
 
+    // 사용량 카운트 silent 증가 (UI 노출 X — 향후 paid tier 한도 결정용 데이터 수집)
+    if (userId) {
+      pool.query(
+        'UPDATE dearday_user SET cards_created_count = cards_created_count + 1 WHERE id = $1',
+        [userId]
+      ).catch((e) => console.error('cards_created_count update failed:', e));
+    }
+
     return { ok: true, slug, ownerToken };
   } catch (e: any) {
     console.error('publishCard error:', e);
@@ -209,5 +217,47 @@ export async function updateCard(slug: string, draft: CardDraft): Promise<Update
   } catch (e: any) {
     console.error('updateCard error:', e);
     return { ok: false, error: e.message || '수정 중 오류가 발생했습니다.' };
+  }
+}
+
+/**
+ * 기존 카드를 복제해 새 slug로 발행 — lock된(첫 수신자가 열람한) 카드를 수정하고 싶을 때 사용.
+ * 원본 카드는 그대로 유지(이미 본 수신자 경험 보존), 새 카드는 편집 가능 상태로 시작.
+ * 수신자 목록은 복사하지 않음(필요 시 사용자가 다시 추가).
+ */
+export async function duplicateCard(slug: string, ownerToken?: string | null): Promise<PublishResult> {
+  const card = await verifyCardOwnership(slug, ownerToken);
+  if (!card) return { ok: false, error: '권한이 없거나 카드를 찾을 수 없습니다.' };
+  const session = await getServerSession(authOptions);
+  const userId = (session?.user as any)?.id || null;
+  const userEmail = session?.user?.email || null;
+  const newSlug = generateSlug();
+  const newOwnerToken = generateOwnerToken();
+  try {
+    // 원본 모든 컬럼 복사 — id/slug/owner_token/user_id/created_at/updated_at만 새로 부여
+    await pool.query(
+      `INSERT INTO dearday_card (
+        slug, owner_token, user_id, user_email,
+        event_type, title, theme, bg_id, layout_id, envelope_anim, custom_bg_url, font_family,
+        body, event_date, event_place, map_url, contact_name, contact_phone, extra_info,
+        greeting_oneliner, recipient_template, event_label,
+        rsvp_enabled, rsvp_deadline, rsvp_max_per_card, rsvp_collect_names, rsvp_allow_oneliner, rsvp_allow_change,
+        expiry_date, plan
+      )
+      SELECT
+        $1, $2, $3, $4,
+        event_type, title, theme, bg_id, layout_id, envelope_anim, custom_bg_url, font_family,
+        body, event_date, event_place, map_url, contact_name, contact_phone, extra_info,
+        greeting_oneliner, recipient_template, event_label,
+        rsvp_enabled, rsvp_deadline, rsvp_max_per_card, rsvp_collect_names, rsvp_allow_oneliner, rsvp_allow_change,
+        expiry_date, plan
+      FROM dearday_card WHERE slug=$5`,
+      [newSlug, newOwnerToken, userId, userEmail, slug]
+    );
+    revalidatePath('/cards');
+    return { ok: true, slug: newSlug, ownerToken: newOwnerToken };
+  } catch (e: any) {
+    console.error('duplicateCard error:', e);
+    return { ok: false, error: e.message || '복제 중 오류가 발생했습니다.' };
   }
 }

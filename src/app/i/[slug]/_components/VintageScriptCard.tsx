@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
+import { imgUrl } from '@/lib/imgUrl';
 import { MapPin } from 'lucide-react';
 import { applyName } from '@/lib/layouts';
 import { getEventLabelScript, getEventTypeMeta } from '@/lib/eventType';
@@ -141,7 +142,7 @@ export default function VintageScriptCard({
     >
       {hasBgImage && (
         <img
-          src={background!.imageUrl} alt=""
+          src={imgUrl(background!.imageUrl)} alt=""
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, pointerEvents: 'none' }}
         />
       )}

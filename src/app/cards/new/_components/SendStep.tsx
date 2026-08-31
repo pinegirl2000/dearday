@@ -89,7 +89,26 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [slug, ownerToken]);
 
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-  const linkFor = (num: string) => `${baseUrl}/i/${slug}/${num}?v=4`;
+  const linkFor = (num: string) => `${baseUrl}/i/${slug}/${num}`;
+
+  // Smart copy 메시지 프리셋 — 사용자가 선택한 톤이 모든 copy 액션에 적용됨
+  const SMART_PRESETS: Array<{ id: string; label: string; build: (name: string) => string }> = [
+    { id: 'none',      label: t('smartLinkOnly'),       build: ()    => '' },
+    { id: 'mom',       label: 'Mom 💝',                  build: ()    => 'Mom, I made this special card for you! ❤️' },
+    { id: 'dad',       label: 'Dad 💙',                  build: ()    => 'Dad, I made this special card for you! ❤️' },
+    { id: 'teacher',   label: 'Teacher 🌸',              build: ()    => 'Teacher, thank you — I made this card for you. 🌸' },
+    { id: 'congrats',  label: 'Congrats 🎓',             build: ()    => 'Congrats! Here\'s a little card to celebrate. 🎓' },
+    { id: 'birthday',  label: 'Birthday 🎂',             build: (n)   => n ? `Happy Birthday, ${n}! Here's a card just for you. 🎂` : 'Happy Birthday! Here\'s a card just for you. 🎂' },
+    { id: 'thanks',    label: 'Thanks 🙏',               build: (n)   => n ? `${n}, thank you — I made this card for you. 🙏` : 'Thank you — I made this card for you. 🙏' },
+    { id: 'special',   label: 'Special card 💌',         build: (n)   => n ? `Hi ${n}, I made a special card just for you. 💌` : 'I made a special card just for you. 💌' }
+  ];
+  const [smartPresetId, setSmartPresetId] = useState<string>('none');
+  const buildSmartShare = (recipientName: string, num: string) => {
+    const preset = SMART_PRESETS.find((p) => p.id === smartPresetId) || SMART_PRESETS[0];
+    const msg = preset.build(recipientName || '').trim();
+    const link = linkFor(num);
+    return msg ? `${msg}\n${link}` : link;
+  };
 
   const handleAddSingle = () => {
     if (!singleName.trim()) { toast.error(t('nameRequired')); return; }
@@ -142,9 +161,9 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
   };
 
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const handleCopy = async (num: string, id: string) => {
+  const handleCopy = async (num: string, id: string, name?: string) => {
     try {
-      await navigator.clipboard.writeText(linkFor(num));
+      await navigator.clipboard.writeText(buildSmartShare(name || '', num));
       // 같은 항목 재클릭 시에도 시각 피드백이 다시 트리거되도록 잠깐 reset
       if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
       setCopiedId(null);
@@ -430,6 +449,55 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
                 <Download className="w-3 h-3" /> {t('exportButton')}
               </button>
             )}
+            {/* RSVP만 export — 링크 제외, 응답 정보만 */}
+            {recipients.length > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  const lines: string[] = [];
+                  const titleRaw = (card?.title && card.title.trim()) || slug;
+                  const cardTitle = `[${titleRaw}]`;
+                  lines.push(t('exportTitleLine', { title: cardTitle }));
+                  lines.push(t('exportCreated', { datetime: new Date().toLocaleString() }));
+                  lines.push('');
+                  const attending = recipients.filter((r) => r.rsvp_attend === true);
+                  const declined = recipients.filter((r) => r.rsvp_attend === false);
+                  const noResp = recipients.filter((r) => r.rsvp_attend === null);
+                  const totalPeople = attending.reduce((sum, r) => sum + (r.rsvp_count || 1), 0);
+                  lines.push(t('exportAttending', { records: attending.length, people: totalPeople }));
+                  for (const r of attending) {
+                    const cnt = r.rsvp_count || 1;
+                    const names = r.rsvp_attendee_names && r.rsvp_attendee_names.length > 0
+                      ? `: ${r.rsvp_attendee_names.join(', ')}`
+                      : '';
+                    lines.push(`- ${r.name} ${t('exportPersonCount', { n: cnt })}${names}${r.rsvp_oneliner ? ` — "${r.rsvp_oneliner}"` : ''}`);
+                  }
+                  lines.push('');
+                  lines.push(t('exportDeclined', { n: declined.length }));
+                  for (const r of declined) {
+                    lines.push(`- ${r.name}${r.rsvp_oneliner ? ` — "${r.rsvp_oneliner}"` : ''}`);
+                  }
+                  lines.push('');
+                  lines.push(t('exportNoResponse', { n: noResp.length }));
+                  for (const r of noResp) {
+                    lines.push(`- ${r.name}`);
+                  }
+                  const text = lines.join('\n');
+                  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = t('exportFileName', { title: `${cardTitle}-rsvp`, date: new Date().toISOString().slice(0,10) });
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  toast.success(t('exportSuccess'));
+                }}
+                title={t('exportRsvpTitle')}
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-white border border-hydrangea-200 text-hydrangea-600 text-[11px] font-semibold hover:bg-hydrangea-50 active:scale-95 transition"
+              >
+                <Download className="w-3 h-3" /> {t('exportRsvpButton')}
+              </button>
+            )}
             {pendingEmailCount > 0 && (
               <button
                 type="button"
@@ -442,6 +510,31 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
             )}
           </div>
         </div>
+
+        {/* Smart copy 메시지 프리셋 — copy 시 링크 앞에 메시지 자동 prepend */}
+        {recipients.length > 0 && (
+          <div className="mb-2 p-2 rounded-xl bg-hydrangea-50/60 border border-hydrangea-100">
+            <div className="text-[10px] font-semibold text-hydrangea-700 mb-1.5 flex items-center gap-1">
+              <Copy className="w-3 h-3" /> {t('smartCopyLabel')}
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {SMART_PRESETS.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setSmartPresetId(p.id)}
+                  className={`text-[10px] px-2 py-1 rounded-full transition active:scale-95 ${
+                    smartPresetId === p.id
+                      ? 'bg-hydrangea-500 text-white font-semibold'
+                      : 'bg-white text-hydrangea-600 border border-hydrangea-200 hover:bg-hydrangea-100'
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {recipients.length === 0 ? (
           <div className="text-center py-8 text-xs text-hydrangea-400 bg-hydrangea-50/40 rounded-xl">
@@ -501,7 +594,7 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
                 {/* col2: 링크복사 버튼 */}
                 <button
                   type="button"
-                  onClick={() => handleCopy(r.num, r.id)}
+                  onClick={() => handleCopy(r.num, r.id, r.name)}
                   title={t('copyLink')}
                   className={`inline-flex items-center justify-center gap-1 px-2 py-1 rounded-md text-[11px] font-semibold transition active:scale-95 ${
                     copiedId === r.id

@@ -175,7 +175,7 @@ function renderInvitationHtml(args: {
           </tr>
           <tr>
             <td style="padding:20px;text-align:center;background:${p.bodyTint};font-size:11px;color:${p.bodyDark};font-family:Arial,sans-serif;">
-              Powered by <a href="https://dearday.sg" style="color:${p.ink};text-decoration:none;font-weight:600;">DearDay</a>
+              Curated by <a href="https://dearday.sg" style="color:${p.ink};text-decoration:none;font-weight:600;">DearDay</a>
             </td>
           </tr>
         </table>

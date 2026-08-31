@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { useSession, signIn } from 'next-auth/react';
-import { Check, ChevronDown, ChevronUp, Minus, Plus, Sparkles, Calendar, RotateCcw } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, Minus, Plus, Sparkles, Calendar, RotateCcw, Copy } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { MobileHeader } from '@/components/layout/MobileHeader';
 import { Input, Textarea, Button, PhoneInput } from '@/components/ui';
@@ -14,7 +14,7 @@ import { ImageUploader } from '@/components/domain/ImageUploader';
 import { useWizardStore } from '@/stores/wizardStore';
 import { EVENT_TYPES, getEventTypeMeta } from '@/lib/eventType';
 import { getBackground } from '@/lib/backgrounds';
-import { ENVELOPE_ANIMS, ClassicEnvelope, EnvelopeBeige, EnvelopeMint, EnvelopeCoral, EnvelopeBlue, EnvelopeBlackGold, SwayEnvelope, NoneEnvelope, COLOR_PALETTES, type EnvelopeColorId } from '@/components/envelopes';
+import { ENVELOPE_ANIMS, ClassicEnvelope, EnvelopeBeige, EnvelopeMint, EnvelopeCoral, EnvelopeBlue, EnvelopeBlackGold, SwayEnvelope, RibbonEnvelope, NoneEnvelope, COLOR_PALETTES, type EnvelopeColorId } from '@/components/envelopes';
 import { resolveColorId } from '@/components/envelopes/palettes';
 
 const ENVELOPE_MAP = {
@@ -28,37 +28,39 @@ const ENVELOPE_MAP = {
 } as const;
 
 // 새 (type, color) 모델 → 봉투 렌더 함수 (모든 sway는 SwayEnvelope, flip은 EnvelopeBlackGold)
-type EnvelopeAnimType = 'none' | 'sway' | 'flip';
+type EnvelopeAnimType = 'none' | 'sway' | 'flip' | 'ribbon';
 
 // 봉투 위 받는분 이름의 색상 — 각 봉투 톤에 어울리는 saturated/coordinated tone
 const ENVELOPE_NAME_COLOR: Record<EnvelopeColorId, string> = {
   pearl:     '#7A5A1F',  // gold cream → deep warm gold
-  lavender:  '#5A3D7A',  // lavender → deep purple
+  lavender:  '#5A3D7A',  // lavender pair cream — 받는분 이름 (deep purple)
   champagne: '#7A5E2E',  // beige → warm bronze
   sage:      '#3D5C3F',  // sage → deep forest green
-  blush:     '#9C5040',  // rose-gold → deep terracotta
+  blush:     '#9C5A3F',  // blush + cream — 봉투 위 받는분 이름 (warm caramel)
   rose:      '#9C2F5C',  // pink → deep berry rose
-  powder:    '#2E5478',  // sky blue → deep ocean blue
+  powder:    '#9C4E62',  // powder + pastel pink — deep rose ink
   midnight:  '#F5EDD2',  // dark navy → cream/gold
   cobalt:    '#FBF7EC',  // dark blue → ivory cream
   aubergine: '#E0DAE6',  // dark purple → soft pearl
-  onyx:      '#F0DC78',  // black → bright gold
-  ivory:     '#A8862E'   // ivory white → warm gold
+  onyx:      '#FBF3E8',  // Tiffany blue body → cream ink (받는분 이름)
+  ivory:     '#A85572'   // ivory + pastel pink — 받는분 이름 색 (deep rose)
 };
-function renderEnvelope(type: EnvelopeAnimType, color: EnvelopeColorId, props: { width?: number; isOpen?: boolean; children?: React.ReactNode; recipientGreeting?: string; cardPreview?: React.ReactNode; onComplete?: () => void }) {
+function renderEnvelope(type: EnvelopeAnimType, color: EnvelopeColorId, props: { width?: number; isOpen?: boolean; children?: React.ReactNode; recipientGreeting?: string; cardPreview?: React.ReactNode; onComplete?: () => void; ribbonVariant?: 1 | 2 | 3 }) {
   if (type === 'none') return <NoneEnvelope {...props} isOpen={!!props.isOpen} />;
   const palette = COLOR_PALETTES[color];
   if (type === 'flip') return <EnvelopeBlackGold {...props} isOpen={!!props.isOpen} palette={palette} />;
+  if (type === 'ribbon') return <RibbonEnvelope {...props} isOpen={!!props.isOpen} palette={palette} variant={props.ribbonVariant ?? 1} />;
   return <SwayEnvelope {...props} isOpen={!!props.isOpen} palette={palette} />;
 }
 
 // 기존 envelope_anim id ↔ (type, color)
-function parseEnvelopeAnim(id: string | undefined | null): { type: EnvelopeAnimType; color: EnvelopeColorId } {
-  if (!id || id === 'none') return { type: 'none', color: 'lavender' };
-  // 새 형식: "type:color"
+function parseEnvelopeAnim(id: string | undefined | null): { type: EnvelopeAnimType; color: EnvelopeColorId; ribbonVariant: 1 | 2 | 3 } {
+  if (!id || id === 'none') return { type: 'none', color: 'lavender', ribbonVariant: 3 };
+  // 새 형식: "type:color" 또는 "type:color:variant" — ribbon은 기본 variant 3
   if (id.includes(':')) {
-    const [t, c] = id.split(':');
-    return { type: t as EnvelopeAnimType, color: resolveColorId(c) };
+    const [t, c, v] = id.split(':');
+    const variant: 1 | 2 | 3 = (v === '1' || v === '2' || v === '3') ? (Number(v) as 1 | 2 | 3) : 3;
+    return { type: t as EnvelopeAnimType, color: resolveColorId(c), ribbonVariant: variant };
   }
   // 기존 envelope-N → 매핑 (구버전 색상 id는 resolveColorId로 신규 매핑)
   const map: Record<string, { type: EnvelopeAnimType; color: string }> = {
@@ -70,10 +72,10 @@ function parseEnvelopeAnim(id: string | undefined | null): { type: EnvelopeAnimT
     'envelope-6': { type: 'flip', color: 'blackgold' }
   };
   const m = map[id];
-  if (m) return { type: m.type, color: resolveColorId(m.color) };
-  return { type: 'sway', color: 'lavender' };
+  if (m) return { type: m.type, color: resolveColorId(m.color), ribbonVariant: 3 };
+  return { type: 'sway', color: 'lavender', ribbonVariant: 3 };
 }
-function buildEnvelopeAnim(type: EnvelopeAnimType, color: EnvelopeColorId): string {
+function buildEnvelopeAnim(type: EnvelopeAnimType, color: EnvelopeColorId, ribbonVariant: 1 | 2 | 3 = 3): string {
   if (type === 'none') return 'none';
   // 기존 6 조합은 backward compat ID 유지
   if (type === 'sway') {
@@ -81,7 +83,8 @@ function buildEnvelopeAnim(type: EnvelopeAnimType, color: EnvelopeColorId): stri
     if (m[color]) return m[color];
   }
   if (type === 'flip' && (color as string) === 'blackgold') return 'envelope-6';
-  // 새 조합 — type:color 형식
+  // ribbon variant 1/2는 세 번째 segment 추가, 3이 기본 (생략)
+  if (type === 'ribbon' && ribbonVariant !== 3) return `${type}:${color}:${ribbonVariant}`;
   return `${type}:${color}`;
 }
 import { publishCard, updateCard } from '@/lib/actions/publishCard';
@@ -95,6 +98,7 @@ import { TEMPLATES, getTemplate, findTemplateByPair, getTemplatesFor, getTemplat
 import { buildSamplePreviewCard, SAMPLE_BY_EVENT } from '@/lib/templates/sampleData';
 import { listSamplesByEventType, type SampleData } from '@/lib/actions/sampleData';
 import { LAYOUTS, getLayout } from '@/lib/layouts';
+import { layoutHasPhoto } from '@/lib/layouts/types';
 import type { BackgroundId, BaseCard, EnvelopeAnimId, EventType, LayoutId } from '@/types/card';
 
 type SectionId = 1 | 2 | 3;
@@ -375,13 +379,44 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated]);
 
-  // ?type= 자동 진입
+  // ?type= 자동 진입 — occasion-driven 진입 시 이벤트 + 기본 템플릿 자동 선택 후
+  // Design 단계 건너뛰고 Details 단계로 바로 진입 (탭 수 ↓)
   useEffect(() => {
     const tp = params.get('type');
-    if (tp && !draft.event_type) {
-      setEventType(tp as EventType);
-      setOpen(1);
+    if (!tp || draft.event_type) return;
+    setEventType(tp as EventType);
+
+    // 이벤트 card_type 판별 → thank/congrats면 thank_classic, invitation이면 layout-classic
+    const evMeta = (allEvents || []).find((e) => e.id === tp);
+    const ct = evMeta?.card_type;
+    const isMessageCard = ct === 'thankcard' || ct === 'congrats';
+
+    // 어울리는 첫 템플릿 자동 선택
+    const baseTpls = TEMPLATES.filter((t) => !t.draft);
+    let chosen = baseTpls.find((t) => {
+      const dbLayouts = templateConfigs?.[t.id];
+      const allowed = (dbLayouts && dbLayouts.length > 0) ? dbLayouts : getTemplateLayouts(t);
+      if (isMessageCard) return allowed.some((id) => id.startsWith('thank_'));
+      return allowed.some((id) => !id.startsWith('thank_'));
+    });
+    // fallback — 사용 가능한 첫 템플릿
+    if (!chosen) chosen = baseTpls[0];
+
+    if (chosen) {
+      // 미리보기용 디폴트 템플릿만 미리 채워두고, Design 단계에서 둘러보기는 그대로 유지
+      const dbLayouts = templateConfigs?.[chosen.id];
+      const allowed = (dbLayouts && dbLayouts.length > 0) ? dbLayouts : getTemplateLayouts(chosen);
+      const layoutId = isMessageCard
+        ? (allowed.find((id) => id.startsWith('thank_')) || 'thank_classic')
+        : (allowed.find((id) => !id.startsWith('thank_')) || 'layout-classic');
+      setDraft({
+        bg_id: chosen.bg_id as BackgroundId,
+        layout_id: layoutId as LayoutId,
+        theme: 'hydrangea'
+      });
     }
+    // Design 단계 그대로 노출 — 사용자가 템플릿 둘러보고 고를 수 있게
+    setOpen(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);
 
@@ -490,6 +525,11 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
   const applySample = (s: SampleData) => {
     const evMetaForApply = (allEvents || []).find((e) => e.id === draft.event_type);
     const isMessageCard = evMetaForApply?.card_type === 'thankcard' || evMetaForApply?.card_type === 'congrats';
+    // thank_* 레이아웃이면 사용자가 직접 사진 안 올린 경우 sample 사진을 미리 채워 보여줌
+    // (실제 발행 전엔 사용자가 자기 사진으로 교체 가능 — 자리표시자 역할)
+    const isThankLayout = draft.layout_id?.startsWith('thank_');
+    const hasOwnPhoto = !!draft.custom_bg_url;
+    const samplePhoto = isThankLayout && !hasOwnPhoto ? '/samples/mom-thank.png' : draft.custom_bg_url;
     setDraft({
       title: s.title || '',
       greeting_oneliner: s.greeting_oneliner,
@@ -500,6 +540,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
       contact_name: s.contact_name,
       contact_phone: isMessageCard ? null : s.contact_phone,
       extra_info: s.extra_info,
+      custom_bg_url: samplePhoto,
       theme: meta.recommendTheme as any
     });
   };
@@ -553,9 +594,8 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
         setPublishedSlug(res.slug);
         setPublishedOwnerToken(res.ownerToken);
       }
-      // 성공 모달 1초 노출 후 My Invitations로 이동
+      // 발행 성공 — share 화면 노출 (자동 redirect 제거, 사용자가 직접 WhatsApp 또는 link copy)
       setPublishSuccess(true);
-      setTimeout(() => router.push('/cards'), 1000);
     });
   };
 
@@ -565,7 +605,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
   const envName = (() => {
     if (envParsed.type === 'none') return 'None';
     const palette = COLOR_PALETTES[envParsed.color];
-    const animLabel = envParsed.type === 'flip' ? 'Flip' : 'Sway';
+    const animLabel = envParsed.type === 'flip' ? 'Flip' : envParsed.type === 'ribbon' ? 'Ribbon' : 'Sway';
     return palette ? `${palette.label} · ${animLabel}` : (ENVELOPE_ANIMS.find((e) => e.id === draft.envelope_anim)?.name || '-');
   })();
   const tplMeta = findTemplateByPair(draft.bg_id, draft.layout_id);
@@ -626,7 +666,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                     onClick={() => enabled && setOpen(id)}
                     disabled={!enabled}
                     title={!enabled ? t('stepLockedHint') : SECTION_LABELS[id]}
-                    className={`relative w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold transition active:scale-95 disabled:cursor-not-allowed ${
+                    className={`relative w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-semibold transition active:scale-95 disabled:cursor-not-allowed ${
                       active
                         ? 'bg-hydrangea-500 text-white shadow ring-2 ring-hydrangea-200'
                         : completed
@@ -638,7 +678,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                   >
                     <span>{id}</span>
                     {completed && (
-                      <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-hydrangea-500 border border-white flex items-center justify-center shadow-sm">
+                      <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-hydrangea-500 border border-white flex items-center justify-center shadow-sm">
                         <Check className="w-2.5 h-2.5 text-white" strokeWidth={3.5} />
                       </span>
                     )}
@@ -647,7 +687,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                     type="button"
                     onClick={() => enabled && setOpen(id)}
                     disabled={!enabled}
-                    className={`mt-1 text-[10px] font-medium tracking-tight transition disabled:cursor-not-allowed ${
+                    className={`mt-1 text-[11px] font-medium tracking-tight transition disabled:cursor-not-allowed ${
                       active
                         ? 'text-hydrangea-700 font-semibold'
                         : enabled
@@ -1232,7 +1272,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
               />
             </div>
 
-            {draft.layout_id?.startsWith('thank_') && (
+            {layoutHasPhoto(draft.layout_id) && (
               <div className="pt-3 border-t border-hydrangea-100/60">
                 <h4 className="text-xs font-semibold text-hydrangea-700 mb-2">{t('topPhotoTitle')}</h4>
                 <ImageUploader
@@ -1391,6 +1431,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                           return renderEnvelope(parsedEnv.type, parsedEnv.color, {
                           isOpen: envelopeOpening,
                           width: 252,
+                          ribbonVariant: parsedEnv.ribbonVariant,
                           recipientGreeting: greetingForEnv,
                           cardPreview: (
                             <div style={{
@@ -1453,15 +1494,16 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                         });
                         })()}
                         {(() => {
-                          // Sway만 외부 overlay 사용 (회전하지 않으므로). Flip은 envelope 내부에서 렌더되어 같이 회전.
-                          if (parsedEnv.type !== 'sway') return null;
+                          // Sway/Ribbon은 외부 overlay 사용 (회전하지 않으므로). Flip은 envelope 내부에서 렌더되어 같이 회전.
+                          if (parsedEnv.type !== 'sway' && parsedEnv.type !== 'ribbon') return null;
                           const previewName = 'Ms. Avery';
                           const tpl = (draft.recipient_template?.trim()) || '$NAME';
                           const greetingPreview = tpl.replace(/\$NAME/g, previewName);
                           const envColor = parsedEnv.color;
                           const isDark = ['midnight', 'cobalt', 'aubergine', 'onyx'].includes(envColor);
                           const inkColor = ENVELOPE_NAME_COLOR[envColor] || '#5A3D7A';
-                          const envHeight = Math.round(252 * 0.75);
+                          // ribbon: 이름은 리본 아래 위치.
+                          const envHeight = Math.round(252 * (parsedEnv.type === 'ribbon' ? 0.78 : 0.75));
                           return (
                             <div style={{
                               position: 'absolute',
@@ -1471,10 +1513,9 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                               width: '85%',
                               textAlign: 'center',
                               color: inkColor,
-                              fontFamily: "'Cormorant Garamond', 'Playfair Display', 'Noto Serif KR', serif",
-                              fontSize: 18,
+                              fontFamily: "var(--font-noto-sans), 'Noto Sans KR', system-ui, sans-serif",
+                              fontSize: 16,
                               fontWeight: 500,
-                              fontVariant: 'small-caps',
                               letterSpacing: '0.12em',
                               textShadow: isDark ? '0 1px 3px rgba(0,0,0,0.6)' : '0 1px 2px rgba(255,255,255,0.4)',
                               pointerEvents: 'none',
@@ -1490,18 +1531,18 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                         const split = (body: string, accent: string) =>
                           `linear-gradient(135deg, ${body} 0%, ${body} 50%, ${accent} 50%, ${accent} 100%)`;
                         const COLORS_TOP = [
-                          { id: 'ivory',      label: 'Ivory White',     swatch: split('#F8F1DE', '#DCB748') },
+                          { id: 'ivory',      label: 'Ivory Pink',      swatch: split('#F8F1DE', '#F5C2D0') },
                           { id: 'pearl',      label: 'Gold Cream',      swatch: split('#DCB748', '#F5F0E2') },
-                          { id: 'lavender',   label: 'Lavender Silver', swatch: split('#C8B0E2', '#CABFCF') },
+                          { id: 'lavender',   label: 'Lavender Cream',  swatch: split('#C8B0E2', '#F5EBD8') },
                           { id: 'champagne',  label: 'Beige Ivory',     swatch: split('#DACFB6', '#F5F0E2') },
                           { id: 'sage',       label: 'Sage Pearl',      swatch: split('#B0C5AC', '#E8E4D8') },
-                          { id: 'blush',      label: 'Blush Rose Gold', swatch: split('#F2C0B3', '#C9907A') },
+                          { id: 'blush',      label: 'Blush Cream',     swatch: split('#F2C0B3', '#F5EBD8') },
                           { id: 'rose',       label: 'Rose Petal',      swatch: split('#F4C5D2', '#F5EBD8') },
-                          { id: 'powder',     label: 'Powder Silver',   swatch: split('#BFD7EA', '#C4CDD4') },
-                          { id: 'midnight',   label: 'Midnight Gold',   swatch: split('#2D3D50', '#DCB748') },
+                          { id: 'powder',     label: 'Powder Pink',     swatch: split('#BFD7EA', '#F5C8D2') },
+                          { id: 'midnight',   label: 'Midnight Gold',   swatch: split('#2D3D50', '#F0CB58') },
                           { id: 'cobalt',     label: 'Cobalt Cream',    swatch: split('#2E4A8C', '#F5F0E2') },
-                          { id: 'aubergine',  label: 'Aubergine Pearl', swatch: split('#3F2A4A', '#C0B6CC') },
-                          { id: 'onyx',       label: 'Onyx Gold',       swatch: split('#2A2A2A', '#DCB748') }
+                          { id: 'aubergine',  label: 'Aubergine HotPink', swatch: split('#3F2A4A', '#FF9CC9') },
+                          { id: 'onyx',       label: 'Tiffany Cream',   swatch: split('#A8DDD9', '#F5EBD8') }
                         ] as const;
                         return (
                           <div className="w-full mt-4 flex flex-col items-center">
@@ -1541,13 +1582,14 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                       {/* 애니메이션 선택 — 봉투 바로 아래에 한 줄 */}
                       {parsedEnv.type !== 'none' && (() => {
                         const ANIMS = [
-                          { id: 'sway', label: 'Sway' },
-                          { id: 'flip', label: 'Flip' }
+                          { id: 'sway',   label: 'Sway' },
+                          { id: 'flip',   label: 'Flip' },
+                          { id: 'ribbon', label: 'Ribbon' }
                         ] as const;
                         return (
                           <div className="w-full mt-4 px-2 space-y-2">
                             <h4 className="text-xs font-semibold text-hydrangea-700">✉️ Envelope animation</h4>
-                            <div className="grid grid-cols-2 gap-2 w-full">
+                            <div className="grid grid-cols-3 gap-2 w-full">
                               {ANIMS.map((a) => {
                                 const selected = parsedEnv.type === a.id;
                                 return (
@@ -1571,8 +1613,13 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                             </div>
                             {/* 애니메이션 설명 — Sway/Flip 버튼 바로 아래 */}
                             <p className="text-[11px] text-hydrangea-500 text-center px-2 leading-snug">
-                              {parsedEnv.type === 'flip' ? t('envFlipDesc') : t('envSwayDesc')}
+                              {parsedEnv.type === 'flip'
+                                ? t('envFlipDesc')
+                                : parsedEnv.type === 'ribbon'
+                                  ? t('envRibbonDesc')
+                                  : t('envSwayDesc')}
                             </p>
+                            {/* Ribbon variant 선택 UI 제거 — variant 3을 기본으로 사용 */}
                           </div>
                         );
                       })()}
@@ -1606,7 +1653,8 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                       } : undefined}
                       disabled={!envelopeOpen}
                       aria-label={envelopeOpen ? t('replayAria') : 'Sample preview'}
-                      className={`absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-16 h-16 rounded-full bg-white/30 backdrop-blur-md border border-white/40 text-hydrangea-700 flex flex-col items-center justify-center gap-0.5 shadow-lg transition opacity-60 ${
+                      style={{ top: 128 }}
+                      className={`absolute left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-16 h-16 rounded-full bg-white/30 backdrop-blur-md border border-white/40 text-hydrangea-700 flex flex-col items-center justify-center gap-0.5 shadow-lg transition opacity-60 ${
                         envelopeOpen
                           ? 'hover:bg-white/50 hover:opacity-100 active:scale-95 cursor-pointer'
                           : 'cursor-default pointer-events-none'
@@ -1724,6 +1772,8 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                     const resolvedLayout = (allowed[0] || tpl.layout_id) as LayoutId;
                     setDraft({ bg_id: tpl.bg_id as BackgroundId, layout_id: resolvedLayout });
                     setPreviewTpl(null);
+                    // 템플릿 선택 완료 → 2 Details 단계로 자동 이동
+                    advance(2);
                   }}
                   className="flex-1 px-4 py-2.5 rounded-xl bg-hydrangea-500 text-white text-sm font-semibold hover:bg-hydrangea-600 transition"
                 >Use this template</button>
@@ -1963,39 +2013,142 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
       )}
 
       {/* 발행 성공 모달 — 1초 후 My Invitations로 이동 */}
-      {publishSuccess && (
-        <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm flex items-center justify-center p-6">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.85 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="bg-white rounded-2xl shadow-2xl px-8 py-7 text-center max-w-sm"
-          >
-            {/* 보라 그라디언트 링 + 흰 체크 — 세련된 success 마크 */}
-            <motion.div
-              initial={{ scale: 0, rotate: -90 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: 'spring', stiffness: 220, damping: 18, delay: 0.05 }}
-              className="w-14 h-14 mx-auto mb-3 rounded-full flex items-center justify-center shadow-lg"
-              style={{
-                background: 'linear-gradient(135deg, #A990CC 0%, #7B5EA7 60%, #5A3D7A 100%)'
-              }}
-            >
+      {publishSuccess && publishedSlug && (() => {
+        // Edit 모드는 단순 confirm 후 my cards로 (자동 redirect 1초)
+        if (isEditMode) {
+          if (typeof window !== 'undefined') setTimeout(() => router.push('/cards'), 1000);
+          return (
+            <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm flex items-center justify-center p-6">
               <motion.div
-                initial={{ pathLength: 0, opacity: 0 }}
-                animate={{ pathLength: 1, opacity: 1 }}
-                transition={{ duration: 0.4, delay: 0.25 }}
+                initial={{ opacity: 0, scale: 0.85 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-white rounded-2xl shadow-2xl px-8 py-7 text-center max-w-sm"
               >
-                <Check className="w-7 h-7 text-white" strokeWidth={3} />
+                <div className="w-14 h-14 mx-auto mb-3 rounded-full flex items-center justify-center shadow-lg"
+                  style={{ background: 'linear-gradient(135deg, #A990CC 0%, #7B5EA7 60%, #5A3D7A 100%)' }}>
+                  <Check className="w-7 h-7 text-white" strokeWidth={3} />
+                </div>
+                <div className="text-base font-bold text-hydrangea-700 mb-1">{t('savedTitle')}</div>
+                <div className="text-[11px] text-hydrangea-400">{t('redirectMyCards')}</div>
               </motion.div>
-            </motion.div>
-            <div className="text-base font-bold text-hydrangea-700 mb-1 tracking-tight">
-              {isEditMode || (publishedSlug && editingSlug !== publishedSlug) ? t('savedTitle') : t('publishedTitle')}
             </div>
-            <div className="text-[11px] text-hydrangea-400">{t('redirectMyCards')}</div>
-          </motion.div>
-        </div>
-      )}
+          );
+        }
+        // 발행 — share 화면 (WhatsApp 1순위 + Copy + My cards)
+        const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://dearday.sg';
+        const cardUrl = `${baseUrl}/i/${publishedSlug}`;
+        // smart message — event 기반
+        const smartMsg = (() => {
+          const ev = draft.event_type as string;
+          const presets: Record<string, string> = {
+            'mothers-day':  'Mum, I made this special card for you! 💝',
+            'fathers-day':  'Dad, I made this special card for you! 💙',
+            'teachers-day': 'Teacher, thank you — I made this card for you. 🌸',
+            'graduation':   'Congrats on your graduation! 🎓',
+            'thank-you':    'Thank you — here\'s a little card for you. 🙏',
+            'birthday':     'Happy Birthday! 🎂',
+            'first-birthday': "You're invited to a 1st Birthday celebration! 🍰",
+            'baby-full-month': "You're invited to baby's Full Month celebration. 👶",
+            'cny':          'Wishing you prosperity this Chinese New Year! 🧧',
+            'hari-raya':    'Selamat Hari Raya — sending warm wishes! 🌙',
+            'deepavali':    'Happy Deepavali! 🪔',
+            'christmas':    'Merry Christmas! 🎄',
+            'valentines':   'Happy Valentine\'s Day! ❤️',
+            'wedding-anniversary': 'Happy Anniversary! 💑'
+          };
+          return presets[ev] || "I made you a card 💌";
+        })();
+        const waText = encodeURIComponent(`${smartMsg}\n${cardUrl}`);
+        const waUrl = `https://wa.me/?text=${waText}`;
+        const handleCopy = async () => {
+          try {
+            await navigator.clipboard.writeText(`${smartMsg}\n${cardUrl}`);
+            toast.success('Copied with message + link');
+          } catch { toast.error('Copy failed'); }
+        };
+        return (
+          <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-6">
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+              className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl px-6 py-7 w-full max-w-md text-center"
+            >
+              {/* success mark */}
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 220, damping: 18, delay: 0.05 }}
+                className="w-12 h-12 mx-auto mb-2 rounded-full flex items-center justify-center shadow-lg"
+                style={{ background: 'linear-gradient(135deg, #A990CC 0%, #7B5EA7 60%, #5A3D7A 100%)' }}
+              >
+                <Check className="w-6 h-6 text-white" strokeWidth={3} />
+              </motion.div>
+              <div className="text-lg font-bold text-hydrangea-700 mb-1">{t('publishedTitle')}</div>
+              <div className="text-xs text-hydrangea-400 mb-4">Send it now — it'll look great on WhatsApp 💌</div>
+
+              {/* 카드 thumbnail — 미리보기 (사용자가 자기 카드 다시 한 번 확인) */}
+              <div
+                className="mx-auto mb-5 overflow-hidden rounded-xl shadow-md border border-hydrangea-100"
+                style={{
+                  width: 200,
+                  height: 240,
+                  position: 'relative'
+                }}
+              >
+                <div
+                  style={{
+                    width: 420,
+                    transform: 'scale(0.476)',
+                    transformOrigin: 'top left',
+                    pointerEvents: 'none'
+                  }}
+                >
+                  <TemplateCard
+                    card={previewCard}
+                    recipientName="Friend"
+                    eventCardType={currentEventCardType}
+                  />
+                </div>
+              </div>
+
+              {/* WhatsApp 1순위 */}
+              <a
+                href={waUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl text-white text-sm font-bold shadow-lg active:scale-95 transition mb-2.5"
+                style={{ background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)' }}
+              >
+                <span className="text-xl">💚</span> Send via WhatsApp
+              </a>
+
+              {/* Copy with message */}
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-hydrangea-50 text-hydrangea-700 text-sm font-semibold border border-hydrangea-200 active:scale-95 transition mb-2.5"
+              >
+                <Copy className="w-4 h-4" /> Copy message + link
+              </button>
+
+              {/* My cards link */}
+              <button
+                type="button"
+                onClick={() => router.push('/cards')}
+                className="w-full inline-flex items-center justify-center px-4 py-2.5 text-xs font-medium text-hydrangea-500 hover:text-hydrangea-700 transition"
+              >
+                See my cards →
+              </button>
+
+              {/* L2 발신자 공지 — 읽음 추적 명시 */}
+              <p className="mt-3 text-[10px] text-hydrangea-400 leading-snug">
+                ℹ️ You'll see when your recipient opens this card.
+              </p>
+            </motion.div>
+          </div>
+        );
+      })()}
     </PageContainer>
   );
 }

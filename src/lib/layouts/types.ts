@@ -5,6 +5,8 @@ import type { ThemeMeta } from '@/lib/theme';
 export type LayoutId =
   | 'layout-classic'
   | 'thank_classic'
+  | 'thank_minimal'
+  | 'thank_polaroid'
   | 'layout-3'
   | 'layout-4'
   | 'layout-5'
@@ -17,6 +19,11 @@ export type LayoutId =
 /** thank-card 전용 layout인지 (id가 'thank_'로 시작) */
 export function isThankLayout(layoutId: string | null | undefined): boolean {
   return !!layoutId && layoutId.startsWith('thank_');
+}
+
+/** 상단 사진(top photo)을 사용하는 layout인지 — minimal은 텍스트만이라 사진 없음 */
+export function layoutHasPhoto(layoutId: string | null | undefined): boolean {
+  return layoutId === 'thank_classic' || layoutId === 'thank_polaroid';
 }
 
 export interface TextField {
@@ -103,4 +110,15 @@ export function formatGreeting(recipientName?: string | null, template?: string 
   if (!recipientName || !recipientName.trim()) return '';
   if (!template || !template.trim()) return '';
   return template.trim().replace(/\$NAME/g, recipientName.trim());
+}
+
+/**
+ * 봉투/공유 subtitle용 "To 〇〇〇집사님" 형태로 감싼다.
+ * 빈 문자열이면 그대로 빈 문자열, 이미 To로 시작하면 중복 붙이지 않음.
+ */
+export function toGreeting(greeting?: string | null): string {
+  const text = (greeting || '').trim();
+  if (!text) return '';
+  if (/^to\s/i.test(text)) return text;
+  return `To ${text}`;
 }

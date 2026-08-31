@@ -25,7 +25,7 @@ export interface BackgroundMeta {
 }
 
 // 5개 행사 공통 (wedding, birthday, opening, baptism, meeting)
-const ALL_EVENTS: EventType[] = ['wedding', 'birthday', 'opening', 'baptism', 'meeting', 'etc'];
+const ALL_EVENTS: EventType[] = ['birthday', 'opening', 'baptism', 'meeting', 'etc'];
 
 export const BACKGROUNDS: BackgroundMeta[] = [
   {
@@ -76,7 +76,7 @@ export const BACKGROUNDS: BackgroundMeta[] = [
   { id: 'bg-img-6', name: 'Pink Teddy Balloons', imageUrl: '/templates/template-6-bg.png', tone: 'light', availableEvents: ['birthday', 'baptism', 'etc'] },
   { id: 'bg-img-7', name: 'Blue Teddy Cloud', imageUrl: '/templates/template-7-bg.png', tone: 'light', availableEvents: ['birthday', 'baptism', 'etc'] },
   // Pink ribbon / luxury / bear with balloons
-  { id: 'bg-img-8', name: 'Pink Ribbon Arch', imageUrl: '/templates/template-8-bg.png', tone: 'light', availableEvents: ['wedding', 'birthday', 'baptism', 'etc'] },
+  { id: 'bg-img-8', name: 'Pink Ribbon Arch', imageUrl: '/templates/template-8-bg.png', tone: 'light', availableEvents: ['birthday', 'baptism', 'etc'] },
   { id: 'bg-img-9', name: 'Pink Ribbon Mono', imageUrl: '/templates/template-9-bg.png', tone: 'light', availableEvents: ['birthday', 'baptism', 'etc'] },
   { id: 'bg-img-10', name: 'Eucalyptus Gold Frame', imageUrl: '/templates/template-10-bg.png', tone: 'light', availableEvents: ALL_EVENTS },
   { id: 'bg-img-11', name: 'Blue Bear Sky', imageUrl: '/templates/template-11-bg.png', tone: 'light', availableEvents: ['birthday', 'baptism', 'etc'] },
@@ -84,12 +84,12 @@ export const BACKGROUNDS: BackgroundMeta[] = [
   { id: 'bg-img-12', name: 'Party Balloons & Cake', imageUrl: '/templates/template-12-bg.png', tone: 'light', availableEvents: ['birthday', 'etc'] },
   { id: 'bg-img-13', name: 'Pink Castle Floral', imageUrl: '/templates/template-13-bg.png', tone: 'light', availableEvents: ['birthday', 'baptism', 'etc'] },
   { id: 'bg-img-14', name: 'Sage Teddy Frame', imageUrl: '/templates/template-14-bg.png', tone: 'light', availableEvents: ['birthday', 'baptism', 'etc'] },
-  { id: 'bg-img-15', name: 'Pressed Flowers', imageUrl: '/templates/template-15-bg.png', tone: 'light', availableEvents: ['wedding', 'meeting', 'opening', 'etc'] },
+  { id: 'bg-img-15', name: 'Pressed Flowers', imageUrl: '/templates/template-15-bg.png', tone: 'light', availableEvents: ['meeting', 'opening', 'etc'] },
   { id: 'bg-img-16', name: 'Pastel Cake Bunting', imageUrl: '/templates/template-16-bg.png', tone: 'light', availableEvents: ['birthday', 'baptism', 'etc'] },
-  { id: 'bg-img-17', name: 'Rose Gold Balloons', imageUrl: '/templates/template-17-bg.png', tone: 'light', availableEvents: ['birthday', 'wedding', 'etc'] },
-  { id: 'bg-img-18', name: 'Gold Splatter Beige', imageUrl: '/templates/template-18-bg.png', tone: 'light', availableEvents: ['wedding', 'opening', 'meeting', 'etc'] },
+  { id: 'bg-img-17', name: 'Rose Gold Balloons', imageUrl: '/templates/template-17-bg.png', tone: 'light', availableEvents: ['birthday', 'etc'] },
+  { id: 'bg-img-18', name: 'Gold Splatter Beige', imageUrl: '/templates/template-18-bg.png', tone: 'light', availableEvents: ['opening', 'meeting', 'etc'] },
   { id: 'bg-img-19', name: 'Black Gold Gala', imageUrl: '/templates/template-19-bg.png', tone: 'dark', availableEvents: ['birthday', 'opening', 'etc'] },
-  { id: 'bg-img-20', name: 'Iris & Hearts', imageUrl: '/templates/template-20-bg.png', tone: 'light', availableEvents: ['wedding', 'birthday', 'etc'] },
+  { id: 'bg-img-20', name: 'Iris & Hearts', imageUrl: '/templates/template-20-bg.png', tone: 'light', availableEvents: ['birthday', 'etc'] },
   // legacy fallback
   {
     id: 'bg-none',

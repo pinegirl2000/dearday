@@ -25,23 +25,8 @@ interface Sample {
   style: LayoutStyle;
 }
 
-// 화려한 actual template 배경 이미지 5종
+// 다양한 occasion + layout style — Singapore B2C 사용 시나리오 반영
 const SAMPLES: Sample[] = [
-  {
-    id: 'black-gold',
-    emoji: '🥂',
-    event: 'GRAND OPENING',
-    title: 'Round Cafe',
-    subtitle: 'A new chapter begins',
-    body: 'Join us for an evening of\ncocktails, hors d\'oeuvres & music.',
-    date: 'FRI 20 SEP · 7 PM',
-    place: 'Round Cafe, 1 Orchard Lane',
-    host: '— The Round Cafe Team —',
-    bg: "url('/templates/template-19-bg.png') center/cover",
-    main: '#F5E29A',
-    sub: '#D4A943',
-    style: 'centered'
-  },
   {
     id: 'thank-mom',
     emoji: '💝',
@@ -52,14 +37,74 @@ const SAMPLES: Sample[] = [
     date: '',
     place: '',
     host: 'your loving one',
-    bg: "url('/templates/template-20-bg.png') center/cover",
+    bg: "url('/templates/template-20-bg.webp') center/cover",
     main: '#8B6075',
     sub: '#C97796',
     style: 'thankcard'
   },
   {
-    id: 'pink-ribbon-arch',
-    emoji: '🎀',
+    id: 'cafe-opening',
+    emoji: '🥂',
+    event: 'GRAND OPENING',
+    title: 'Round Cafe',
+    subtitle: 'A new chapter begins',
+    body: 'Join us for an evening of\ncocktails, hors d\'oeuvres & music.',
+    date: 'FRI 20 SEP · 7 PM',
+    place: 'Round Cafe, 1 Orchard Lane',
+    host: '— The Round Cafe Team —',
+    bg: "url('/templates/template-19-bg.webp') center/cover",
+    main: '#F5E29A',
+    sub: '#D4A943',
+    style: 'centered'
+  },
+  {
+    id: 'baby-shower',
+    emoji: '👶',
+    event: 'BABY SHOWER',
+    title: "Hello, Baby Liam",
+    subtitle: 'A little one on the way',
+    body: 'Come celebrate with us as we\nwelcome the newest addition to our family.',
+    date: 'SAT 8 JUN · 2 PM',
+    place: 'The Rose Garden, Sentosa',
+    host: '— With love, Sarah & Mark —',
+    bg: "url('/templates/template-6-bg.webp') center/cover",
+    main: '#8E5A4D',
+    sub: '#E89AA0',
+    style: 'centered'
+  },
+  {
+    id: 'birthday-wish',
+    emoji: '🎂',
+    event: 'HAPPY BIRTHDAY',
+    title: 'Sophie',
+    subtitle: 'Cheers to another year,',
+    body: 'May your day be filled with cake,\nlaughter and the people you love most. 🎉',
+    date: '',
+    place: '',
+    host: '— with warmest wishes —',
+    bg: "url('/templates/template-12-bg.webp') center/cover",
+    main: '#C44A7F',
+    sub: '#F8B5C8',
+    style: 'thankcard'
+  },
+  {
+    id: 'housewarming',
+    emoji: '🏡',
+    event: 'HOUSEWARMING',
+    title: 'Our New Home',
+    subtitle: 'Come share our joy',
+    body: "We've moved! Drop by anytime\nfor laughs, food, and a tour.",
+    date: 'SAT 12 OCT · 11 AM',
+    place: '88 Orchid Lane, #12-34',
+    host: '— Tom & Lisa —',
+    bg: "url('/templates/template-15-bg.webp') center/cover",
+    main: '#7A5E2E',
+    sub: '#B89456',
+    style: 'centered'
+  },
+  {
+    id: 'baptism',
+    emoji: '🕊️',
     event: 'BAPTISM',
     title: "Avery's Baptism Day",
     subtitle: 'A blessed first step',
@@ -67,52 +112,37 @@ const SAMPLES: Sample[] = [
     date: 'SUN 3 MAY · 10 AM',
     place: 'Grace Church, Main Sanctuary',
     host: '— Love, David & Rachel —',
-    bg: "url('/templates/template-8-bg.png') center/cover",
+    bg: "url('/templates/template-8-bg.webp') center/cover",
     main: '#A65A6F',
     sub: '#E89AA0',
     style: 'centered'
   },
   {
-    id: 'eucalyptus-gold',
-    emoji: '🌿',
-    event: 'WEDDING',
-    title: 'James ♥ Sophie',
-    subtitle: 'Two hearts, one journey',
-    body: 'Join us for a garden ceremony\nunder the eucalyptus arch.',
-    date: 'SAT 11 OCT · 4 PM',
-    place: 'Botanic Gardens, Symphony Lawn',
-    host: '— With our families —',
-    bg: "url('/templates/template-10-bg.png') center/cover",
-    main: '#A07C2C',
-    sub: '#7A9B6E',
-    style: 'centered'
+    id: 'teacher-thanks',
+    emoji: '🌸',
+    event: "TEACHER'S DAY",
+    title: 'Ms. Lee',
+    subtitle: 'With sincere thanks',
+    body: 'Your patience taught us to think.\nYour kindness taught us to care.\nThank you for everything.',
+    date: '',
+    place: '',
+    host: '— Class of 6A —',
+    bg: "url('/templates/template-3-bg.webp') center/cover",
+    main: '#7B5EA7',
+    sub: '#A990CC',
+    style: 'thankcard'
   },
   {
-    id: 'pressed-flowers',
-    emoji: '💐',
-    event: 'WEDDING',
-    title: 'Daniel ♥ Olivia',
-    subtitle: 'Together with our families',
-    body: 'We invite you to share in\nthe joy of our wedding day.',
-    date: 'SAT 14 JUN · 4 PM',
-    place: 'The Grand Ballroom, Marina Hotel',
-    host: '— Daniel & Olivia —',
-    bg: "url('/templates/template-15-bg.png') center/cover",
-    main: '#7A5E2E',
-    sub: '#B89456',
-    style: 'centered'
-  },
-  {
-    id: 'watercolor-purple',
+    id: 'gathering',
     emoji: '🤝',
     event: 'GATHERING',
     title: 'Spring Gathering',
     subtitle: 'See you again',
-    body: 'It has been too long.\nLet\'s gather and catch up.',
+    body: 'It has been too long.\nLet\'s gather, eat, and catch up.',
     date: 'SUN 12 APR · 2 PM',
-    place: 'Hangang Park, Open Lawn',
+    place: 'East Coast Park, Area E2',
     host: '— From the Hosts —',
-    bg: "url('/templates/template-2-bg.png') center/cover",
+    bg: "url('/templates/template-2-bg.webp') center/cover",
     main: '#5A3D7A',
     sub: '#7B5EA7',
     style: 'centered'
@@ -173,7 +203,7 @@ function CardPreview({ sample }: { sample: Sample }) {
       <div
         className="absolute inset-0 flex flex-col items-center px-5 text-center"
         style={{
-          backgroundImage: "url('/templates/template-20-bg.png')",
+          backgroundImage: "url('/templates/template-20-bg.webp')",
           backgroundSize: 'cover',
           backgroundPosition: 'top center',
           backgroundRepeat: 'no-repeat',
@@ -191,7 +221,7 @@ function CardPreview({ sample }: { sample: Sample }) {
             marginBottom: 14
           }}
         >
-          <img src="/samples/mom-thank.png" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+          <img src="/samples/mom-thank.webp" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
         </div>
         {/* subtitle (small serif) */}
         <p className="text-[9px] tracking-[0.2em] font-medium mb-1" style={{ color: sample.sub, fontFamily: "'Cormorant Garamond', serif" }}>

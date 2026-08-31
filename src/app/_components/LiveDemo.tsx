@@ -9,15 +9,6 @@ const GOLD = '#C4A36A';
 
 const PRESETS = [
   {
-    id: 'wedding',
-    label: 'Wedding',
-    emoji: '💒',
-    title: 'Daniel ♥ Olivia',
-    sub: 'Together with our families',
-    date: 'Jun 14, 2026 · The Grand Ballroom',
-    accent: '#7B5EA7'
-  },
-  {
     id: 'birthday',
     label: 'Birthday',
     emoji: '🎂',
@@ -47,7 +38,7 @@ const PRESETS = [
 ];
 
 export default function LiveDemo() {
-  const [activeId, setActiveId] = useState<string>('wedding');
+  const [activeId, setActiveId] = useState<string>('birthday');
   const active = PRESETS.find((p) => p.id === activeId) || PRESETS[0];
 
   return (

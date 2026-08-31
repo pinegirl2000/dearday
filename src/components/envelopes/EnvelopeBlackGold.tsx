@@ -4,6 +4,7 @@ import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
 import type { EnvelopeProps } from './FoldEnvelope';
 import { COLOR_PALETTES, type EnvelopePalette } from './palettes';
+import { toGreeting } from '@/lib/layouts';
 
 // 꽃잎 파티클 — flap 열릴 때 봉투 안에서 폭발하듯 펼쳐짐
 interface PetalSpec {
@@ -102,7 +103,8 @@ export default function EnvelopeBlackGold({
   const height = Math.round(width * 0.915);
   const D = prefersReducedMotion ? 0.001 : 1;
 
-  const greeting = (recipientGreeting && recipientGreeting.trim()) || DEFAULT_GREETING;
+  // 봉투 표기는 "To 〇〇〇집사님" 형태로 통일
+  const greeting = toGreeting(recipientGreeting) || DEFAULT_GREETING;
 
   // 시퀀스 phase
   // 'front'   : 앞면(우표 + 타이핑)
@@ -270,10 +272,10 @@ function FrontFace({
             transform: 'translateY(-50%)',
             textAlign: 'center',
             color: PALETTE.ink,
-            fontFamily: "'Cormorant Garamond', 'Playfair Display', 'Noto Serif KR', serif",
-            fontSize: Math.max(12, Math.round(width * 0.055)),
+            fontFamily: "var(--font-noto-sans), 'Noto Sans KR', system-ui, sans-serif",
+            // 12pt(=16px @ width 380) — 기존 0.055(≈21px)에서 3단계 축소
+            fontSize: Math.max(10, Math.round(width * 0.042)),
             fontWeight: 500,
-            fontVariant: 'small-caps',
             letterSpacing: '0.12em',
             // midnight/onyx만 그림자로 깊이감 — 그 외 밝은 봉투는 번짐 방지 위해 그림자 없음
             textShadow: (palette.id === 'midnight' || palette.id === 'onyx') ? '0 1px 2px rgba(0,0,0,0.35)' : 'none',

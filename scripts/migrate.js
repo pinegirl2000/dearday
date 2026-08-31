@@ -232,19 +232,140 @@ ALTER TABLE dearday_event ADD COLUMN IF NOT EXISTS card_type TEXT DEFAULT 'invit
 -- congrats 추가 — 기존 CHECK 제약 갱신
 ALTER TABLE dearday_event DROP CONSTRAINT IF EXISTS dearday_event_card_type_check;
 ALTER TABLE dearday_event ADD CONSTRAINT dearday_event_card_type_check CHECK (card_type IN ('invitation', 'thankcard', 'congrats'));
--- 코드 default 6개 시드
-INSERT INTO dearday_event (id, label, emoji, sort_order, is_default) VALUES
-  ('wedding', 'Wedding', '💒', 10, true),
-  ('birthday', 'Birthday', '🎂', 20, true),
-  ('baptism', 'Baptism', '🕊️', 30, true),
-  ('meeting', 'Gathering', '🤝', 40, true),
-  ('opening', 'Opening', '🎉', 50, true),
-  ('etc', 'Other', '✉️', 60, true)
-ON CONFLICT (id) DO NOTHING;
+-- 코드 default + Singapore 문화 기반 확장 시드
+INSERT INTO dearday_event (id, label, emoji, sort_order, is_default, card_type) VALUES
+  -- Invitation (date/place + RSVP)
+  ('birthday',          'Birthday Party',    '🎂',  20, true,  'invitation'),
+  ('baby-full-month',   'Baby Full Month',   '👶',  22, true,  'invitation'),
+  ('first-birthday',    '1st Birthday',      '🍰',  24, true,  'invitation'),
+  ('housewarming',      'Housewarming',      '🏡',  26, true,  'invitation'),
+  ('engagement',        'Engagement',        '💍',  28, true,  'invitation'),
+  ('baptism',           'Baptism',           '🕊️',  30, true,  'invitation'),
+  ('meeting',           'Gathering',         '🤝',  40, true,  'invitation'),
+  ('opening',           'Opening',           '🎉',  50, true,  'invitation'),
+  ('etc',               'Other',             '✉️',  60, true,  'invitation'),
+  -- Thank / Congrats (message-focused, no date/place)
+  ('mothers-day',       'Mother''s Day',     '💝', 110, true,  'thankcard'),
+  ('fathers-day',       'Father''s Day',     '💙', 112, true,  'thankcard'),
+  ('teachers-day',      'Teacher''s Day',    '🌸', 114, true,  'thankcard'),
+  ('thank-you',         'Thank you',         '🙏', 116, true,  'thankcard'),
+  ('get-well',          'Get well',          '🌷', 118, true,  'thankcard'),
+  ('sorry',             'Sorry',             '🤍', 120, true,  'thankcard'),
+  ('graduation',        'Graduation',        '🎓', 130, true,  'congrats'),
+  ('promotion',         'New Job · Promo',   '🎯', 132, true,  'congrats'),
+  -- Anniversary / Holiday (Singapore 문화)
+  ('wedding-anniversary', 'Wedding Anniv.',  '💑', 210, true,  'congrats'),
+  ('cny',                 'Chinese New Year','🧧', 212, true,  'congrats'),
+  ('hari-raya',           'Hari Raya',       '🌙', 214, true,  'congrats'),
+  ('deepavali',           'Deepavali',       '🪔', 216, true,  'congrats'),
+  ('mid-autumn',          'Mid-Autumn',      '🥮', 218, true,  'congrats'),
+  ('christmas',           'Christmas',       '🎄', 220, true,  'congrats'),
+  ('national-day',        'National Day SG', '🇸🇬', 222, true,  'congrats'),
+  ('valentines',          'Valentine''s',    '❤️', 224, true,  'congrats')
+ON CONFLICT (id) DO UPDATE SET
+  label = EXCLUDED.label,
+  emoji = EXCLUDED.emoji,
+  card_type = EXCLUDED.card_type,
+  sort_order = EXCLUDED.sort_order;
 -- 기존 커스텀 데이터 마이그레이션
 INSERT INTO dearday_event (id, label, emoji, sort_order, is_default, created_at, created_by)
 SELECT id, label, emoji, sort_order, false, created_at, created_by FROM dearday_event_custom
 ON CONFLICT (id) DO NOTHING;
+
+-- ============================================
+-- 결제 / 유료 plan (Stripe 통합 — 베타에선 비활성)
+-- ============================================
+-- Single Card $2.99 = 1 slot, 1 recipient unique link, 박제 후 새 구매 필요.
+-- slots는 사용 전엔 회수 가능, 사용(발송) 후엔 lock.
+CREATE TABLE IF NOT EXISTS dearday_payment (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id TEXT NOT NULL,
+  user_email TEXT,
+  stripe_session_id TEXT UNIQUE,           -- Stripe Checkout Session ID
+  stripe_payment_intent TEXT,
+  amount_cents INT NOT NULL,                -- $2.99 = 299
+  currency TEXT NOT NULL DEFAULT 'sgd',
+  plan_type TEXT NOT NULL,                  -- 'single' | 'pack5' | 'holiday_pass' | 'annual_pass'
+  status TEXT NOT NULL DEFAULT 'pending',   -- 'pending' | 'paid' | 'failed' | 'refunded'
+  metadata JSONB DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  paid_at TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_dearday_payment_user ON dearday_payment(user_id);
+CREATE INDEX IF NOT EXISTS idx_dearday_payment_status ON dearday_payment(status);
+
+-- 사용자가 보유한 발송 slot — Single Card 결제 시 1 slot 생성
+CREATE TABLE IF NOT EXISTS dearday_send_slot (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id TEXT NOT NULL,
+  payment_id UUID REFERENCES dearday_payment(id) ON DELETE CASCADE,
+  card_id UUID REFERENCES dearday_card(id) ON DELETE SET NULL,    -- 사용된 카드 (NULL이면 미사용)
+  recipient_id UUID REFERENCES dearday_recipient(id) ON DELETE SET NULL, -- 사용된 수신자
+  status TEXT NOT NULL DEFAULT 'unused',  -- 'unused' | 'reserved' | 'sent' | 'locked'
+                                           -- unused: 미사용 / reserved: 카드+수신자 할당됨, 회수 가능
+                                           -- sent: 발송 완료, 미열람이면 회수 가능 (B안)
+                                           -- locked: 수신자 열람 → 박제, 회수 불가
+  reserved_at TIMESTAMPTZ,
+  sent_at TIMESTAMPTZ,
+  locked_at TIMESTAMPTZ,
+  expires_at TIMESTAMPTZ,                  -- 무제한이면 NULL, holiday_pass는 30일
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_dearday_slot_user ON dearday_send_slot(user_id);
+CREATE INDEX IF NOT EXISTS idx_dearday_slot_status ON dearday_send_slot(status);
+CREATE INDEX IF NOT EXISTS idx_dearday_slot_card ON dearday_send_slot(card_id);
+
+-- 카드에 결제 상태 추가 — 무료/유료 구분
+ALTER TABLE dearday_card ADD COLUMN IF NOT EXISTS paid_status TEXT DEFAULT 'free';
+-- 'free': 무료 카드 (베타) / 'paid': slot 사용된 카드
+
+-- 사용량 카운터 (silent — UI 노출 X). 향후 유료 한도 결정용 데이터 수집.
+ALTER TABLE dearday_user ADD COLUMN IF NOT EXISTS cards_created_count INT DEFAULT 0;
+ALTER TABLE dearday_card ADD COLUMN IF NOT EXISTS recipients_added_count INT DEFAULT 0;
+
+-- 기념일 reminder (self-reminder, recipient 데이터 없음)
+-- 사용자가 본인 데이터로 본인에게만 알림. 명시적 opt-in.
+CREATE TABLE IF NOT EXISTS dearday_reminder (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id TEXT NOT NULL,
+  person_name TEXT NOT NULL,                          -- "Mom" / "Sarah" 등
+  occasion TEXT NOT NULL,                             -- birthday | mothers-day | fathers-day | anniversary | other
+  occasion_label TEXT,                                -- custom label (occasion='other'일 때)
+  event_month INT NOT NULL CHECK (event_month BETWEEN 1 AND 12),
+  event_day INT NOT NULL CHECK (event_day BETWEEN 1 AND 31),
+  notify_days_before INT NOT NULL DEFAULT 7,          -- D-N
+  email_enabled BOOLEAN NOT NULL DEFAULT true,
+  push_enabled BOOLEAN NOT NULL DEFAULT false,        -- PWA push
+  last_notified_year INT,                             -- 중복 방지 (연도)
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_dearday_reminder_user ON dearday_reminder(user_id);
+CREATE INDEX IF NOT EXISTS idx_dearday_reminder_date ON dearday_reminder(event_month, event_day);
+
+-- 평가 로그 — 4 에이전트 점수 + 종합 점수, 시간 누적
+CREATE TABLE IF NOT EXISTS dearday_evaluation (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  evaluated_at TIMESTAMPTZ DEFAULT NOW(),
+  evaluated_by TEXT,                                  -- admin email
+  perfectionist_score INT NOT NULL,                   -- 0-100
+  compliance_score INT NOT NULL,
+  mz_score INT NOT NULL,
+  tech_score INT NOT NULL,
+  total_score INT NOT NULL,                            -- 평균 (또는 가중치)
+  perfectionist_notes TEXT,
+  compliance_notes TEXT,
+  mz_notes TEXT,
+  tech_notes TEXT,
+  summary TEXT,                                        -- 종합 요약
+  ai_recommendations TEXT                              -- 100점으로 가기 위한 다음 step
+);
+CREATE INDEX IF NOT EXISTS idx_dearday_eval_date ON dearday_evaluation(evaluated_at DESC);
+
+-- 사용자 알림 동의 — 가입 시 default 같이 들어감
+ALTER TABLE dearday_user ADD COLUMN IF NOT EXISTS reminder_email_opt_in BOOLEAN DEFAULT false;
+ALTER TABLE dearday_user ADD COLUMN IF NOT EXISTS reminder_push_subscription JSONB;
+ALTER TABLE dearday_user ADD COLUMN IF NOT EXISTS preferred_locale TEXT DEFAULT 'en';  -- 'en' | 'ko' (이메일 등 발송 시 사용)
 
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_dearday_card_slug ON dearday_card(slug);

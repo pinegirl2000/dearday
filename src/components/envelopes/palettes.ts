@@ -57,10 +57,10 @@ export const COLOR_PALETTES: Record<EnvelopeColorId, EnvelopePalette> = {
     goldHighlight:'#FFFFFF', goldLight:'#FBF8F0', gold:'#F5F0E2', goldDeep:'#DDD4BC', goldShadow:'#A89D80'
   },
   lavender: {
-    id: 'lavender', label: 'Lavender Silver',
+    id: 'lavender', label: 'Lavender Cream',
     flap:'#D2B8E5', flapShadow:'#B89AD2',
     body:'#C8B0E2', bodyDark:'#9C82BE', bodyMid:'#D2B8E5', bodyTint:'#E8DCF3',
-    inner:'#F8F6FB', paper:'#FFFFFF', accent:'#7B5EA7', ink:'#3A2E55',
+    inner:'#F8F6FB', paper:'#FFFFFF', accent:'#F5EBD8', ink:'#5A3D7A',
     petals:['#C9A0DC','#D9B6E5','#E8CFEF','#A990CC','#B89AD2','#E0C8EE'],
     // 연보라와 어울리는 시원한 펄/실버 톤 — cool-on-cool 모노크로매틱 (한 단계 밝게)
     goldHighlight:'#F8F5FA', goldLight:'#E8E2EE', gold:'#CABFCF', goldDeep:'#9C90A6', goldShadow:'#6B6173'
@@ -83,12 +83,12 @@ export const COLOR_PALETTES: Record<EnvelopeColorId, EnvelopePalette> = {
     goldHighlight:'#FBFAF2', goldLight:'#F0ECDF', gold:'#E8E4D8', goldDeep:'#C2BCAA', goldShadow:'#8E8775'
   },
   blush: {
-    id: 'blush', label: 'Blush Rose Gold',
+    id: 'blush', label: 'Blush Cream',
     flap:'#EDB5A4', flapShadow:'#B5806F',
     body:'#F2C0B3', bodyDark:'#C48E80', bodyMid:'#F5C8B8', bodyTint:'#FAD9CE',
-    inner:'#FBF3EE', paper:'#FFFFFF', accent:'#C9907A', ink:'#5A2E22',
-    petals:['#FBC4B0','#FDD0BF','#FFDDD0','#F5B098','#FFE7DE','#FFF1EB'],
-    goldHighlight:'#F0CABA', goldLight:'#DDA48F', gold:'#C9907A', goldDeep:'#9C6A55', goldShadow:'#6B4536'
+    inner:'#FBF3EE', paper:'#FFFFFF', accent:'#F5EBD8', ink:'#7A4F2E',
+    petals:['#FBC4B0','#FDD0BF','#FFDDD0','#F5EBD8','#FFE7DE','#FFF1EB'],
+    goldHighlight:'#FFFFFF', goldLight:'#FBF3E8', gold:'#F5EBD8', goldDeep:'#D8C8A8', goldShadow:'#A89880'
   },
   rose: {
     id: 'rose', label: 'Rose Petal',
@@ -100,38 +100,38 @@ export const COLOR_PALETTES: Record<EnvelopeColorId, EnvelopePalette> = {
     goldHighlight:'#FFFCF6', goldLight:'#FBF6EC', gold:'#F5EBD8', goldDeep:'#DDD0B8', goldShadow:'#A89880'
   },
   powder: {
-    id: 'powder', label: 'Powder Silver',
+    id: 'powder', label: 'Powder Pink',
     flap:'#A8C3D8', flapShadow:'#7592A8',
     body:'#BFD7EA', bodyDark:'#88A4BA', bodyMid:'#CADCE9', bodyTint:'#DDE9F2',
-    inner:'#F8FAFB', paper:'#FFFFFF', accent:'#8FB5D0', ink:'#1F3548',
-    petals:['#BFD9F0','#D5E5F2','#A8C8E0','#C7DCEE','#E5EFF7','#9CC0DD'],
-    goldHighlight:'#EFF2F5', goldLight:'#D9DEE3', gold:'#C4CDD4', goldDeep:'#9AA4AC', goldShadow:'#6B7378'
+    inner:'#FBF0F4', paper:'#FFFFFF', accent:'#F5C8D2', ink:'#9C4E62',
+    petals:['#F5C8D2','#FBE0E8','#A8C8E0','#FFFFFF','#E5EFF7','#F0B5C2'],
+    goldHighlight:'#FFFFFF', goldLight:'#FBE0E8', gold:'#F5C8D2', goldDeep:'#C898A4', goldShadow:'#8E6A74'
   },
   midnight: {
     id: 'midnight', label: 'Midnight Gold',
     flap:'#384858', flapShadow:'#0E1822',
     body:'#2D3D50', bodyDark:'#16202C', bodyMid:'#3D4E62', bodyTint:'#5A6B7E',
-    inner:'#1F2E40', paper:'#FFFFFF', accent:'#D4AF37', ink:'#F5EDD2',
-    petals:['#D4AF37','#F2D98A','#B08820','#FFFFFF','#1A1A1A','#7A5C12'],
+    inner:'#1F2E40', paper:'#FFFFFF', accent:'#F0CB58', ink:'#F5EDD2',
+    petals:['#F0CB58','#F8E08A','#D4AF37','#FFFFFF','#1A1A1A','#9E7E1F'],
     ...goldFoil
   },
   onyx: {
-    id: 'onyx', label: 'Onyx Gold',
-    flap:'#353535', flapShadow:'#1A1A1A',
-    body:'#2A2A2A', bodyDark:'#0F0F0F', bodyMid:'#3A3A3A', bodyTint:'#4D4D4D',
-    inner:'#2A2418', paper:'#FFFFFF', accent:'#DCB748', ink:'#F0DC78',
-    petals:['#DCB748','#F0DC78','#FBEFA8','#1A1A1A','#3A3A3A','#A8862E'],
-    // 매트 차콜 블랙과 어울리는 luxe 메탈릭 골드 포일 — 격조 높은 black-tie 룩
-    ...goldFoil
+    id: 'onyx', label: 'Tiffany Cream',
+    flap:'#B8E2DE', flapShadow:'#88C5C0',
+    body:'#A8DDD9', bodyDark:'#7FBEB9', bodyMid:'#B8E2DE', bodyTint:'#D2EEEC',
+    inner:'#F0FAF9', paper:'#FFFFFF', accent:'#F5EBD8', ink:'#3A6C68',
+    petals:['#F5EBD8','#FFFFFF','#FBF3E8','#D2EEEC','#B8E2DE','#A8DDD9'],
+    // 파스텔 티파니 블루 + 크림 — 부드럽고 우아한 페어
+    goldHighlight:'#FFFFFF', goldLight:'#FBF3E8', gold:'#F5EBD8', goldDeep:'#D9CCB0', goldShadow:'#A89E84'
   },
   aubergine: {
-    id: 'aubergine', label: 'Aubergine Pearl',
+    id: 'aubergine', label: 'Aubergine HotPink',
     flap:'#523A60', flapShadow:'#251628',
     body:'#3F2A4A', bodyDark:'#251628', bodyMid:'#523A60', bodyTint:'#75587E',
-    inner:'#251628', paper:'#FFFFFF', accent:'#C0B6CC', ink:'#F0E6F2',
-    petals:['#C0B6CC','#E0DAE6','#75587E','#F5F2F8','#523A60','#8E8298'],
-    // 깊은 가지(eggplant) 보라와 어울리는 cool pearl/silver — 보라 위 부드러운 metallic 광택
-    goldHighlight:'#F5F2F8', goldLight:'#E0DAE6', gold:'#C0B6CC', goldDeep:'#8E8298', goldShadow:'#5A4F66'
+    inner:'#251628', paper:'#FFFFFF', accent:'#FF9CC9', ink:'#FFCFE3',
+    petals:['#FF9CC9','#FFB8DA','#75587E','#FFCFE3','#523A60','#FF85BD'],
+    // 깊은 aubergine 위 연한 hot pink — 부드러우면서 임팩트 있는 콘트라스트
+    goldHighlight:'#FFCFE3', goldLight:'#FFB8DA', gold:'#FF9CC9', goldDeep:'#D47AA8', goldShadow:'#A0588A'
   },
   cobalt: {
     id: 'cobalt', label: 'Cobalt Cream',
@@ -146,10 +146,10 @@ export const COLOR_PALETTES: Record<EnvelopeColorId, EnvelopePalette> = {
     id: 'ivory', label: 'Ivory White',
     flap:'#FBF6E8', flapShadow:'#E5DCC4',
     body:'#F8F1DE', bodyDark:'#D9CFB4', bodyMid:'#FBF6E8', bodyTint:'#FFFCF2',
-    inner:'#FFFCF2', paper:'#FFFFFF', accent:'#C9A85E', ink:'#5A4A28',
-    petals:['#FBF6E8','#F8F1DE','#F0E6CA','#FFFCF2','#E5DCC4','#FFFFFF'],
-    // 거의 흰색 크림 외피 + warm gold 안감 — 클린한 ivory wedding 룩
-    goldHighlight:'#FBEFA8', goldLight:'#F0DC78', gold:'#DCB748', goldDeep:'#A8862E', goldShadow:'#5A4017'
+    inner:'#FFFCF2', paper:'#FFFFFF', accent:'#F5C2D0', ink:'#A85572',
+    petals:['#FBF6E8','#F8F1DE','#FBE0E8','#FFFCF2','#F5C2D0','#FFFFFF'],
+    // 아이보리 화이트 + 파스텔 핑크 — 부드럽고 사랑스러운 페어
+    goldHighlight:'#FFFFFF', goldLight:'#FBE0E8', gold:'#F5C2D0', goldDeep:'#C28DA0', goldShadow:'#8A5870'
   },
 };
 

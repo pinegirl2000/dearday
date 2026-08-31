@@ -3,11 +3,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { ClassicEnvelope, EnvelopeBeige, EnvelopeMint, EnvelopeCoral, EnvelopeBlue, EnvelopeBlackGold, SwayEnvelope, NoneEnvelope, COLOR_PALETTES, type EnvelopeColorId } from '@/components/envelopes';
+import { ClassicEnvelope, EnvelopeBeige, EnvelopeMint, EnvelopeCoral, EnvelopeBlue, EnvelopeBlackGold, SwayEnvelope, RibbonEnvelope, NoneEnvelope, COLOR_PALETTES, type EnvelopeColorId } from '@/components/envelopes';
 import { resolveColorId } from '@/components/envelopes/palettes';
 import { getTheme } from '@/lib/theme';
 import { getEventTypeMeta } from '@/lib/eventType';
-import { formatGreeting, getLayout, applyName } from '@/lib/layouts';
+import { formatGreeting, getLayout, applyName, toGreeting } from '@/lib/layouts';
 import type { BaseCard } from '@/types/card';
 import RsvpForm from './RsvpForm';
 import TemplateCard from './TemplateCard';
@@ -24,12 +24,13 @@ const ENVELOPE_MAP = {
 } as const;
 
 // 새 (type, color) 모델 파싱 — wizard와 동일 로직
-type EnvelopeAnimType = 'none' | 'sway' | 'flip';
-function parseEnvAnim(id: string | undefined | null): { type: EnvelopeAnimType; color: EnvelopeColorId } {
-  if (!id || id === 'none') return { type: 'none', color: 'lavender' };
+type EnvelopeAnimType = 'none' | 'sway' | 'flip' | 'ribbon';
+function parseEnvAnim(id: string | undefined | null): { type: EnvelopeAnimType; color: EnvelopeColorId; ribbonVariant: 1 | 2 | 3 } {
+  if (!id || id === 'none') return { type: 'none', color: 'lavender', ribbonVariant: 3 };
   if (id.includes(':')) {
-    const [t, c] = id.split(':');
-    return { type: t as EnvelopeAnimType, color: resolveColorId(c) };
+    const [t, c, v] = id.split(':');
+    const variant: 1 | 2 | 3 = (v === '1' || v === '2' || v === '3') ? (Number(v) as 1 | 2 | 3) : 3;
+    return { type: t as EnvelopeAnimType, color: resolveColorId(c), ribbonVariant: variant };
   }
   const map: Record<string, { type: EnvelopeAnimType; color: string }> = {
     'envelope-1': { type: 'sway', color: 'lavender' },
@@ -40,8 +41,8 @@ function parseEnvAnim(id: string | undefined | null): { type: EnvelopeAnimType; 
     'envelope-6': { type: 'flip', color: 'blackgold' }
   };
   const m = map[id];
-  if (m) return { type: m.type, color: resolveColorId(m.color) };
-  return { type: 'sway', color: 'lavender' };
+  if (m) return { type: m.type, color: resolveColorId(m.color), ribbonVariant: 3 };
+  return { type: 'sway', color: 'lavender', ribbonVariant: 3 };
 }
 
 interface Props {
@@ -62,6 +63,21 @@ interface Props {
 }
 
 export default function InvitationView({ card, feed, recipientName, recipientId, existingRsvp, templateColorOverride, eventCardType }: Props) {
+  // L3 — 수신자 첫 열람 1회 안내 (개인 링크로 접속한 경우만, recipientId 있으면)
+  useEffect(() => {
+    if (!recipientId || typeof window === 'undefined') return;
+    const key = `dd_read_notice_${recipientId}`;
+    if (localStorage.getItem(key)) return;
+    // 잠시 후 toast — 봉투 애니메이션 끝나고
+    const t = setTimeout(() => {
+      toast.message('💌 The sender will know you opened this card.', {
+        duration: 4500,
+        description: 'Your view is recorded once (see Privacy).'
+      });
+      try { localStorage.setItem(key, '1'); } catch {}
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [recipientId]);
   // 봉투 'none'이면 봉투 단계 건너뛰고 바로 카드 표시
   const [open, setOpen] = useState(card.envelope_anim === 'none');
   const [opening, setOpening] = useState(false);
@@ -90,6 +106,7 @@ export default function InvitationView({ card, feed, recipientName, recipientId,
   // 모든 sway 봉투는 generic SwayEnvelope(palette) 사용 — 기존 envelope-1~5도 동일
   const Envelope: any = envParsed.type === 'none' ? NoneEnvelope
     : envParsed.type === 'flip' ? EnvelopeBlackGold
+    : envParsed.type === 'ribbon' ? RibbonEnvelope
     : SwayEnvelope;
   const envelopePalette = envParsed.type !== 'none' ? COLOR_PALETTES[envParsed.color] : undefined;
 
@@ -114,17 +131,18 @@ export default function InvitationView({ card, feed, recipientName, recipientId,
   };
   // 새 (type, color) 조합용 — 각 봉투 색상별로 흰 텍스트와 충분한 대비를 갖는 saturated tone
   const ENVELOPE_BUTTON_BY_COLOR: Record<string, string> = {
+    ivory:     '#A85572',  // ivory + pastel pink — deep rose ink
     pearl:     '#A8862E',  // gold cream → deep warm gold (accent #F5F0E2가 너무 옅어 darker)
-    lavender:  '#A990CC',
+    lavender:  '#5A3D7A',
     champagne: '#9C8B6E',
     sage:      '#7E9279',
-    blush:     '#C9907A',
+    blush:     '#9C5A3F',
     rose:      '#C97796',
-    powder:    '#8FB5D0',
-    midnight:  '#D4AF37',
-    cobalt:    '#3D5A9C',  // accent #E8DBB8가 너무 옅어 봉투 본체 색
-    aubergine: '#75587E',  // accent #C0B6CC가 너무 옅어 봉투 본체 색
-    onyx:      '#DCB748'
+    powder:    '#9C4E62',  // powder + pastel pink
+    midnight:  '#F0CB58',
+    cobalt:    '#3D5A9C',  // cobalt body
+    aubergine: '#FF9CC9',  // aubergine + hot pink accent (CSS hotpink)
+    onyx:      '#FBF3E8'
   };
   const newColorButton = envParsed.type !== 'none' ? ENVELOPE_BUTTON_BY_COLOR[envParsed.color] : undefined;
   const buttonBg = BUTTON_COLOR[card.envelope_anim] || newColorButton || envelopePalette?.accent || '#A990CC';
@@ -250,6 +268,7 @@ export default function InvitationView({ card, feed, recipientName, recipientId,
             isOpen={opening}
             width={envWidth}
             palette={envelopePalette}
+            variant={envParsed.type === 'ribbon' ? envParsed.ribbonVariant : undefined}
             recipientGreeting={formatGreeting(recipientName, card.recipient_template) || undefined}
             onComplete={handleEnvelopeComplete}
             cardPreview={envParsed.type !== 'none' ? (
@@ -305,9 +324,10 @@ export default function InvitationView({ card, feed, recipientName, recipientId,
               )}
             </div>
           </Envelope>
-          {/* Sway만 외부 overlay (flip은 EnvelopeBlackGold 내부에서 렌더되어 봉투와 함께 회전) */}
-          {envParsed.type === 'sway' && card.envelope_anim !== 'none' && recipientName && recipientName.trim() && (() => {
-            const envHeight = Math.round(envWidth * 0.75);
+          {/* Sway/Ribbon은 외부 overlay (flip은 EnvelopeBlackGold 내부에서 렌더되어 봉투와 함께 회전) */}
+          {(envParsed.type === 'sway' || envParsed.type === 'ribbon') && card.envelope_anim !== 'none' && recipientName && recipientName.trim() && (() => {
+            // ribbon: 이름은 리본 아래 위치.
+            const envHeight = Math.round(envWidth * (envParsed.type === 'ribbon' ? 0.78 : 0.75));
             return (
               <div style={{
                 position: 'absolute',
@@ -317,16 +337,15 @@ export default function InvitationView({ card, feed, recipientName, recipientId,
                 width: '85%',
                 textAlign: 'center',
                 color: envelopeDeep,
-                fontFamily: "'Cormorant Garamond', 'Playfair Display', 'Noto Serif KR', serif",
-                fontSize: 18,
+                fontFamily: "var(--font-noto-sans), 'Noto Sans KR', system-ui, sans-serif",
+                fontSize: 16,
                 fontWeight: 500,
-                fontVariant: 'small-caps',
                 letterSpacing: '0.12em',
                 textShadow: '0 1px 2px rgba(255,255,255,0.4)',
                 pointerEvents: 'none',
                 zIndex: 10
               }}>
-                {recipientName}
+                {toGreeting(formatGreeting(recipientName, card.recipient_template) || recipientName)}
               </div>
             );
           })()}
@@ -361,7 +380,7 @@ export default function InvitationView({ card, feed, recipientName, recipientId,
               />
             </motion.div>
             <div className="text-center text-xs mt-4" style={{ color: theme.colors.muted }}>
-              Powered by <a href="https://dearday.sg" className="font-semibold text-hydrangea-700">dearday.sg</a>
+              Curated by <a href="https://dearday.sg" className="font-semibold text-hydrangea-700">dearday.sg</a>
             </div>
           </motion.div>
         )}
@@ -407,7 +426,7 @@ export default function InvitationView({ card, feed, recipientName, recipientId,
       </div>
 
       <footer className="text-center text-xs mt-2" style={{ color: theme.colors.muted }}>
-        Powered by <a href="https://dearday.sg" className="font-semibold text-hydrangea-700">dearday.sg</a>
+        Curated by <a href="https://dearday.sg" className="font-semibold text-hydrangea-700">dearday.sg</a>
       </footer>
     </main>
   );

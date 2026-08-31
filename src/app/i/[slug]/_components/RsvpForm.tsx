@@ -46,8 +46,12 @@ const ENVELOPE_PALETTE: Record<string, { primary: string; soft: string; deep: st
 export default function RsvpForm({ card, theme, recipientId, recipientName, existingRsvp, compact = false, templateColorOverride }: Props) {
   const t = useTranslations('Invitation');
   const hasExisting = !!existingRsvp;
+  // RSVP 마감일 지났는지 — 폼 잠금 (이미 응답한 사용자는 응답 표시 유지)
+  const deadlinePassed = !!card.rsvp_deadline && new Date(card.rsvp_deadline).getTime() < Date.now();
   // 응답 수정 잠금 — card.rsvp_allow_change=false + 이미 응답한 사용자는 변경 불가
-  const locked = hasExisting && card.rsvp_allow_change === false;
+  // 잠금 조건: 이미 응답 + 변경 불허 / OR 마감일 지남 (deadlinePassed는 아래에서 계산)
+  const _deadlinePassedEarly = !!card.rsvp_deadline && new Date(card.rsvp_deadline).getTime() < Date.now();
+  const locked = (hasExisting && card.rsvp_allow_change === false) || (hasExisting && _deadlinePassedEarly);
   const [attend, setAttend] = useState<boolean | null>(existingRsvp ? existingRsvp.attend : null);
   const [adultCount, setAdultCount] = useState(existingRsvp?.adult_count ?? 1);
   const [childCount, setChildCount] = useState(existingRsvp?.child_count ?? 0);
@@ -165,6 +169,18 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
     );
   }
 
+  // 마감 지났고 본인 응답 없으면 — 마감 안내만 표시
+  if (deadlinePassed && !hasExisting) {
+    return (
+      <div className={`text-center ${compact ? 'py-3' : 'py-4'}`}>
+        <div style={{ color: ACCENT, opacity: 0.6, fontSize: 11, marginBottom: 4 }}>✽</div>
+        <p className={`font-semibold ${compact ? 'text-sm' : 'text-base'}`} style={{ color: ACCENT_DEEP }}>
+          {t('rsvpClosed')}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className={compact ? 'space-y-2' : 'space-y-4'}>
       <div className="text-center">
@@ -186,11 +202,18 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
             ✓ You already replied — edit and resubmit to update
           </p>
         )}
-        {!hasExisting && card.rsvp_deadline && !compact && (
-          <p className="text-xs mt-1" style={{ color: theme.colors.muted }}>
-            {new Date(card.rsvp_deadline).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}까지
-          </p>
-        )}
+        {!hasExisting && card.rsvp_deadline && (() => {
+          const d = new Date(card.rsvp_deadline);
+          // 00:00:00 이면 시간 없이 입력된 것으로 간주 → 날짜만 표시
+          const hasTime = d.getHours() !== 0 || d.getMinutes() !== 0;
+          const dateStr = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+          const timeStr = hasTime ? d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
+          return (
+            <p className={`mt-1 ${compact ? 'text-[10px]' : 'text-xs'}`} style={{ color: theme.colors.muted, opacity: 0.85 }}>
+              Reply by {dateStr}{hasTime ? ` · ${timeStr}` : ''}
+            </p>
+          );
+        })()}
       </div>
 
       {compact ? (
