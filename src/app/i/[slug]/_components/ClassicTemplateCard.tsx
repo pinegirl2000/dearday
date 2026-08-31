@@ -266,8 +266,9 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
               </div>
           </div>
         )}
-        {/* 상단 장식 — 템플릿 메인 색상으로 ✽ + gradient 라인 (Topdown Text, Thank-Classic 제외) */}
-        {card.layout_id !== 'layout-7' && card.layout_id !== 'thank_classic' && (
+        {/* 상단 장식 — 템플릿 메인 색상으로 ✽ + gradient 라인.
+            (Topdown Text, Thank-Classic 제외. 프레임형 배경은 아치 테두리와 겹쳐 생략) */}
+        {card.layout_id !== 'layout-7' && card.layout_id !== 'thank_classic' && background?.fit !== 'fill' && (
           <FadeUp delay={0.05}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '8px 0 12px' }}>
               <div style={{ width: 60, height: 1, background: `linear-gradient(90deg, transparent, ${palette.title}, transparent)`, opacity: 0.6 }} />
