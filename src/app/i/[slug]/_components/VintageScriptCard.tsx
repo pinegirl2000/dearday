@@ -152,7 +152,12 @@ export default function VintageScriptCard({
       {hasBgImage && (
         <img
           src={imgUrl(background!.imageUrl)} alt=""
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, pointerEvents: 'none' }}
+          style={{
+            position: 'absolute', inset: 0, width: '100%', height: '100%',
+            // fit: 'fill' 배경(프레임 디자인)은 카드 크기에 맞춰 늘려 좌우 장식 잘림 방지
+            objectFit: background!.fit === 'fill' ? 'fill' : 'cover',
+            zIndex: 0, pointerEvents: 'none'
+          }}
         />
       )}
       <div style={{
