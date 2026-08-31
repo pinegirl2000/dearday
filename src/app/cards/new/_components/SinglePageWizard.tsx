@@ -170,13 +170,20 @@ interface SinglePageWizardProps {
   eventIncludes?: Record<string, string[]>;
   /** DB가 source of truth인 모든 이벤트 (default + 커스텀) — 없으면 코드 EVENT_TYPES fallback */
   allEvents?: Array<{ id: string; label: string; emoji: string; card_type?: 'invitation' | 'thankcard' | 'congrats' }>;
-  /** admin이 DB에 저장한 템플릿별 색상 override (template_id → 5 colors) */
+  /** admin이 DB에 저장한 템플릿별 색상 + 배치 override (template_id → override) */
   templateColors?: Record<string, {
     color_main?: string | null;
     color_sub?: string | null;
     color_box_text?: string | null;
     box_bg_top?: string | null;
     box_bg_bottom?: string | null;
+    color_title_accent?: string | null;
+    rsvp_button_color?: string | null;
+    card_max_width?: number | null;
+    card_min_height?: number | null;
+    content_top?: number | null;
+    content_side?: number | null;
+    box_max_width?: number | null;
   }>;
 }
 
@@ -555,6 +562,13 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
     title: draft.title || '',
     event_type: draft.event_type || 'etc'
   } as BaseCard;
+
+  // 현재 선택된 (bg, layout) 조합의 template override — 색상 + 배치(시작 위치/카드 크기).
+  // 실제 초대장 페이지와 동일한 값을 써야 미리보기와 결과물이 일치한다.
+  const previewOverride = (() => {
+    const t = findTemplateByPair(previewCard.bg_id, previewCard.layout_id);
+    return t ? templateColors?.[t.id] : undefined;
+  })();
 
   // 현재 선택한 이벤트의 card_type (invitation/thankcard/congrats) — preview에 전달해 eventLabel 숨김
   const currentEventCardType: 'invitation' | 'thankcard' | 'congrats' = (() => {
@@ -1141,6 +1155,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                 card={previewCard}
                 recipientName="John"
                 eventCardType={currentEventCardType}
+                templateColorOverride={previewOverride}
                 onPhotoClick={triggerThankPhotoUpload}
                 rsvpSlot={(draft.rsvp_enabled && currentEventCardType === 'invitation') ? (() => {
                   const isRsvpHighlighted = fieldsOrder.find((f) => f.no === flashFieldNo)?.key === 'rsvp_section';
@@ -1157,7 +1172,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                       }}
                       aria-disabled
                     >
-                      <RsvpForm card={previewCard} theme={getTheme(previewCard.theme)} compact />
+                      <RsvpForm card={previewCard} theme={getTheme(previewCard.theme)} compact templateColorOverride={previewOverride} />
                     </div>
                   );
                 })() : null}
@@ -1449,8 +1464,9 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                                   card={previewCard}
                                   recipientName="John"
                                   eventCardType={currentEventCardType}
+                                  templateColorOverride={previewOverride}
                                   rsvpSlot={(draft.rsvp_enabled && currentEventCardType === 'invitation') ? (
-                                    <RsvpForm card={previewCard} theme={getTheme(previewCard.theme)} compact />
+                                    <RsvpForm card={previewCard} theme={getTheme(previewCard.theme)} compact templateColorOverride={previewOverride} />
                                   ) : null}
                                 />
                               </div>
@@ -1636,8 +1652,9 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                           card={previewCard}
                           recipientName="John"
                           eventCardType={currentEventCardType}
+                          templateColorOverride={previewOverride}
                           rsvpSlot={(draft.rsvp_enabled && currentEventCardType === 'invitation') ? (
-                            <RsvpForm card={previewCard} theme={getTheme(previewCard.theme)} compact />
+                            <RsvpForm card={previewCard} theme={getTheme(previewCard.theme)} compact templateColorOverride={previewOverride} />
                           ) : null}
                         />
                       </motion.div>
@@ -1753,7 +1770,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                 >×</button>
               </div>
               <div className="p-3 max-h-[70vh] overflow-y-auto bg-hydrangea-50/30">
-                <TemplateCard card={sampleCard} recipientName="John" eventCardType={currentEventCardType} />
+                <TemplateCard card={sampleCard} recipientName="John" eventCardType={currentEventCardType} templateColorOverride={templateColors?.[tpl.id]} />
               </div>
               <div className="p-3 flex gap-2 border-t border-hydrangea-100">
                 <button
@@ -2108,6 +2125,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                     card={previewCard}
                     recipientName="Friend"
                     eventCardType={currentEventCardType}
+                    templateColorOverride={previewOverride}
                   />
                 </div>
               </div>
