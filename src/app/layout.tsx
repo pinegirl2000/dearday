@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
-import { Noto_Serif_KR, Noto_Sans_KR, Playfair_Display, Great_Vibes, Cormorant_Garamond, Sacramento } from 'next/font/google';
+import { Noto_Serif_KR, Noto_Sans_KR, Gothic_A1, Playfair_Display, Great_Vibes, Cormorant_Garamond, Sacramento } from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 import { getServerSession } from 'next-auth';
@@ -24,6 +24,14 @@ const notoSans = Noto_Sans_KR({
   subsets: ['latin'],
   weight: ['300', '400', '500', '700'],
   variable: '--font-noto-sans',
+  display: 'swap'
+});
+
+// 봉투 수신자 이름용 고딕 — Noto Sans KR과 구분되는 한글 고딕
+const gothicA1 = Gothic_A1({
+  subsets: ['latin'],
+  weight: ['300', '400', '500'],
+  variable: '--font-gothic-a1',
   display: 'swap'
 });
 
@@ -87,7 +95,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const session = await getServerSession(authOptions);
 
   return (
-    <html lang={locale} className={`${notoSerif.variable} ${notoSans.variable} ${cormorant.variable}`}>
+    <html lang={locale} className={`${notoSerif.variable} ${notoSans.variable} ${gothicA1.variable} ${cormorant.variable}`}>
       <head>
         <Script
           id="adsense-script"

@@ -272,9 +272,9 @@ function FrontFace({
             transform: 'translateY(-50%)',
             textAlign: 'center',
             color: PALETTE.ink,
-            fontFamily: "var(--font-noto-sans), 'Noto Sans KR', system-ui, sans-serif",
-            // 12pt(=16px @ width 380) — 기존 0.055(≈21px)에서 3단계 축소
-            fontSize: Math.max(10, Math.round(width * 0.042)),
+            fontFamily: "var(--font-gothic-a1), 'Gothic A1', 'Noto Sans KR', sans-serif",
+            // 11pt(≈14.7px) 고정 — 봉투 폭과 무관하게 동일 크기
+            fontSize: '11pt',
             fontWeight: 400,
             letterSpacing: '0.12em',
             // midnight/onyx만 그림자로 깊이감 — 그 외 밝은 봉투는 번짐 방지 위해 그림자 없음
