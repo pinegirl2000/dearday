@@ -32,6 +32,7 @@ interface Props {
     card_min_height?: number | null;
     content_top?: number | null;
     content_side?: number | null;
+    box_max_width?: number | null;
   };
   eventCardType?: 'invitation' | 'thankcard' | 'congrats';
 }
@@ -242,7 +243,7 @@ export default function VintageScriptCard({
         {!hideEventLabel && (card.event_date || card.event_place || card.map_url || editable) && (
           <FadeUp delay={0.3}>
             <div style={{
-              maxWidth: 280, margin: '0 auto 18px', padding: '16px 18px',
+              maxWidth: templateColorOverride?.box_max_width || 280, margin: '0 auto 18px', padding: '16px 18px',
               background: boxBg,
               backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
               border: `1px solid ${main}`,

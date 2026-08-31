@@ -174,6 +174,7 @@ ALTER TABLE dearday_template_config ADD COLUMN IF NOT EXISTS card_max_width INT;
 ALTER TABLE dearday_template_config ADD COLUMN IF NOT EXISTS card_min_height INT;
 ALTER TABLE dearday_template_config ADD COLUMN IF NOT EXISTS content_top INT;
 ALTER TABLE dearday_template_config ADD COLUMN IF NOT EXISTS content_side INT;
+ALTER TABLE dearday_template_config ADD COLUMN IF NOT EXISTS box_max_width INT;
 
 -- 이벤트별 템플릿 노출 순서 (admin drag&drop으로 지정)
 CREATE TABLE IF NOT EXISTS dearday_template_event_order (

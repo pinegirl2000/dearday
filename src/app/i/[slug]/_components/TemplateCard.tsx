@@ -42,6 +42,7 @@ interface Props {
     card_min_height?: number | null;
     content_top?: number | null;
     content_side?: number | null;
+    box_max_width?: number | null;
   };
   /** 카드 타입 — 'thankcard' / 'congrats'면 eventLabel("YOU'RE INVITED") 숨김 */
   eventCardType?: 'invitation' | 'thankcard' | 'congrats';
@@ -371,6 +372,8 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
               position: 'absolute',
               left: layout.id === 'layout-5' ? '38%' : '6%',
               right: layout.id === 'layout-5' ? '5%' : '6%',
+              // admin 배치 override — 정보 박스 가로 (left/right + auto margin으로 가운데 정렬 유지)
+              ...(mx?.box_max_width ? { maxWidth: mx.box_max_width, marginLeft: 'auto', marginRight: 'auto' } : {}),
               top: layout.id === 'layout-6'
                 ? `calc(${f.date.y + 0.5}%)`
                 : layout.id === 'layout-5'

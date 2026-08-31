@@ -17,7 +17,8 @@ const FIELDS = [
   { key: 'content_top' as const,    label: '시작 위치',   hint: '텍스트가 시작될 상단 위치(px). 배경 프레임 안쪽에서 시작하도록 조정', ph: '24' },
   { key: 'content_side' as const,   label: '좌우 여백',   hint: '본문 좌우 여백(px). 글자가 프레임 밖으로 나가지 않도록',           ph: '20' },
   { key: 'card_max_width' as const, label: '카드 가로',   hint: '카드 최대 폭(px). 240~900',                                      ph: '440' },
-  { key: 'card_min_height' as const,label: '카드 세로',   hint: '카드 최소 높이(px). 배경 하단이 비는 것 방지. 0~2400',            ph: 'auto' }
+  { key: 'card_min_height' as const,label: '카드 세로',   hint: '카드 최소 높이(px). 배경 하단이 비는 것 방지. 0~2400',            ph: 'auto' },
+  { key: 'box_max_width' as const,  label: '정보 박스 가로', hint: '날짜·장소 박스의 최대 폭(px). 120~900',                        ph: '320' }
 ];
 
 export default function TemplateMetricsEditor({ templateId, initial, onSaved }: Props) {
@@ -26,7 +27,8 @@ export default function TemplateMetricsEditor({ templateId, initial, onSaved }: 
     content_top: toStr(initial?.content_top),
     content_side: toStr(initial?.content_side),
     card_max_width: toStr(initial?.card_max_width),
-    card_min_height: toStr(initial?.card_min_height)
+    card_min_height: toStr(initial?.card_min_height),
+    box_max_width: toStr(initial?.box_max_width)
   });
   const [pending, startTransition] = useTransition();
 
@@ -42,7 +44,8 @@ export default function TemplateMetricsEditor({ templateId, initial, onSaved }: 
       content_top: toNum(next.content_top),
       content_side: toNum(next.content_side),
       card_max_width: toNum(next.card_max_width),
-      card_min_height: toNum(next.card_min_height)
+      card_min_height: toNum(next.card_min_height),
+      box_max_width: toNum(next.box_max_width)
     };
     startTransition(async () => {
       const res = await saveTemplateMetrics(templateId, payload);
@@ -52,13 +55,14 @@ export default function TemplateMetricsEditor({ templateId, initial, onSaved }: 
         content_top: payload.content_top ?? null,
         content_side: payload.content_side ?? null,
         card_max_width: payload.card_max_width ?? null,
-        card_min_height: payload.card_min_height ?? null
+        card_min_height: payload.card_min_height ?? null,
+        box_max_width: payload.box_max_width ?? null
       });
     });
   };
 
   const handleReset = () => {
-    const cleared = { content_top: '', content_side: '', card_max_width: '', card_min_height: '' };
+    const cleared = { content_top: '', content_side: '', card_max_width: '', card_min_height: '', box_max_width: '' };
     setVals(cleared);
     submit(cleared);
   };

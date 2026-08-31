@@ -49,6 +49,7 @@ interface Props {
     card_min_height?: number | null;
     content_top?: number | null;
     content_side?: number | null;
+    box_max_width?: number | null;
   };
   eventCardType?: 'invitation' | 'thankcard' | 'congrats';
   /** thank_* 레이아웃 상단 원형 사진 클릭 핸들러 (편집 모드 only) — 부모가 file picker 트리거 */
@@ -373,7 +374,8 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
                 padding: '12px 18px',
                 // Topdown Text는 box를 title 바로 아래에 (body가 box 다음으로 이동)
                 margin: card.layout_id === 'layout-7' ? '24px auto 14px' : '20px auto 14px',
-                maxWidth: 320,
+                // admin 배치 override — 정보 박스 가로
+                maxWidth: templateColorOverride?.box_max_width || 320,
                 background: boxBg,
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)',
