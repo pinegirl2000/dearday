@@ -169,6 +169,11 @@ ALTER TABLE dearday_template_config ADD COLUMN IF NOT EXISTS box_bg_top TEXT;
 ALTER TABLE dearday_template_config ADD COLUMN IF NOT EXISTS box_bg_bottom TEXT;
 ALTER TABLE dearday_template_config ADD COLUMN IF NOT EXISTS color_title_accent TEXT;
 ALTER TABLE dearday_template_config ADD COLUMN IF NOT EXISTS rsvp_button_color TEXT;
+-- 카드 배치(metrics) override — 배경 이미지에 맞춰 텍스트 시작 위치/카드 크기 조정
+ALTER TABLE dearday_template_config ADD COLUMN IF NOT EXISTS card_max_width INT;
+ALTER TABLE dearday_template_config ADD COLUMN IF NOT EXISTS card_min_height INT;
+ALTER TABLE dearday_template_config ADD COLUMN IF NOT EXISTS content_top INT;
+ALTER TABLE dearday_template_config ADD COLUMN IF NOT EXISTS content_side INT;
 
 -- 이벤트별 템플릿 노출 순서 (admin drag&drop으로 지정)
 CREATE TABLE IF NOT EXISTS dearday_template_event_order (

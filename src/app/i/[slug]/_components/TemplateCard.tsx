@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { createContext, useContext } from 'react';
 import { useTranslations } from 'next-intl';
 import { imgUrl } from '@/lib/imgUrl';
 import { Phone, MapPin } from 'lucide-react';
@@ -37,11 +38,18 @@ interface Props {
     box_bg_bottom?: string | null;
     color_title_accent?: string | null;
     rsvp_button_color?: string | null;
+    card_max_width?: number | null;
+    card_min_height?: number | null;
+    content_top?: number | null;
+    content_side?: number | null;
   };
   /** 카드 타입 — 'thankcard' / 'congrats'면 eventLabel("YOU'RE INVITED") 숨김 */
   eventCardType?: 'invitation' | 'thankcard' | 'congrats';
   onPhotoClick?: () => void;
 }
+
+// 카드 배치 override — admin이 지정한 텍스트 시작 위치(px)를 절대 배치 필드에 더한다.
+const FieldOffsetCtx = createContext<{ top: number; side: number }>({ top: 0, side: 0 });
 
 function formatDate(iso?: string | null) {
   if (!iso) return '';
@@ -73,6 +81,7 @@ function isUrl(s?: string | null): s is string {
 
 /** Modern Bold 전용 — MAY | 18 | 2025 + SATURDAY, AT 6 O'CLOCK 2줄 */
 function ModernSplitDate({ field, iso, delay = 0 }: { field: TextField; iso: string; delay?: number }) {
+  const off = useContext(FieldOffsetCtx);
   const d = new Date(iso);
   if (isNaN(d.getTime())) return null;
   const month = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
@@ -96,9 +105,9 @@ function ModernSplitDate({ field, iso, delay = 0 }: { field: TextField; iso: str
       transition={{ duration: 0.8, delay, ease: 'easeOut' }}
       style={{
         position: 'absolute',
-        left: `${field.x}%`,
-        top: `${field.y}%`,
-        width: `${field.w}%`,
+        left: `calc(${field.x}% + ${off.side}px)`,
+        top: `calc(${field.y}% + ${off.top}px)`,
+        width: `calc(${field.w}% - ${off.side * 2}px)`,
         color: field.color,
         fontFamily: field.fontFamily,
         textAlign: 'center'
@@ -120,6 +129,7 @@ function ModernSplitDate({ field, iso, delay = 0 }: { field: TextField; iso: str
 
 /** Vintage Script 전용 — SUNDAY | 15 NOV | AT 5 PM 3분할 + 세로 디바이더 */
 function SplitDate({ field, iso, delay = 0 }: { field: TextField; iso: string; delay?: number }) {
+  const off = useContext(FieldOffsetCtx);
   const d = new Date(iso);
   if (isNaN(d.getTime())) return null;
   const weekday = d.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
@@ -137,9 +147,9 @@ function SplitDate({ field, iso, delay = 0 }: { field: TextField; iso: string; d
       transition={{ duration: 0.8, delay, ease: 'easeOut' }}
       style={{
         position: 'absolute',
-        left: `${field.x}%`,
-        top: `${field.y}%`,
-        width: `${field.w}%`,
+        left: `calc(${field.x}% + ${off.side}px)`,
+        top: `calc(${field.y}% + ${off.top}px)`,
+        width: `calc(${field.w}% - ${off.side * 2}px)`,
         color: field.color,
         fontFamily: field.fontFamily,
         display: 'flex',
@@ -165,6 +175,7 @@ function SplitDate({ field, iso, delay = 0 }: { field: TextField; iso: string; d
 }
 
 function FieldText({ field, children, delay = 0 }: { field: TextField; children: React.ReactNode; delay?: number }) {
+  const off = useContext(FieldOffsetCtx);
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -173,9 +184,9 @@ function FieldText({ field, children, delay = 0 }: { field: TextField; children:
       transition={{ duration: 0.8, delay, ease: 'easeOut' }}
       style={{
         position: 'absolute',
-        left: `${field.x}%`,
-        top: `${field.y}%`,
-        width: `${field.w}%`,
+        left: `calc(${field.x}% + ${off.side}px)`,
+        top: `calc(${field.y}% + ${off.top}px)`,
+        width: `calc(${field.w}% - ${off.side * 2}px)`,
         textAlign: field.align,
         fontSize: field.fontSize,
         fontWeight: field.fontWeight,
@@ -272,12 +283,18 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
   };
   const greeting = formatGreeting(recipientName, card.recipient_template);
 
+  // admin 배치 override — 카드 폭/최소 높이 + 텍스트 시작 위치(px)
+  const mx = templateColorOverride;
+  const fieldOffset = { top: mx?.content_top ?? 0, side: mx?.content_side ?? 0 };
+
   return (
-    <div className="w-full max-w-md mx-auto">
+    <FieldOffsetCtx.Provider value={fieldOffset}>
+    <div className="w-full mx-auto" style={{ maxWidth: mx?.card_max_width || 448 }}>
     <div
       className="relative w-full rounded-3xl overflow-hidden shadow-2xl"
       style={{
         aspectRatio: layout.aspectRatio.replace('/', ' / '),
+        minHeight: mx?.card_min_height || undefined,
         background: bg.imageUrl ? undefined : bg.gradient
       }}
     >
@@ -629,5 +646,6 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
       </div>
     )}
     </div>
+    </FieldOffsetCtx.Provider>
   );
 }

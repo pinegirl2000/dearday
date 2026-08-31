@@ -28,6 +28,10 @@ interface Props {
     box_bg_bottom?: string | null;
     color_title_accent?: string | null;
     rsvp_button_color?: string | null;
+    card_max_width?: number | null;
+    card_min_height?: number | null;
+    content_top?: number | null;
+    content_side?: number | null;
   };
   eventCardType?: 'invitation' | 'thankcard' | 'congrats';
 }
@@ -133,7 +137,11 @@ export default function VintageScriptCard({
   return (
     <div
       style={{
-        position: 'relative', width: '100%', maxWidth: 440, margin: '0 auto',
+        position: 'relative', width: '100%',
+        // admin 배치 override — 미지정 시 코드 default
+        maxWidth: templateColorOverride?.card_max_width || 440,
+        minHeight: templateColorOverride?.card_min_height || undefined,
+        margin: '0 auto',
         background: hasBgImage ? '#fff' : (background?.gradient || '#F4ECFA'),
         borderRadius: 24, overflow: 'hidden',
         boxShadow: '0 20px 50px rgba(123,94,167,0.18)',
@@ -146,7 +154,17 @@ export default function VintageScriptCard({
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, pointerEvents: 'none' }}
         />
       )}
-      <div style={{ position: 'relative', padding: '32px 24px 60px', zIndex: 1, textAlign: 'center' }}>
+      <div style={{
+        position: 'relative',
+        padding: '32px 24px 60px',
+        // admin 배치 override — shorthand 뒤에 와야 적용됨
+        ...(templateColorOverride?.content_top != null && { paddingTop: templateColorOverride.content_top }),
+        ...(templateColorOverride?.content_side != null && {
+          paddingLeft: templateColorOverride.content_side,
+          paddingRight: templateColorOverride.content_side
+        }),
+        zIndex: 1, textAlign: 'center'
+      }}>
         {/* 1. 상단 라벨 — event_label 텍스트. thank/congrats는 숨김.
             baptism이면서 라벨이 비어 있으면 상단에 아무것도 렌더하지 않음 (기존 ✝ 아이콘 제거) */}
         {!hideEventLabel && <FadeUp delay={0.1}>

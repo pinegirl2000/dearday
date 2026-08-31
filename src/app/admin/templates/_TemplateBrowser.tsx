@@ -11,6 +11,7 @@ import RsvpForm from '@/app/i/[slug]/_components/RsvpForm';
 import { getTheme } from '@/lib/theme';
 import TemplateInfoPanel from './_TemplateInfoPanel';
 import TemplateColorEditor from './_TemplateColorEditor';
+import TemplateMetricsEditor from './_TemplateMetricsEditor';
 import type { BaseCard, LayoutId } from '@/types/card';
 import type { TemplateColors } from '@/lib/actions/templateConfig';
 
@@ -198,7 +199,15 @@ export default function TemplateBrowser({ configs, colorOverrides }: Props) {
           boxTextColor: selectedTpl.infoBox?.textColor
         }}
         initial={localColors[selectedTpl.id] || null}
-        onSaved={(colors) => setLocalColors((s) => ({ ...s, [selectedTpl.id]: colors }))}
+        onSaved={(colors) => setLocalColors((s) => ({ ...s, [selectedTpl.id]: { ...s[selectedTpl.id], ...colors } }))}
+      />
+
+      {/* 배치 override (DB) — 카드 크기 / 텍스트 시작 위치 */}
+      <TemplateMetricsEditor
+        key={`metrics-${selectedTpl.id}`}
+        templateId={selectedTpl.id}
+        initial={localColors[selectedTpl.id] || null}
+        onSaved={(metrics) => setLocalColors((s) => ({ ...s, [selectedTpl.id]: { ...s[selectedTpl.id], ...metrics } }))}
       />
 
       {activeLayoutId && (

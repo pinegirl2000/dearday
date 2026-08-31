@@ -45,6 +45,10 @@ interface Props {
     box_bg_top?: string | null;
     box_bg_bottom?: string | null;
     rsvp_button_color?: string | null;
+    card_max_width?: number | null;
+    card_min_height?: number | null;
+    content_top?: number | null;
+    content_side?: number | null;
   };
   eventCardType?: 'invitation' | 'thankcard' | 'congrats';
   /** thank_* 레이아웃 상단 원형 사진 클릭 핸들러 (편집 모드 only) — 부모가 file picker 트리거 */
@@ -165,7 +169,9 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
       style={{
         position: 'relative',
         width: '100%',
-        maxWidth: 440,
+        // admin 배치 override — 미지정 시 코드 default
+        maxWidth: templateColorOverride?.card_max_width || 440,
+        minHeight: templateColorOverride?.card_min_height || undefined,
         margin: '0 auto',
         background: hasBgImage ? '#fff' : (background?.gradient || COLORS.bgCream),
         borderRadius: 24,
@@ -197,6 +203,12 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
           card.layout_id === 'thank_polaroid' ? '300px 20px 60px' :
           card.layout_id === 'thank_minimal' ? '120px 20px 60px' :
           '24px 20px 60px',
+        // admin 배치 override — 지정된 항목만 위 default를 덮어씀 (shorthand 뒤에 와야 적용됨)
+        ...(templateColorOverride?.content_top != null && { paddingTop: templateColorOverride.content_top }),
+        ...(templateColorOverride?.content_side != null && {
+          paddingLeft: templateColorOverride.content_side,
+          paddingRight: templateColorOverride.content_side
+        }),
         zIndex: 1
       }}>
         {/* thank_classic / thank_polaroid 전용: 상단 사진. thank_minimal은 사진 없음 */}
