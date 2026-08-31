@@ -147,16 +147,10 @@ export default function VintageScriptCard({
         />
       )}
       <div style={{ position: 'relative', padding: '32px 24px 60px', zIndex: 1, textAlign: 'center' }}>
-        {/* 1. 상단 라벨 — baptism은 십자가 아이콘, 그 외는 event_label 텍스트. thank/congrats는 숨김 */}
+        {/* 1. 상단 라벨 — event_label 텍스트. thank/congrats는 숨김.
+            baptism이면서 라벨이 비어 있으면 상단에 아무것도 렌더하지 않음 (기존 ✝ 아이콘 제거) */}
         {!hideEventLabel && <FadeUp delay={0.1}>
-          {card.event_type === 'baptism' && !card.event_label ? (
-            <div style={{
-              color: main, fontFamily: 'serif',
-              fontSize: 36, lineHeight: 1, marginTop: 28, marginBottom: 18, opacity: 0.9
-            }} aria-label="cross">
-              ✝
-            </div>
-          ) : (
+          {card.event_type === 'baptism' && !card.event_label ? null : (
             <div style={{
               fontFamily: SCRIPT, fontSize: 14, fontWeight: 700, color: main,
               letterSpacing: '0.6em', lineHeight: 1.1, marginTop: 28, marginBottom: 18
