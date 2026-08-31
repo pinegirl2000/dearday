@@ -331,9 +331,8 @@ export const TEMPLATES: TemplateMeta[] = [
     colorMain: '#A85FBA',
     colorSub: '#EFE0F5',
     recommendEvents: ['baptism', 'meeting', 'birthday', 'etc'],
-    // 텍스트가 아치형 프레임 안쪽에 머무는 레이아웃만 허용 —
-    // rightside/rightbottom 계열은 좌우 꽃 장식과 겹쳐 제외
-    allowedLayouts: ['layout-classic', 'layout-center', 'layout-topcenter', 'layout-3', 'layout-6', 'layout-4']
+    // 아치형 프레임 안에 텍스트가 정확히 들어가는 2종만 허용
+    allowedLayouts: ['layout-classic', 'layout-4']
   }
 ];
 
