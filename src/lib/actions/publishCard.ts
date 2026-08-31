@@ -230,14 +230,13 @@ export async function duplicateCard(slug: string, ownerToken?: string | null): P
   if (!card) return { ok: false, error: '권한이 없거나 카드를 찾을 수 없습니다.' };
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id || null;
-  const userEmail = session?.user?.email || null;
   const newSlug = generateSlug();
   const newOwnerToken = generateOwnerToken();
   try {
     // 원본 모든 컬럼 복사 — id/slug/owner_token/user_id/created_at/updated_at만 새로 부여
     await pool.query(
       `INSERT INTO dearday_card (
-        slug, owner_token, user_id, user_email,
+        slug, owner_token, user_id,
         event_type, title, theme, bg_id, layout_id, envelope_anim, custom_bg_url, font_family,
         body, event_date, event_place, map_url, contact_name, contact_phone, extra_info,
         greeting_oneliner, recipient_template, event_label,
@@ -245,14 +244,14 @@ export async function duplicateCard(slug: string, ownerToken?: string | null): P
         expiry_date, plan
       )
       SELECT
-        $1, $2, $3, $4,
+        $1, $2, $3,
         event_type, title, theme, bg_id, layout_id, envelope_anim, custom_bg_url, font_family,
         body, event_date, event_place, map_url, contact_name, contact_phone, extra_info,
         greeting_oneliner, recipient_template, event_label,
         rsvp_enabled, rsvp_deadline, rsvp_max_per_card, rsvp_collect_names, rsvp_allow_oneliner, rsvp_allow_change,
         expiry_date, plan
-      FROM dearday_card WHERE slug=$5`,
-      [newSlug, newOwnerToken, userId, userEmail, slug]
+      FROM dearday_card WHERE slug=$4`,
+      [newSlug, newOwnerToken, userId, slug]
     );
     revalidatePath('/cards');
     return { ok: true, slug: newSlug, ownerToken: newOwnerToken };
