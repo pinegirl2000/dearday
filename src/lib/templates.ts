@@ -333,7 +333,7 @@ export const TEMPLATES: TemplateMeta[] = [
     recommendEvents: ['baptism', 'meeting', 'birthday', 'etc'],
     // 텍스트가 아치형 프레임 안쪽에 머무는 레이아웃만 허용 —
     // rightside/rightbottom 계열은 좌우 꽃 장식과 겹쳐 제외
-    allowedLayouts: ['layout-classic', 'layout-center', 'layout-topcenter', 'layout-3', 'layout-6']
+    allowedLayouts: ['layout-classic', 'layout-center', 'layout-topcenter', 'layout-3', 'layout-6', 'layout-4']
   }
 ];
 
