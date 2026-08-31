@@ -7,7 +7,7 @@ export type BackgroundId =
   | 'bg-1' | 'bg-2' | 'bg-3' | 'bg-4' | 'bg-cream'
   | 'bg-img-1' | 'bg-img-2' | 'bg-img-3' | 'bg-img-4'
   | 'bg-img-6' | 'bg-img-7' | 'bg-img-8' | 'bg-img-9' | 'bg-img-10' | 'bg-img-11'
-  | 'bg-img-12' | 'bg-img-13' | 'bg-img-14' | 'bg-img-15' | 'bg-img-16' | 'bg-img-17' | 'bg-img-18' | 'bg-img-19' | 'bg-img-20';
+  | 'bg-img-12' | 'bg-img-13' | 'bg-img-14' | 'bg-img-15' | 'bg-img-16' | 'bg-img-17' | 'bg-img-18' | 'bg-img-19' | 'bg-img-20' | 'bg-img-21';
 
 export interface BackgroundMeta {
   id: BackgroundId;
@@ -90,6 +90,7 @@ export const BACKGROUNDS: BackgroundMeta[] = [
   { id: 'bg-img-18', name: 'Gold Splatter Beige', imageUrl: '/templates/template-18-bg.png', tone: 'light', availableEvents: ['opening', 'meeting', 'etc'] },
   { id: 'bg-img-19', name: 'Black Gold Gala', imageUrl: '/templates/template-19-bg.png', tone: 'dark', availableEvents: ['birthday', 'opening', 'etc'] },
   { id: 'bg-img-20', name: 'Iris & Hearts', imageUrl: '/templates/template-20-bg.png', tone: 'light', availableEvents: ['birthday', 'etc'] },
+  { id: 'bg-img-21', name: 'Lavender Peony Frame', imageUrl: '/templates/template-26-bg.png', tone: 'light', availableEvents: ALL_EVENTS },
   // legacy fallback
   {
     id: 'bg-none',

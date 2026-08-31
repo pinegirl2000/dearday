@@ -321,6 +321,17 @@ export const TEMPLATES: TemplateMeta[] = [
     colorSub: '#FCE4EC',
     recommendEvents: ['birthday', 'etc'],
     draft: true
+  },
+  {
+    id: 'tpl-lavender-peony',
+    name: 'Lavender Peony Frame',
+    description: 'Pink peonies & baby’s breath on lavender with an arched cream panel',
+    bg_id: 'bg-img-21',
+    layout_id: 'layout-classic',
+    colorMain: '#A85FBA',
+    colorSub: '#EFE0F5',
+    recommendEvents: ['baptism', 'meeting', 'birthday', 'etc'],
+    allowedLayouts: ['layout-classic']
   }
 ];
 
