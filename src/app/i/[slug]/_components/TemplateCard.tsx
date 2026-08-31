@@ -285,7 +285,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
         <img
           src={imgUrl(bg.imageUrl)}
           alt={bg.name}
-          className="absolute inset-0 w-full h-full object-cover"
+          className={`absolute inset-0 w-full h-full ${bg.fit === 'fill' ? 'object-fill' : 'object-cover'}`}
           draggable={false}
         />
       )}

@@ -18,6 +18,11 @@ export interface BackgroundMeta {
   gradient?: string;
   tone: 'light' | 'medium' | 'dark';
   /**
+   * 이미지 맞춤 방식. 'fill'이면 카드 크기에 맞춰 늘려 좌우 잘림 없이 전체를 보여줌.
+   * 프레임/테두리 디자인 배경에 사용. 미지정 시 'cover'(비율 유지 + 잘림).
+   */
+  fit?: 'cover' | 'fill';
+  /**
    * 이 배경을 사용할 수 있는 이벤트 타입 목록.
    * 비어있으면 모든 이벤트에서 사용 가능.
    */
@@ -90,7 +95,7 @@ export const BACKGROUNDS: BackgroundMeta[] = [
   { id: 'bg-img-18', name: 'Gold Splatter Beige', imageUrl: '/templates/template-18-bg.png', tone: 'light', availableEvents: ['opening', 'meeting', 'etc'] },
   { id: 'bg-img-19', name: 'Black Gold Gala', imageUrl: '/templates/template-19-bg.png', tone: 'dark', availableEvents: ['birthday', 'opening', 'etc'] },
   { id: 'bg-img-20', name: 'Iris & Hearts', imageUrl: '/templates/template-20-bg.png', tone: 'light', availableEvents: ['birthday', 'etc'] },
-  { id: 'bg-img-21', name: 'Lavender Peony Frame', imageUrl: '/templates/template-26-bg.png', tone: 'light', availableEvents: ALL_EVENTS },
+  { id: 'bg-img-21', name: 'Lavender Peony Frame', imageUrl: '/templates/template-26-bg.png', tone: 'light', fit: 'fill', availableEvents: ALL_EVENTS },
   // legacy fallback
   {
     id: 'bg-none',

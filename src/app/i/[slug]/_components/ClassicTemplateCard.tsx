@@ -181,7 +181,8 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
           alt=""
           style={{
             position: 'absolute', inset: 0, width: '100%', height: '100%',
-            objectFit: 'cover',
+            // fit: 'fill' 배경(프레임 디자인)은 카드 크기에 맞춰 늘려 좌우 꽃 잘림 방지
+            objectFit: background!.fit === 'fill' ? 'fill' : 'cover',
             // text 길이로 카드 높이가 변해도 bg 상단 기준으로 일관되게 — thank_classic은 위 고정
             objectPosition: card.layout_id === 'thank_classic' ? 'top center' : 'center',
             zIndex: 0, pointerEvents: 'none'
