@@ -225,9 +225,13 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
             disabled={pending || locked}
             className="min-h-[34px] text-xs rounded-lg border font-medium transition flex items-center justify-center gap-1 disabled:opacity-50"
             style={{
-              background: attend === true ? ACCENT_SOFT : ACCENT,
-              color: attend === true ? ACCENT_DEEP : ACCENT_SOFT,
-              borderColor: attend === true ? ACCENT_DEEP : ACCENT_SOFT
+              background: ACCENT,
+              color: '#fff',
+              borderColor: attend === true ? '#fff' : ACCENT_SOFT,
+              borderWidth: attend === true ? 2 : 1,
+              opacity: attend === null ? 1 : (attend === true ? 1 : 0.45),
+              boxShadow: attend === true ? `0 0 0 3px ${ACCENT_SOFT}` : 'none',
+              fontWeight: attend === true ? 700 : 500
             }}
           >
             <Check className="w-3 h-3" /> 참석합니다
@@ -238,9 +242,13 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
             disabled={pending || locked}
             className="min-h-[34px] text-xs rounded-lg border font-medium transition flex items-center justify-center gap-1 disabled:opacity-50"
             style={{
-              background: attend === false ? ACCENT_SOFT : ACCENT_DEEP,
-              color: attend === false ? ACCENT_DEEP : ACCENT_SOFT,
-              borderColor: attend === false ? ACCENT_DEEP : ACCENT_SOFT
+              background: ACCENT_DEEP,
+              color: '#fff',
+              borderColor: attend === false ? '#fff' : ACCENT_SOFT,
+              borderWidth: attend === false ? 2 : 1,
+              opacity: attend === null ? 1 : (attend === false ? 1 : 0.45),
+              boxShadow: attend === false ? `0 0 0 3px ${ACCENT_SOFT}` : 'none',
+              fontWeight: attend === false ? 700 : 500
             }}
           >
             <X className="w-3 h-3" /> 불참합니다
@@ -278,9 +286,13 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
             disabled={pending || locked}
             className="min-h-[52px] rounded-xl border font-medium transition flex items-center justify-center gap-2 disabled:opacity-50"
             style={{
-              background: attend === true ? ACCENT_SOFT : ACCENT,
-              color: attend === true ? ACCENT_DEEP : ACCENT_SOFT,
-              borderColor: attend === true ? ACCENT_DEEP : ACCENT_SOFT
+              background: ACCENT,
+              color: '#fff',
+              borderColor: attend === true ? '#fff' : ACCENT_SOFT,
+              borderWidth: attend === true ? 2 : 1,
+              opacity: attend === null ? 1 : (attend === true ? 1 : 0.45),
+              boxShadow: attend === true ? `0 0 0 3px ${ACCENT_SOFT}` : 'none',
+              fontWeight: attend === true ? 700 : 500
             }}
           >
             <Check className="w-4 h-4" /> 참석합니다
@@ -291,9 +303,13 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
             disabled={pending || locked}
             className="min-h-[52px] rounded-xl border font-medium transition flex items-center justify-center gap-2 disabled:opacity-50"
             style={{
-              background: attend === false ? ACCENT_SOFT : ACCENT_DEEP,
-              color: attend === false ? ACCENT_DEEP : ACCENT_SOFT,
-              borderColor: attend === false ? ACCENT_DEEP : ACCENT_SOFT
+              background: ACCENT_DEEP,
+              color: '#fff',
+              borderColor: attend === false ? '#fff' : ACCENT_SOFT,
+              borderWidth: attend === false ? 2 : 1,
+              opacity: attend === null ? 1 : (attend === false ? 1 : 0.45),
+              boxShadow: attend === false ? `0 0 0 3px ${ACCENT_SOFT}` : 'none',
+              fontWeight: attend === false ? 700 : 500
             }}
           >
             <X className="w-4 h-4" /> 불참합니다
