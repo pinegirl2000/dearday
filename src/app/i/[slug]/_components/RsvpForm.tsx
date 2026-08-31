@@ -185,7 +185,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
     <div className={compact ? 'space-y-2' : 'space-y-4'}>
       <div className="text-center">
         <div style={{ color: ACCENT, opacity: 0.6, fontSize: 11, marginBottom: 4, lineHeight: 1 }}>✽</div>
-        <h3 className={`font-semibold ${compact ? 'text-sm' : 'text-lg'}`} style={{ color: ACCENT }}>Will you join us?</h3>
+        <h3 className={`font-semibold ${compact ? 'text-sm' : 'text-lg'}`} style={{ color: ACCENT }}>참석여부</h3>
         {hasExisting && locked && (
           <p className={`mt-1 font-semibold ${compact ? 'text-[11px]' : 'text-sm'}`} style={{ color: ACCENT_DEEP }}>
             {t.rich('alreadyReplied', {
@@ -225,12 +225,12 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
             disabled={pending || locked}
             className="min-h-[34px] text-xs rounded-lg border font-medium transition flex items-center justify-center gap-1 disabled:opacity-50"
             style={{
-              background: attend === true ? ACCENT : ACCENT_SOFT,
-              color: attend === true ? '#fff' : ACCENT_DEEP,
-              borderColor: ACCENT
+              background: attend === true ? ACCENT_SOFT : ACCENT,
+              color: attend === true ? ACCENT_DEEP : ACCENT_SOFT,
+              borderColor: attend === true ? ACCENT_DEEP : ACCENT_SOFT
             }}
           >
-            <Check className="w-3 h-3" /> Attend
+            <Check className="w-3 h-3" /> 참석합니다
           </motion.button>
           <motion.button
             whileTap={{ scale: 0.96 }}
@@ -238,12 +238,12 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
             disabled={pending || locked}
             className="min-h-[34px] text-xs rounded-lg border font-medium transition flex items-center justify-center gap-1 disabled:opacity-50"
             style={{
-              background: attend === false ? ACCENT_DEEP : ACCENT_SOFT,
-              color: attend === false ? '#fff' : ACCENT_DEEP,
-              borderColor: ACCENT_DEEP
+              background: attend === false ? ACCENT_SOFT : ACCENT_DEEP,
+              color: attend === false ? ACCENT_DEEP : ACCENT_SOFT,
+              borderColor: attend === false ? ACCENT_DEEP : ACCENT_SOFT
             }}
           >
-            <X className="w-3 h-3" /> Decline
+            <X className="w-3 h-3" /> 불참합니다
           </motion.button>
           {attend === true && max > 1 && (
             <div className="min-h-[34px] rounded-lg border flex items-center justify-between px-1.5"
@@ -278,12 +278,12 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
             disabled={pending || locked}
             className="min-h-[52px] rounded-xl border font-medium transition flex items-center justify-center gap-2 disabled:opacity-50"
             style={{
-              background: attend === true ? ACCENT : ACCENT_SOFT,
-              color: attend === true ? '#fff' : ACCENT_DEEP,
-              borderColor: ACCENT
+              background: attend === true ? ACCENT_SOFT : ACCENT,
+              color: attend === true ? ACCENT_DEEP : ACCENT_SOFT,
+              borderColor: attend === true ? ACCENT_DEEP : ACCENT_SOFT
             }}
           >
-            <Check className="w-4 h-4" /> Attend
+            <Check className="w-4 h-4" /> 참석합니다
           </motion.button>
           <motion.button
             whileTap={{ scale: 0.96 }}
@@ -291,12 +291,12 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
             disabled={pending || locked}
             className="min-h-[52px] rounded-xl border font-medium transition flex items-center justify-center gap-2 disabled:opacity-50"
             style={{
-              background: attend === false ? ACCENT_DEEP : ACCENT_SOFT,
-              color: attend === false ? '#fff' : ACCENT_DEEP,
-              borderColor: ACCENT_DEEP
+              background: attend === false ? ACCENT_SOFT : ACCENT_DEEP,
+              color: attend === false ? ACCENT_DEEP : ACCENT_SOFT,
+              borderColor: attend === false ? ACCENT_DEEP : ACCENT_SOFT
             }}
           >
-            <X className="w-4 h-4" /> Decline
+            <X className="w-4 h-4" /> 불참합니다
           </motion.button>
         </div>
       )}
