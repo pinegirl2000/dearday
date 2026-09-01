@@ -58,7 +58,8 @@ function FadeUp({ delay = 0, children, style }: { delay?: number; children: Reac
 function SplitDate({ iso, color }: { iso: string; color: string }) {
   const d = new Date(iso);
   if (isNaN(d.getTime())) return null;
-  const weekday = d.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+  // 요일은 축약형(SUN) — 좁은 화면에서 3분할이 넘치지 않도록
+  const weekday = d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
   const day = String(d.getDate());
   const month = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
   const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
@@ -66,16 +67,16 @@ function SplitDate({ iso, color }: { iso: string; color: string }) {
   return (
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      gap: 'clamp(6px, 2vw, 14px)', color, fontFamily: SERIF
+      gap: 'clamp(9px, 2.6vw, 14px)', color, fontFamily: SERIF
     }}>
-      <span style={{ flex: 1, fontSize: 'clamp(13px, 3.6vw, 16px)', fontWeight: 500, letterSpacing: '0.18em', textAlign: 'right' }}>{weekday}</span>
+      <span style={{ flex: 1, fontSize: 'clamp(14px, 4vw, 16px)', fontWeight: 500, letterSpacing: '0.18em', textAlign: 'right' }}>{weekday}</span>
       <span style={{ width: 1, height: 50, background: color, opacity: 0.55 }} />
       <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1.05 }}>
         <span style={{ fontSize: 'clamp(26px, 7.2vw, 32px)', fontWeight: 700 }}>{day}</span>
         <span style={{ fontSize: 'clamp(11px, 3vw, 13px)', letterSpacing: '0.2em' }}>{month}</span>
       </span>
       <span style={{ width: 1, height: 50, background: color, opacity: 0.55 }} />
-      <span style={{ flex: 1, fontSize: 'clamp(13px, 3.6vw, 16px)', fontWeight: 500, letterSpacing: '0.18em', textAlign: 'left' }}>{time}</span>
+      <span style={{ flex: 1, fontSize: 'clamp(14px, 4vw, 16px)', fontWeight: 500, letterSpacing: '0.18em', textAlign: 'left' }}>{time}</span>
     </div>
   );
 }
@@ -255,7 +256,7 @@ export default function VintageScriptCard({
             <div style={{
               // 기준 폭 대비 %로 환산 — 좁은 화면에서도 프레임 안쪽에 여백을 두고 들어감
               // (날짜 글자·간격이 clamp로 함께 줄어들어 넘치지 않음)
-              maxWidth: pctOf(templateColorOverride?.box_max_width || 280), margin: '0 auto 18px', padding: '16px 18px',
+              maxWidth: pctOf(templateColorOverride?.box_max_width || 320), margin: '0 auto 18px', padding: '16px 18px',
               background: boxBg,
               backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
               border: `1px solid ${main}`,
