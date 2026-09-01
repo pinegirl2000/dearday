@@ -165,6 +165,12 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
   // Baptism이면 장식을 ✽ → ✝ 십자가로 교체
   const decoIcon = card.event_type === 'baptism' ? '✝' : '✽';
 
+  // 배치 override는 admin이 기준 폭(card_max_width)에서 맞춘 px 값.
+  // 배경 프레임은 카드 폭의 비율로 그려지므로, px를 기준 폭 대비 %로 환산해야
+  // 좁은 모바일 화면에서도 텍스트/박스가 프레임 안쪽에 그대로 머문다.
+  const refWidth = templateColorOverride?.card_max_width || 440;
+  const pctOf = (px?: number | null) => (px == null ? undefined : `${((px / refWidth) * 100).toFixed(3)}%`);
+
   return (
     <div
       style={{
@@ -205,10 +211,10 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
           card.layout_id === 'thank_minimal' ? '120px 20px 60px' :
           '24px 20px 60px',
         // admin 배치 override — 지정된 항목만 위 default를 덮어씀 (shorthand 뒤에 와야 적용됨)
-        ...(templateColorOverride?.content_top != null && { paddingTop: templateColorOverride.content_top }),
+        ...(templateColorOverride?.content_top != null && { paddingTop: pctOf(templateColorOverride.content_top) }),
         ...(templateColorOverride?.content_side != null && {
-          paddingLeft: templateColorOverride.content_side,
-          paddingRight: templateColorOverride.content_side
+          paddingLeft: pctOf(templateColorOverride.content_side),
+          paddingRight: pctOf(templateColorOverride.content_side)
         }),
         zIndex: 1
       }}>
@@ -374,8 +380,8 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
                 padding: '12px 18px',
                 // Topdown Text는 box를 title 바로 아래에 (body가 box 다음으로 이동)
                 margin: card.layout_id === 'layout-7' ? '24px auto 14px' : '20px auto 14px',
-                // admin 배치 override — 정보 박스 가로
-                maxWidth: templateColorOverride?.box_max_width || 320,
+                // admin 배치 override — 정보 박스 가로 (기준 폭 대비 %) → 모바일에서도 프레임 안쪽 유지
+                maxWidth: pctOf(templateColorOverride?.box_max_width || 320),
                 background: boxBg,
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)',

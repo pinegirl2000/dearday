@@ -389,7 +389,8 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
           onClick={() => handleSubmit()}
           disabled={pending}
           className={`w-full font-semibold text-white shadow disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1 ${compact ? 'min-h-[34px] text-xs rounded-lg' : 'min-h-[52px] text-base rounded-xl'}`}
-          style={{ background: ACCENT }}
+          // Attend/Decline 버튼 행과 같은 폭 — 카드 전체 폭으로 늘어나 프레임을 넘지 않도록
+          style={{ background: ACCENT, maxWidth: compact ? 280 : 320, marginLeft: 'auto', marginRight: 'auto' }}
         >
           {pending ? 'Sending...' : (<><Heart className={compact ? 'w-3 h-3' : 'w-4 h-4'} /> {hasExisting ? 'Update' : 'Reply'}</>)}
         </motion.button>

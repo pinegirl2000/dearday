@@ -132,6 +132,11 @@ export default function VintageScriptCard({
     );
   };
 
+  // 배치 override는 기준 폭(card_max_width)에서 맞춘 px 값 —
+  // 배경 프레임이 카드 폭 비율로 그려지므로 %로 환산해야 모바일에서도 프레임 안쪽에 머문다.
+  const refWidth = templateColorOverride?.card_max_width || 440;
+  const pctOf = (px?: number | null) => (px == null ? undefined : `${((px / refWidth) * 100).toFixed(3)}%`);
+
   const isDateHi = highlightedField === 'event_date';
   const isPhoneHi = highlightedField === 'contact_phone';
 
@@ -164,10 +169,10 @@ export default function VintageScriptCard({
         position: 'relative',
         padding: '32px 24px 60px',
         // admin 배치 override — shorthand 뒤에 와야 적용됨
-        ...(templateColorOverride?.content_top != null && { paddingTop: templateColorOverride.content_top }),
+        ...(templateColorOverride?.content_top != null && { paddingTop: pctOf(templateColorOverride.content_top) }),
         ...(templateColorOverride?.content_side != null && {
-          paddingLeft: templateColorOverride.content_side,
-          paddingRight: templateColorOverride.content_side
+          paddingLeft: pctOf(templateColorOverride.content_side),
+          paddingRight: pctOf(templateColorOverride.content_side)
         }),
         zIndex: 1, textAlign: 'center'
       }}>
@@ -248,7 +253,7 @@ export default function VintageScriptCard({
         {!hideEventLabel && (card.event_date || card.event_place || card.map_url || editable) && (
           <FadeUp delay={0.3}>
             <div style={{
-              maxWidth: templateColorOverride?.box_max_width || 280, margin: '0 auto 18px', padding: '16px 18px',
+              maxWidth: pctOf(templateColorOverride?.box_max_width || 280), margin: '0 auto 18px', padding: '16px 18px',
               background: boxBg,
               backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
               border: `1px solid ${main}`,
