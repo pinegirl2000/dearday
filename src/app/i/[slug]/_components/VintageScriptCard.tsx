@@ -253,7 +253,8 @@ export default function VintageScriptCard({
         {!hideEventLabel && (card.event_date || card.event_place || card.map_url || editable) && (
           <FadeUp delay={0.3}>
             <div style={{
-              maxWidth: pctOf(templateColorOverride?.box_max_width || 280), margin: '0 auto 18px', padding: '16px 18px',
+              // px 고정 유지 — %로 줄이면 좁은 화면에서 날짜 3분할이 박스를 넘쳐 깨짐
+              maxWidth: templateColorOverride?.box_max_width || 280, margin: '0 auto 18px', padding: '16px 18px',
               background: boxBg,
               backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
               border: `1px solid ${main}`,
