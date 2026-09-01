@@ -66,7 +66,7 @@ function SplitDate({ iso, color }: { iso: string; color: string }) {
   return (
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      gap: 14, color, fontFamily: SERIF
+      gap: 'clamp(6px, 2vw, 14px)', color, fontFamily: SERIF
     }}>
       <span style={{ flex: 1, fontSize: 'clamp(13px, 3.6vw, 16px)', fontWeight: 500, letterSpacing: '0.18em', textAlign: 'right' }}>{weekday}</span>
       <span style={{ width: 1, height: 50, background: color, opacity: 0.55 }} />
@@ -253,8 +253,9 @@ export default function VintageScriptCard({
         {!hideEventLabel && (card.event_date || card.event_place || card.map_url || editable) && (
           <FadeUp delay={0.3}>
             <div style={{
-              // px 고정 유지 — %로 줄이면 좁은 화면에서 날짜 3분할이 박스를 넘쳐 깨짐
-              maxWidth: templateColorOverride?.box_max_width || 280, margin: '0 auto 18px', padding: '16px 18px',
+              // 기준 폭 대비 %로 환산 — 좁은 화면에서도 프레임 안쪽에 여백을 두고 들어감
+              // (날짜 글자·간격이 clamp로 함께 줄어들어 넘치지 않음)
+              maxWidth: pctOf(templateColorOverride?.box_max_width || 280), margin: '0 auto 18px', padding: '16px 18px',
               background: boxBg,
               backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
               border: `1px solid ${main}`,

@@ -381,8 +381,8 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
                 // Topdown Text는 box를 title 바로 아래에 (body가 box 다음으로 이동)
                 margin: card.layout_id === 'layout-7' ? '24px auto 14px' : '20px auto 14px',
                 // admin 배치 override — 정보 박스 가로.
-                // px 고정 유지: %로 줄이면 좁은 화면에서 날짜 3분할이 박스를 넘쳐 깨짐
-                maxWidth: templateColorOverride?.box_max_width || 320,
+                // 기준 폭 대비 %로 환산 → 좁은 화면에서도 프레임 안쪽에 여백을 두고 들어감
+                maxWidth: pctOf(templateColorOverride?.box_max_width || 320),
                 background: boxBg,
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)',
