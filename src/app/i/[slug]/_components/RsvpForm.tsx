@@ -217,7 +217,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
       </div>
 
       {compact ? (
-        <div className={`grid ${attend === true && max > 1 ? 'grid-cols-3' : 'grid-cols-2'} gap-1.5 items-stretch mx-auto`}
+        <div className={`grid ${attend === true && max > 1 ? 'grid-cols-[1fr_1fr_1.4fr]' : 'grid-cols-2'} gap-1.5 items-stretch mx-auto`}
           style={{ maxWidth: 280 }}>
           <motion.button
             whileTap={{ scale: 0.96 }}
@@ -234,7 +234,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
               fontWeight: attend === true ? 700 : 500
             }}
           >
-            <Check className="w-3 h-3" /> 참석합니다
+            <Check className="w-3 h-3" /> 참석
           </motion.button>
           <motion.button
             whileTap={{ scale: 0.96 }}
@@ -251,11 +251,12 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
               fontWeight: attend === false ? 700 : 500
             }}
           >
-            <X className="w-3 h-3" /> 불참합니다
+            <X className="w-3 h-3" /> 불참
           </motion.button>
           {attend === true && max > 1 && (
-            <div className="min-h-[34px] rounded-lg border flex items-center justify-between px-1.5"
+            <div className="min-h-[34px] rounded-lg border flex items-center justify-between gap-1 px-1.5"
               style={{ borderColor: ACCENT, background: ACCENT_SOFT }}>
+              <span className="text-[10px] font-medium shrink-0" style={{ color: ACCENT_DEEP }}>참석인원</span>
               <button
                 type="button"
                 onClick={() => adjustCount(-1)}
@@ -295,7 +296,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
               fontWeight: attend === true ? 700 : 500
             }}
           >
-            <Check className="w-4 h-4" /> 참석합니다
+            <Check className="w-4 h-4" /> 참석
           </motion.button>
           <motion.button
             whileTap={{ scale: 0.96 }}
@@ -312,7 +313,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
               fontWeight: attend === false ? 700 : 500
             }}
           >
-            <X className="w-4 h-4" /> 불참합니다
+            <X className="w-4 h-4" /> 불참
           </motion.button>
         </div>
       )}
@@ -328,7 +329,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
             {/* 비-compact일 때만 별도 카운트 컨트롤 (compact는 위 3열에 포함됨) */}
             {!compact && max > 1 && (
               <div className="flex items-center justify-between rounded-xl p-4" style={{ background: theme.colors.bg }}>
-                <span className="font-medium text-sm" style={{ color: theme.colors.deep }}>Attendees</span>
+                <span className="font-medium text-sm" style={{ color: theme.colors.deep }}>참석인원</span>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => adjustCount(-1)}
@@ -390,7 +391,8 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
           disabled={pending}
           className={`w-full font-semibold text-white shadow disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1 ${compact ? 'min-h-[34px] text-xs rounded-lg' : 'min-h-[52px] text-base rounded-xl'}`}
           // Attend/Decline 버튼 행과 같은 폭 — 카드 전체 폭으로 늘어나 프레임을 넘지 않도록
-          style={{ background: ACCENT, maxWidth: compact ? 280 : 320, marginLeft: 'auto', marginRight: 'auto' }}
+          // 위 버튼 행보다 좁게 — 카드 폭을 가로지르지 않도록
+          style={{ background: ACCENT, maxWidth: compact ? 150 : 200, marginLeft: 'auto', marginRight: 'auto' }}
         >
           {pending ? 'Sending...' : (<><Heart className={compact ? 'w-3 h-3' : 'w-4 h-4'} /> {hasExisting ? 'Update' : 'Reply'}</>)}
         </motion.button>
