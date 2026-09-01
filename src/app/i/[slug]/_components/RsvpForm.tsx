@@ -399,7 +399,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
           // 위 버튼 행보다 좁게 — 카드 폭을 가로지르지 않도록
           style={{ background: ACCENT, maxWidth: compact ? 150 : 200, marginLeft: 'auto', marginRight: 'auto' }}
         >
-          {pending ? 'Sending...' : (<><Heart className={compact ? 'w-3 h-3' : 'w-4 h-4'} /> {hasExisting ? 'Update' : 'Reply'}</>)}
+          {pending ? '전송 중...' : (<><Heart className={compact ? 'w-3 h-3' : 'w-4 h-4'} /> {hasExisting ? '수정' : '제출'}</>)}
         </motion.button>
       )}
     </div>
