@@ -66,6 +66,12 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
 
   const max = card.rsvp_max_per_card || 4;
   const count = adultCount + childCount;
+  // 카드 제목에 한글이 있으면 한국어 카드로 보고 RSVP 문구도 한글로.
+  // 그 외 언어 제목이면 영문 표기 (Attend / Decline / Pax / Reply)
+  const isKo = /[가-힣]/.test(card.title || '');
+  const L = isKo
+    ? { heading: '참석여부를 알려주세요', attend: '참석', decline: '불참', pax: '참석인원', submit: '제출', update: '수정', sending: '전송 중...' }
+    : { heading: 'Will you join us?', attend: 'Attend', decline: 'Decline', pax: 'Pax', submit: 'Reply', update: 'Update', sending: 'Sending...' };
   // 템플릿 페어링 색상 우선 — main(텍스트) / sub(버튼 배경). 없으면 envelope 팔레트 fallback.
   const tpl = findTemplateByPair(card.bg_id, card.layout_id);
   const envPalette = ENVELOPE_PALETTE[card.envelope_anim] || ENVELOPE_PALETTE['envelope-1'];
@@ -185,7 +191,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
     <div className={compact ? 'space-y-2' : 'space-y-4'}>
       <div className="text-center">
         <div style={{ color: ACCENT, opacity: 0.6, fontSize: 11, marginBottom: 4, lineHeight: 1 }}>✽</div>
-        <h3 className={`font-semibold ${compact ? 'text-sm' : 'text-lg'}`} style={{ color: ACCENT }}>참석여부를 알려주세요</h3>
+        <h3 className={`font-semibold ${compact ? 'text-sm' : 'text-lg'}`} style={{ color: ACCENT }}>{L.heading}</h3>
         {hasExisting && locked && (
           <p className={`mt-1 font-semibold ${compact ? 'text-[11px]' : 'text-sm'}`} style={{ color: ACCENT_DEEP }}>
             {t.rich('alreadyReplied', {
@@ -239,7 +245,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
               fontWeight: attend === true ? 700 : 500
             }}
           >
-            <Check className="w-3 h-3" /> 참석
+            <Check className="w-3 h-3" /> {L.attend}
           </motion.button>
           <motion.button
             whileTap={{ scale: 0.96 }}
@@ -256,12 +262,12 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
               fontWeight: attend === false ? 700 : 500
             }}
           >
-            <X className="w-3 h-3" /> 불참
+            <X className="w-3 h-3" /> {L.decline}
           </motion.button>
           {attend === true && max > 1 && (
             <div className="min-h-[34px] rounded-lg border flex items-center justify-between gap-1 px-1.5"
               style={{ borderColor: ACCENT, background: ACCENT_SOFT }}>
-              <span className="text-[10px] font-medium shrink-0" style={{ color: ACCENT_DEEP }}>참석인원</span>
+              <span className="text-[10px] font-medium shrink-0" style={{ color: ACCENT_DEEP }}>{L.pax}</span>
               <button
                 type="button"
                 onClick={() => adjustCount(-1)}
@@ -301,7 +307,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
               fontWeight: attend === true ? 700 : 500
             }}
           >
-            <Check className="w-4 h-4" /> 참석
+            <Check className="w-4 h-4" /> {L.attend}
           </motion.button>
           <motion.button
             whileTap={{ scale: 0.96 }}
@@ -318,7 +324,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
               fontWeight: attend === false ? 700 : 500
             }}
           >
-            <X className="w-4 h-4" /> 불참
+            <X className="w-4 h-4" /> {L.decline}
           </motion.button>
         </div>
       )}
@@ -334,7 +340,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
             {/* 비-compact일 때만 별도 카운트 컨트롤 (compact는 위 3열에 포함됨) */}
             {!compact && max > 1 && (
               <div className="flex items-center justify-between rounded-xl p-4" style={{ background: theme.colors.bg }}>
-                <span className="font-medium text-sm" style={{ color: theme.colors.deep }}>참석인원</span>
+                <span className="font-medium text-sm" style={{ color: theme.colors.deep }}>{L.pax}</span>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => adjustCount(-1)}
@@ -399,7 +405,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
           // 위 버튼 행보다 좁게 — 카드 폭을 가로지르지 않도록
           style={{ background: ACCENT, maxWidth: compact ? 150 : 200, marginLeft: 'auto', marginRight: 'auto' }}
         >
-          {pending ? '전송 중...' : (<><Heart className={compact ? 'w-3 h-3' : 'w-4 h-4'} /> {hasExisting ? '수정' : '제출'}</>)}
+          {pending ? L.sending : (<><Heart className={compact ? 'w-3 h-3' : 'w-4 h-4'} /> {hasExisting ? L.update : L.submit}</>)}
         </motion.button>
       )}
     </div>
