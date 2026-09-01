@@ -206,11 +206,16 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
           const d = new Date(card.rsvp_deadline);
           // 00:00:00 이면 시간 없이 입력된 것으로 간주 → 날짜만 표시
           const hasTime = d.getHours() !== 0 || d.getMinutes() !== 0;
-          const dateStr = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-          const timeStr = hasTime ? d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
+          // "4 OCT 2026" — 월은 대문자 축약
+          const dateStr = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).toUpperCase();
+          // "10:30AM" — 12시간제 + AM/PM 붙여쓰기
+          const h24 = d.getHours();
+          const ampm = h24 >= 12 ? 'PM' : 'AM';
+          const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
+          const timeStr = hasTime ? `${h12}:${String(d.getMinutes()).padStart(2, '0')}${ampm}` : '';
           return (
             <p className={`mt-1 ${compact ? 'text-[10px]' : 'text-xs'}`} style={{ color: theme.colors.muted, opacity: 0.85 }}>
-              Reply by {dateStr}{hasTime ? ` · ${timeStr}` : ''}
+              Reply by {dateStr}{hasTime ? ` ${timeStr}` : ''}
             </p>
           );
         })()}
