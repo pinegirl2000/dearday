@@ -12,6 +12,7 @@ import { getEventTypeMeta } from '@/lib/eventType';
 import { getBackground } from '@/lib/backgrounds';
 import TemplateCard from '@/app/i/[slug]/_components/TemplateCard';
 import SendStep from '@/app/cards/new/_components/SendStep';
+import ShareStatusButton from '@/components/cards/ShareStatusButton';
 import type { BaseCard } from '@/types/card';
 
 interface CardStats {
@@ -277,6 +278,10 @@ export default function RecentCardSelector({
               </button>
             );
           })}
+          {/* 로그인 없이 볼 수 있는 읽기 전용 응답 현황 링크 */}
+          <span className="ml-auto self-center pb-1.5">
+            <ShareStatusButton slug={c.slug} ownerToken={null} cardTitle={c.title} compact />
+          </span>
         </div>
         <div className="border-t border-hydrangea-200" />
       </div>
