@@ -30,9 +30,9 @@ function detectInAppBrowser(): { isInApp: boolean; appKey: string | null; isAndr
   return { isInApp: !!appKey, appKey, isAndroid, isIOS };
 }
 
-// 배너를 띄우지 않을 경로 — 수신자가 로그인 없이 보는 화면(초대장 열람)
+// 배너를 띄우지 않을 경로 — 로그인 없이 보는 화면(초대장 열람 /i/*, 응답 현황 공유 /r/*)
 function isGuestRoute(pathname: string | null): boolean {
-  return !!pathname && pathname.startsWith('/i/');
+  return !!pathname && (pathname.startsWith('/i/') || pathname.startsWith('/r/'));
 }
 
 export default function InAppBrowserBanner() {

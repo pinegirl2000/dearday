@@ -89,6 +89,9 @@ CREATE TABLE IF NOT EXISTS dearday_card (
 
 -- 카드 상단 이벤트 라벨 사용자 override (마이그레이션 — 기존 테이블에도 추가)
 ALTER TABLE dearday_card ADD COLUMN IF NOT EXISTS event_label TEXT;
+-- 응답 현황 공유 링크용 읽기 전용 토큰 (owner_token과 별개, 재발급으로 무효화)
+ALTER TABLE dearday_card ADD COLUMN IF NOT EXISTS share_token TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_dearday_card_share_token ON dearday_card(share_token) WHERE share_token IS NOT NULL;
 -- RSVP 옵션 — 기존 테이블에도 추가
 ALTER TABLE dearday_card ADD COLUMN IF NOT EXISTS rsvp_allow_oneliner BOOLEAN DEFAULT false;
 ALTER TABLE dearday_card ADD COLUMN IF NOT EXISTS rsvp_allow_change BOOLEAN DEFAULT true;

@@ -394,5 +394,33 @@
     "openingButton": "Opening...",
     "openInvitation": "Open invitation",
     "linkCopied": "Link copied"
+  },
+  "ShareStatus": {
+    "title": "RSVP Status",
+    "asOf": "As of {date}",
+    "readOnly": "Read-only — shared by the host",
+    "totalSent": "Sent",
+    "attending": "Attending",
+    "declined": "Declined",
+    "pending": "No reply",
+    "totalPeople": "{n} pax",
+    "readCount": "{n} opened",
+    "responseRate": "Response rate",
+    "replyVsSend": "{replies} replies / {total} sent",
+    "unit": "",
+    "listTitle": "Guest list",
+    "all": "All",
+    "read": "Opened",
+    "unread": "Not opened",
+    "pax": "{n} pax",
+    "companions": "With: {names}",
+    "notFound": "This link is not valid",
+    "notFoundHint": "The host may have regenerated the link, or the address is wrong.",
+    "expired": "This invitation has expired",
+    "eventDate": "Event",
+    "place": "Venue",
+    "deadline": "Reply by",
+    "refresh": "Refresh",
+    "poweredBy": "Made with DearDay"
   }
 }

@@ -11,6 +11,7 @@ import { Button, Sheet, Textarea } from '@/components/ui';
 import { listRecipients, bulkAddRecipients, deleteRecipient, deleteCard } from '@/lib/actions/recipients';
 import { useRouter } from 'next/navigation';
 import { Trash } from 'lucide-react';
+import ShareStatusButton from '@/components/cards/ShareStatusButton';
 
 interface Props {
   slug: string;
@@ -172,6 +173,8 @@ export default function ManageClient({ slug, cardTitle }: Props) {
 
         <div className="flex items-center gap-2 text-sm font-semibold text-hydrangea-700 mb-2">
           <Users className="w-4 h-4" /> Recipients {recipients.length}
+          {/* 로그인 없이 볼 수 있는 읽기 전용 현황 링크 */}
+          <span className="ml-auto"><ShareStatusButton slug={slug} ownerToken={ownerToken} cardTitle={cardTitle} compact /></span>
         </div>
         {recipients.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-3">

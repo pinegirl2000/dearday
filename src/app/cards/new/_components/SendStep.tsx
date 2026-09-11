@@ -12,6 +12,7 @@ import {
   updateRecipientName
 } from '@/lib/actions/recipients';
 import type { BaseCard } from '@/types/card';
+import ShareStatusButton from '@/components/cards/ShareStatusButton';
 
 interface Recipient {
   id: string;
@@ -720,12 +721,16 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
         const declinePct = denom > 0 ? (declinedRecords / denom) * 100 : 0;
         return (
           <div className="rounded-xl border border-hydrangea-100 bg-hydrangea-50/30 p-3 space-y-3">
-            <div className="flex items-baseline gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-[11px] font-bold text-hydrangea-700 uppercase tracking-wide flex items-center gap-1">
                 <TrendingUp className="w-3.5 h-3.5" /> {t('statsTitle')}
               </h3>
               <span className="text-[10px] text-hydrangea-400">
                 {t('asOf', { date: new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) })}
+              </span>
+              {/* 로그인 없이 볼 수 있는 읽기 전용 현황 링크 */}
+              <span className="ml-auto">
+                <ShareStatusButton slug={slug} ownerToken={ownerToken} cardTitle={card?.title} compact />
               </span>
             </div>
             <div className="grid grid-cols-3 gap-2">
