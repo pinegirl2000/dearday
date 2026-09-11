@@ -13,6 +13,7 @@ import { getBackground } from '@/lib/backgrounds';
 import TemplateCard from '@/app/i/[slug]/_components/TemplateCard';
 import SendStep from '@/app/cards/new/_components/SendStep';
 import ShareStatusButton from '@/components/cards/ShareStatusButton';
+import RsvpDeadlineEditor from '@/components/cards/RsvpDeadlineEditor';
 import type { BaseCard } from '@/types/card';
 
 interface CardStats {
@@ -313,6 +314,16 @@ export default function RecentCardSelector({
             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
           </button>
         </div>
+
+        {/* 회신 마감일 인라인 수정 — 카드가 잠겨도 마감일은 여기서 바꿀 수 있음 */}
+        {c.rsvp_enabled && (
+          <RsvpDeadlineEditor
+            key={`${c.slug}-deadline`}
+            slug={c.slug}
+            ownerToken={null}
+            initial={c.rsvp_deadline as string | null}
+          />
+        )}
 
         {/* thank/congrats 카드 (RSVP 비활성) → 발송·읽음 중심 stat 2 타일 */}
         {!c.rsvp_enabled ? (

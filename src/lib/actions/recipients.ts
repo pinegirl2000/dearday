@@ -291,6 +291,28 @@ export async function deleteCard(slug: string, ownerToken: string | null) {
   return { ok: true as const };
 }
 
+/**
+ * 회신 마감일만 단독 수정 — 카드가 잠겨(수신자 열람) 본문 편집이 막힌 뒤에도
+ * 마감일은 운영상 바꿔야 하는 경우가 많아 별도 액션으로 허용.
+ * deadline: ISO 문자열 또는 null(마감 없음)
+ */
+export async function updateRsvpDeadline(slug: string, ownerToken: string | null, deadline: string | null) {
+  const card = await verifyOwner({ slug, ownerToken });
+  if (!card) return { ok: false as const, error: '권한이 없습니다.' };
+  let value: string | null = null;
+  if (deadline) {
+    const d = new Date(deadline);
+    if (isNaN(d.getTime())) return { ok: false as const, error: '날짜 형식이 올바르지 않습니다.' };
+    value = d.toISOString();
+  }
+  await pool.query('UPDATE dearday_card SET rsvp_deadline=$1, updated_at=NOW() WHERE id=$2', [value, card.id]);
+  // 초대장 페이지의 "Reply by …" 표기가 바로 바뀌도록
+  revalidatePath(`/i/${slug}`, 'layout');
+  revalidatePath('/cards');
+  revalidatePath(`/cards/${slug}/manage`);
+  return { ok: true as const, deadline: value };
+}
+
 export async function deleteRecipient(slug: string, ownerToken: string | null, recipientId: string) {
   const card = await verifyOwner({ slug, ownerToken });
   if (!card) return { ok: false as const, error: '권한이 없습니다.' };
