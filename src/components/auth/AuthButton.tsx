@@ -4,6 +4,26 @@ import Link from 'next/link';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { LogIn, LogOut, User } from 'lucide-react';
 
+/**
+ * 로그아웃 — 세션 쿠키 삭제 + 이 브라우저에 남아 있던 카드 소유자 토큰(localStorage)도 함께 제거.
+ * 소유자 토큰이 남아 있으면 로그아웃 후에도 /cards/[slug]/manage 등에 접근 가능했음.
+ * 마지막에 전체 새로고침으로 서버 세션 기준 화면을 다시 그린다.
+ */
+async function handleSignOut() {
+  try {
+    const keys: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && (k.startsWith('dearday:owner:') || k.startsWith('dd_owner_'))) keys.push(k);
+    }
+    keys.forEach((k) => localStorage.removeItem(k));
+    sessionStorage.clear();
+  } catch { /* storage 접근 불가 환경 — 무시 */ }
+  await signOut({ redirect: false });
+  // 클라이언트 라우터 캐시에 남은 로그인 상태 화면을 버리고 서버 세션으로 다시 렌더
+  window.location.assign('/');
+}
+
 export default function AuthButton() {
   const { data: session, status } = useSession();
 
@@ -30,7 +50,7 @@ export default function AuthButton() {
           </span>
         </Link>
         <button
-          onClick={() => signOut()}
+          onClick={handleSignOut}
           className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] text-hydrangea-500 hover:bg-hydrangea-50"
           title="로그아웃"
         >
