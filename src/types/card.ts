@@ -41,7 +41,7 @@ export interface BaseCard {
   event_label: string | null;
   rsvp_enabled: boolean;
   rsvp_deadline: string | null;
-  rsvp_max_per_card: 1 | 2 | 3 | 4 | 5;
+  rsvp_max_per_card: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
   rsvp_collect_names: boolean;
   rsvp_allow_oneliner: boolean;
   /** 마감일 안에 사용자가 응답을 수정할 수 있는지 (true: 언제든 attend↔decline, false: 첫 응답 후 잠김) */

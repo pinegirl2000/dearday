@@ -305,7 +305,7 @@ export async function updateRsvpDeadline(slug: string, ownerToken: string | null
 export interface RsvpSettingsPatch {
   /** ISO 문자열 / null(마감 없음) / undefined(변경 안 함) */
   deadline?: string | null;
-  /** 1~5. 1이면 동반자 불가 */
+  /** 1~8. 1이면 동반자 불가 */
   maxPerCard?: number;
   /** 동반자 이름 입력 필수 여부 (maxPerCard>1일 때만 의미) */
   collectNames?: boolean;
@@ -334,7 +334,7 @@ export async function updateRsvpSettings(slug: string, ownerToken: string | null
   }
   if (patch.maxPerCard !== undefined) {
     const n = Math.round(Number(patch.maxPerCard));
-    if (!Number.isFinite(n) || n < 1 || n > 5) return { ok: false as const, error: '최대 인원은 1~5 사이여야 합니다.' };
+    if (!Number.isFinite(n) || n < 1 || n > 8) return { ok: false as const, error: '최대 인원은 1~8 사이여야 합니다.' };
     push('rsvp_max_per_card', n);
     // 동반자 불가(1명)면 이름 입력 옵션은 의미 없음 → 함께 끔
     if (n === 1 && patch.collectNames === undefined) push('rsvp_collect_names', false);

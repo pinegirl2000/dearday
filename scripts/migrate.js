@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS dearday_card (
 
   rsvp_enabled BOOLEAN DEFAULT true,
   rsvp_deadline TIMESTAMPTZ,
-  rsvp_max_per_card INT DEFAULT 4 CHECK (rsvp_max_per_card BETWEEN 1 AND 5),
+  rsvp_max_per_card INT DEFAULT 4 CHECK (rsvp_max_per_card BETWEEN 1 AND 8),
   rsvp_collect_names BOOLEAN DEFAULT false,
   rsvp_allow_oneliner BOOLEAN DEFAULT false,
   rsvp_allow_change BOOLEAN DEFAULT true,
@@ -92,6 +92,9 @@ ALTER TABLE dearday_card ADD COLUMN IF NOT EXISTS event_label TEXT;
 -- 응답 현황 공유 링크용 읽기 전용 토큰 (owner_token과 별개, 재발급으로 무효화)
 ALTER TABLE dearday_card ADD COLUMN IF NOT EXISTS share_token TEXT;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_dearday_card_share_token ON dearday_card(share_token) WHERE share_token IS NOT NULL;
+-- 최대 참석 인원 상한 5 → 8 (기존 DB의 CHECK 제약 교체)
+ALTER TABLE dearday_card DROP CONSTRAINT IF EXISTS dearday_card_rsvp_max_per_card_check;
+ALTER TABLE dearday_card ADD CONSTRAINT dearday_card_rsvp_max_per_card_check CHECK (rsvp_max_per_card BETWEEN 1 AND 8);
 -- RSVP 옵션 — 기존 테이블에도 추가
 ALTER TABLE dearday_card ADD COLUMN IF NOT EXISTS rsvp_allow_oneliner BOOLEAN DEFAULT false;
 ALTER TABLE dearday_card ADD COLUMN IF NOT EXISTS rsvp_allow_change BOOLEAN DEFAULT true;

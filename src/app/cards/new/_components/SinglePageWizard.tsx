@@ -1321,14 +1321,14 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                       <div className="flex items-center gap-2">
                         <button type="button" onClick={() => {
                           const cur = (draft.rsvp_max_per_card || 1) as number;
-                          setDraft({ rsvp_max_per_card: Math.max(1, cur - 1) as 1 | 2 | 3 | 4 | 5 });
+                          setDraft({ rsvp_max_per_card: Math.max(1, cur - 1) as BaseCard['rsvp_max_per_card'] });
                         }} className="w-7 h-7 rounded-full bg-hydrangea-100 flex items-center justify-center">
                           <Minus className="w-3.5 h-3.5 text-hydrangea-700" />
                         </button>
                         <span className="font-bold text-hydrangea-700 w-5 text-center">{draft.rsvp_max_per_card || 1}</span>
                         <button type="button" onClick={() => {
                           const cur = (draft.rsvp_max_per_card || 1) as number;
-                          setDraft({ rsvp_max_per_card: Math.min(5, cur + 1) as 1 | 2 | 3 | 4 | 5 });
+                          setDraft({ rsvp_max_per_card: Math.min(8, cur + 1) as BaseCard['rsvp_max_per_card'] });
                         }} className="w-7 h-7 rounded-full bg-hydrangea-100 flex items-center justify-center">
                           <Plus className="w-3.5 h-3.5 text-hydrangea-700" />
                         </button>

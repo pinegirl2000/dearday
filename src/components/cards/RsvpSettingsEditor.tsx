@@ -145,7 +145,7 @@ export default function RsvpSettingsEditor({ slug, ownerToken, initial }: Props)
           className="px-2 py-1 rounded border border-hydrangea-200 text-[11px] text-hydrangea-700 bg-white focus:outline-none focus:ring-2 focus:ring-hydrangea-300"
         >
           <option value={1}>1명 (동반자 불가)</option>
-          {[2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}명</option>)}
+          {[2, 3, 4, 5, 6, 7, 8].map((n) => <option key={n} value={n}>{n}명</option>)}
         </select>
         <label className={`inline-flex items-center gap-1.5 ml-1 ${draft.max > 1 ? 'text-hydrangea-700' : 'text-gray-400'}`}>
           <input
