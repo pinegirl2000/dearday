@@ -13,6 +13,7 @@ import {
 } from '@/lib/actions/recipients';
 import type { BaseCard } from '@/types/card';
 import ShareStatusButton from '@/components/cards/ShareStatusButton';
+import RsvpSettingsEditor from '@/components/cards/RsvpSettingsEditor';
 
 interface Recipient {
   id: string;
@@ -329,57 +330,19 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
         )}
       </div>
 
-      {/* RSVP 설정 / 마감 정보 — card 정보 있을 때만 */}
-      {card?.rsvp_enabled && (() => {
-        const deadline = card.rsvp_deadline ? new Date(card.rsvp_deadline) : null;
-        const validDeadline = deadline && !isNaN(deadline.getTime()) ? deadline : null;
-        const now = new Date();
-        const daysLeft = validDeadline
-          ? Math.ceil((validDeadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-          : null;
-        const expired = daysLeft !== null && daysLeft < 0;
-        const maxPerCard = card.rsvp_max_per_card || 1;
-        const allowGroup = maxPerCard > 1;
-        const collectNames = !!card.rsvp_collect_names;
-        return (
-          <div className="rounded-xl border border-hydrangea-200 bg-hydrangea-50/50 p-3 space-y-2 text-[11px]">
-            {/* 마감일 */}
-            {validDeadline && (
-              <div className="flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-hydrangea-500 flex-shrink-0" />
-                <span className="text-hydrangea-700 font-medium">{t('rsvpDeadline')}</span>
-                <span className="text-hydrangea-500">
-                  {validDeadline.toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' })}
-                </span>
-                <span className={`ml-auto px-1.5 py-0.5 rounded-full font-bold ${
-                  expired ? 'bg-rose-500 text-white'
-                    : daysLeft! <= 3 ? 'bg-amber-500 text-white'
-                    : 'bg-emerald-500 text-white'
-                }`}>
-                  {expired ? t('expired') : daysLeft === 0 ? t('today') : t('daysLeft', { n: daysLeft! })}
-                </span>
-              </div>
-            )}
-            {/* RSVP 옵션 */}
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <Users className="w-3.5 h-3.5 text-hydrangea-500 flex-shrink-0" />
-              <span className="text-hydrangea-700 font-medium">{t('options')}</span>
-              <span className={`px-1.5 py-0.5 rounded-full font-semibold ${
-                allowGroup ? 'bg-hydrangea-500 text-white' : 'bg-gray-200 text-gray-600'
-              }`}>
-                {allowGroup ? t('guestMax', { n: maxPerCard }) : t('guestNone')}
-              </span>
-              {allowGroup && (
-                <span className={`px-1.5 py-0.5 rounded-full font-semibold ${
-                  collectNames ? 'bg-emerald-500 text-white' : 'bg-gray-200 text-gray-600'
-                }`}>
-                  {collectNames ? t('namesRequired') : t('namesNone')}
-                </span>
-              )}
-            </div>
-          </div>
-        );
-      })()}
+      {/* RSVP 설정 — 마감일 / 최대 인원 / 이름 입력을 이 자리에서 바로 수정 (카드 잠금과 무관) */}
+      {card?.rsvp_enabled && (
+        <RsvpSettingsEditor
+          key={`${slug}-rsvp-settings`}
+          slug={slug}
+          ownerToken={ownerToken}
+          initial={{
+            rsvp_deadline: card.rsvp_deadline as string | null,
+            rsvp_max_per_card: card.rsvp_max_per_card,
+            rsvp_collect_names: card.rsvp_collect_names
+          }}
+        />
+      )}
 
       {/* 수신자 리스트 */}
       <div>

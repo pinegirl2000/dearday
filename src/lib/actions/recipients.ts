@@ -297,20 +297,70 @@ export async function deleteCard(slug: string, ownerToken: string | null) {
  * deadline: ISO 문자열 또는 null(마감 없음)
  */
 export async function updateRsvpDeadline(slug: string, ownerToken: string | null, deadline: string | null) {
+  const res = await updateRsvpSettings(slug, ownerToken, { deadline });
+  if (!res.ok) return res;
+  return { ok: true as const, deadline: res.settings.rsvp_deadline };
+}
+
+export interface RsvpSettingsPatch {
+  /** ISO 문자열 / null(마감 없음) / undefined(변경 안 함) */
+  deadline?: string | null;
+  /** 1~5. 1이면 동반자 불가 */
+  maxPerCard?: number;
+  /** 동반자 이름 입력 필수 여부 (maxPerCard>1일 때만 의미) */
+  collectNames?: boolean;
+}
+
+/**
+ * RSVP 운영 설정(마감일 · 최대 인원 · 이름 입력) 부분 수정.
+ * 카드 본문이 잠긴 뒤에도 바꿀 수 있어야 하는 값들이라 본문 편집과 분리.
+ */
+export async function updateRsvpSettings(slug: string, ownerToken: string | null, patch: RsvpSettingsPatch) {
   const card = await verifyOwner({ slug, ownerToken });
   if (!card) return { ok: false as const, error: '권한이 없습니다.' };
-  let value: string | null = null;
-  if (deadline) {
-    const d = new Date(deadline);
-    if (isNaN(d.getTime())) return { ok: false as const, error: '날짜 형식이 올바르지 않습니다.' };
-    value = d.toISOString();
+
+  const sets: string[] = [];
+  const params: any[] = [];
+  const push = (col: string, v: any) => { params.push(v); sets.push(`${col} = $${params.length}`); };
+
+  if (patch.deadline !== undefined) {
+    let value: string | null = null;
+    if (patch.deadline) {
+      const d = new Date(patch.deadline);
+      if (isNaN(d.getTime())) return { ok: false as const, error: '날짜 형식이 올바르지 않습니다.' };
+      value = d.toISOString();
+    }
+    push('rsvp_deadline', value);
   }
-  await pool.query('UPDATE dearday_card SET rsvp_deadline=$1, updated_at=NOW() WHERE id=$2', [value, card.id]);
-  // 초대장 페이지의 "Reply by …" 표기가 바로 바뀌도록
+  if (patch.maxPerCard !== undefined) {
+    const n = Math.round(Number(patch.maxPerCard));
+    if (!Number.isFinite(n) || n < 1 || n > 5) return { ok: false as const, error: '최대 인원은 1~5 사이여야 합니다.' };
+    push('rsvp_max_per_card', n);
+    // 동반자 불가(1명)면 이름 입력 옵션은 의미 없음 → 함께 끔
+    if (n === 1 && patch.collectNames === undefined) push('rsvp_collect_names', false);
+  }
+  if (patch.collectNames !== undefined) push('rsvp_collect_names', !!patch.collectNames);
+  if (sets.length === 0) return { ok: false as const, error: '변경할 항목이 없습니다.' };
+
+  params.push(card.id);
+  const { rows } = await pool.query<{ rsvp_deadline: Date | null; rsvp_max_per_card: number; rsvp_collect_names: boolean }>(
+    `UPDATE dearday_card SET ${sets.join(', ')}, updated_at=NOW() WHERE id=$${params.length}
+     RETURNING rsvp_deadline, rsvp_max_per_card, rsvp_collect_names`,
+    params
+  );
+  const r = rows[0];
+  // 초대장 페이지의 "Reply by …" / 인원 선택 UI가 바로 바뀌도록
   revalidatePath(`/i/${slug}`, 'layout');
   revalidatePath('/cards');
   revalidatePath(`/cards/${slug}/manage`);
-  return { ok: true as const, deadline: value };
+  return {
+    ok: true as const,
+    settings: {
+      rsvp_deadline: r.rsvp_deadline ? new Date(r.rsvp_deadline).toISOString() : null,
+      rsvp_max_per_card: r.rsvp_max_per_card,
+      rsvp_collect_names: r.rsvp_collect_names
+    }
+  };
 }
 
 export async function deleteRecipient(slug: string, ownerToken: string | null, recipientId: string) {
