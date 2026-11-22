@@ -1,3 +1,4 @@
+import { FONT_STACKS } from '@/lib/font-keys';
 import type { LayoutMeta } from './types';
 
 /**
@@ -12,10 +13,10 @@ export const LAYOUT_THANK_MINIMAL: LayoutMeta = {
   aspectRatio: '440/700',
   accent: '#7B5EA7',
   fields: {
-    greeting: { x: 0, y: 0, w: 100, align: 'center', fontSize: 14, color: '#8B7A9E', letterSpacing: '0.18em', fontWeight: 400, fontFamily: "'Cormorant Garamond', 'Noto Serif KR', serif" },
-    subtitle: { x: 0, y: 0, w: 100, align: 'center', fontSize: 12, color: '#8B7A9E', letterSpacing: '0.2em', fontWeight: 400, fontFamily: "'Cormorant Garamond', 'Noto Serif KR', serif" },
-    title:    { x: 0, y: 0, w: 100, align: 'center', fontSize: 46, color: '#5A3D7A', letterSpacing: '0.01em', fontWeight: 400, lineHeight: 1.1, fontFamily: "'Sacramento', 'Great Vibes', 'Noto Serif KR', cursive" },
-    body:     { x: 0, y: 0, w: 100, align: 'center', fontSize: 14, color: '#3A2D4F', lineHeight: 2.0, fontFamily: "'Noto Serif KR', serif" }
+    greeting: { x: 0, y: 0, w: 100, align: 'center', fontSize: 14, color: '#8B7A9E', letterSpacing: '0.18em', fontWeight: 400, fontFamily: FONT_STACKS.cormorant },
+    subtitle: { x: 0, y: 0, w: 100, align: 'center', fontSize: 12, color: '#8B7A9E', letterSpacing: '0.2em', fontWeight: 400, fontFamily: FONT_STACKS.cormorant },
+    title:    { x: 0, y: 0, w: 100, align: 'center', fontSize: 46, color: '#5A3D7A', letterSpacing: '0.01em', fontWeight: 400, lineHeight: 1.1, fontFamily: FONT_STACKS.sacramento },
+    body:     { x: 0, y: 0, w: 100, align: 'center', fontSize: 14, color: '#3A2D4F', lineHeight: 2.0, fontFamily: FONT_STACKS.notoSerif }
     // 사진 / 날짜 / 장소 / 연락처 — Thank-Minimal에서는 사용 안 함
   }
 };

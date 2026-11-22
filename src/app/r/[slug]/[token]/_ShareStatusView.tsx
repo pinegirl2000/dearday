@@ -85,7 +85,7 @@ export default function ShareStatusView({ data }: Props) {
         <header className="bg-white rounded-2xl border border-hydrangea-100 p-4 shadow-sm">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <div className="text-[10px] font-semibold text-hydrangea-400 uppercase tracking-wide">{t('title')}</div>
+              <div className="text-[11px] font-semibold text-hydrangea-400 uppercase tracking-wide">{t('title')}</div>
               <h1 className="text-lg font-bold text-hydrangea-800 leading-snug break-words">{card.title}</h1>
             </div>
             <button
@@ -108,7 +108,7 @@ export default function ShareStatusView({ data }: Props) {
               <div className="flex items-center gap-1"><Send className="w-3 h-3" /> {t('deadline')}: {fmtDate(card.rsvp_deadline)}</div>
             )}
           </div>
-          <p className="mt-2 text-[10px] text-hydrangea-400">{t('readOnly')}</p>
+          <p className="mt-2 text-[11px] text-hydrangea-400">{t('readOnly')}</p>
         </header>
 
         {card.expired && (
@@ -119,7 +119,7 @@ export default function ShareStatusView({ data }: Props) {
         <section className="rounded-2xl border border-hydrangea-100 bg-white p-3 space-y-3 shadow-sm">
           <div className="flex items-baseline gap-2">
             <h2 className="text-[11px] font-bold text-hydrangea-700 uppercase tracking-wide">{t('title')}</h2>
-            <span className="text-[10px] text-hydrangea-400">
+            <span className="text-[11px] text-hydrangea-400">
               {t('asOf', { date: new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) })}
             </span>
           </div>
@@ -127,13 +127,13 @@ export default function ShareStatusView({ data }: Props) {
             <div className="rounded-xl bg-gradient-to-br from-hydrangea-50 to-hydrangea-100 border border-hydrangea-200 p-3 shadow-sm relative overflow-hidden">
               <Send className="absolute -bottom-2 -right-2 w-12 h-12 text-hydrangea-300/40" strokeWidth={1.5} />
               <div className="relative">
-                <div className="text-[10px] font-semibold text-hydrangea-500 mb-0.5">{t('totalSent')}</div>
+                <div className="text-[11px] font-semibold text-hydrangea-500 mb-0.5">{t('totalSent')}</div>
                 <div className="flex items-baseline gap-0.5">
                   <span className="text-2xl font-extrabold leading-none text-hydrangea-700">{stats.total}</span>
-                  <span className="text-[10px] text-hydrangea-500">{t('unit')}</span>
+                  <span className="text-[11px] text-hydrangea-500">{t('unit')}</span>
                 </div>
                 <div className="mt-1">
-                  <div className="text-[10px] inline-flex items-center gap-1 bg-hydrangea-500 text-white px-1.5 py-0.5 rounded-full font-semibold">
+                  <div className="text-[11px] inline-flex items-center gap-1 bg-hydrangea-500 text-white px-1.5 py-0.5 rounded-full font-semibold">
                     <Eye className="w-2.5 h-2.5" /> {t('readCount', { n: stats.read })}
                   </div>
                 </div>
@@ -142,12 +142,12 @@ export default function ShareStatusView({ data }: Props) {
             <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200 p-3 shadow-sm relative overflow-hidden">
               <ThumbsUp className="absolute -bottom-2 -right-2 w-12 h-12 text-emerald-300/40" strokeWidth={1.5} />
               <div className="relative">
-                <div className="text-[10px] font-semibold text-emerald-600 mb-0.5">{t('attending')}</div>
+                <div className="text-[11px] font-semibold text-emerald-600 mb-0.5">{t('attending')}</div>
                 <div className="flex items-baseline gap-0.5">
                   <span className="text-2xl font-extrabold leading-none text-emerald-700">{stats.attendingRecords}</span>
-                  <span className="text-[10px] text-emerald-600">{t('unit')}</span>
+                  <span className="text-[11px] text-emerald-600">{t('unit')}</span>
                 </div>
-                <div className="text-[10px] mt-1 inline-flex items-center gap-1 bg-emerald-500 text-white px-1.5 py-0.5 rounded-full font-semibold">
+                <div className="text-[11px] mt-1 inline-flex items-center gap-1 bg-emerald-500 text-white px-1.5 py-0.5 rounded-full font-semibold">
                   <Users className="w-2.5 h-2.5" /> {t('totalPeople', { n: stats.attendingTotal })}
                 </div>
               </div>
@@ -155,10 +155,10 @@ export default function ShareStatusView({ data }: Props) {
             <div className="rounded-xl bg-gradient-to-br from-rose-50 to-rose-100 border border-rose-200 p-3 shadow-sm relative overflow-hidden">
               <ThumbsDown className="absolute -bottom-2 -right-2 w-12 h-12 text-rose-300/40" strokeWidth={1.5} />
               <div className="relative">
-                <div className="text-[10px] font-semibold text-rose-600 mb-0.5">{t('declined')}</div>
+                <div className="text-[11px] font-semibold text-rose-600 mb-0.5">{t('declined')}</div>
                 <div className="flex items-baseline gap-0.5">
                   <span className="text-2xl font-extrabold leading-none text-rose-700">{stats.declinedRecords}</span>
-                  <span className="text-[10px] text-rose-600">{t('unit')}</span>
+                  <span className="text-[11px] text-rose-600">{t('unit')}</span>
                 </div>
               </div>
             </div>
@@ -166,7 +166,7 @@ export default function ShareStatusView({ data }: Props) {
           {stats.total > 0 && (
             <div>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] font-semibold text-hydrangea-600">{t('responseRate')}</span>
+                <span className="text-[11px] font-semibold text-hydrangea-600">{t('responseRate')}</span>
                 <span className="text-[11px] font-bold text-hydrangea-700">
                   {t('replyVsSend', { replies: stats.replies, total: stats.total })}
                   <span className="text-hydrangea-400 font-medium ml-1">({stats.rate}%)</span>
@@ -176,7 +176,7 @@ export default function ShareStatusView({ data }: Props) {
                 {stats.attendingRecords > 0 && <div className="bg-emerald-500 h-full" style={{ width: `${stats.attendPct}%` }} />}
                 {stats.declinedRecords > 0 && <div className="bg-rose-400 h-full" style={{ width: `${stats.declinePct}%` }} />}
               </div>
-              <div className="flex items-center gap-3 mt-1.5 text-[9px] text-hydrangea-500">
+              <div className="flex items-center gap-3 mt-1.5 text-[10px] text-hydrangea-500">
                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> {t('attending')}</span>
                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-400" /> {t('declined')}</span>
                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-hydrangea-100 border border-hydrangea-200" /> {t('pending')}</span>
@@ -205,9 +205,9 @@ export default function ShareStatusView({ data }: Props) {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="text-[13px] font-semibold text-hydrangea-800 break-words">{r.name}</span>
-                      {r.group_name && <span className="text-[10px] text-hydrangea-400">{r.group_name}</span>}
+                      {r.group_name && <span className="text-[11px] text-hydrangea-400">{r.group_name}</span>}
                       <span
-                        className={`inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full border ${
+                        className={`inline-flex items-center gap-0.5 text-[11px] px-1.5 py-0.5 rounded-full border ${
                           r.read_at ? 'text-hydrangea-600 border-hydrangea-200 bg-hydrangea-50' : 'text-gray-400 border-gray-200 bg-gray-50'
                         }`}
                         title={r.read_at ? fmtDate(r.read_at) : undefined}
@@ -227,7 +227,7 @@ export default function ShareStatusView({ data }: Props) {
                     {status === true && (
                       <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                         <Check className="w-3 h-3" /> {t('attending')}
-                        <span className="ml-0.5 px-1.5 rounded-full bg-emerald-600 text-white text-[10px]">{r.rsvp_count || 1}</span>
+                        <span className="ml-0.5 px-1.5 rounded-full bg-emerald-600 text-white text-[11px]">{r.rsvp_count || 1}</span>
                       </span>
                     )}
                     {status === false && (
@@ -250,7 +250,7 @@ export default function ShareStatusView({ data }: Props) {
           </ul>
         </section>
 
-        <footer className="text-center text-[10px] text-hydrangea-400 pb-4">{t('poweredBy')}</footer>
+        <footer className="text-center text-[11px] text-hydrangea-400 pb-4">{t('poweredBy')}</footer>
       </div>
     </main>
   );

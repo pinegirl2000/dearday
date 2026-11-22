@@ -5,9 +5,32 @@
 :root {
   --bg: 250 245 255;
   --fg: 58 45 79;
+  /* 🔧 고정 TopBar 높이 — sticky 헤더들이 TopBar 아래에 붙도록 공통 기준값으로 사용 */
+  --topbar-h: calc(3rem + env(safe-area-inset-top));
 }
 
 * { -webkit-tap-highlight-color: transparent; }
+
+/* 🔧 키보드 사용자를 위한 포커스 링 — 마우스/터치 클릭에는 나타나지 않도록 :focus-visible 만 사용
+   border-radius 는 지정하지 않음: 같은 명시도라 뒤에 선언된 이 규칙이 rounded-* 를 덮어써 모양이 바뀌기 때문 (outline 은 요소의 radius 를 그대로 따라감) */
+:focus-visible {
+  outline: 2px solid #7B5EA7;
+  outline-offset: 2px;
+}
+
+/* 🔧 터치 기기에서 16px 미만 입력창은 iOS 가 포커스 시 화면을 강제 확대함 — 확대 제한을 풀었으므로 입력 글꼴을 16px 로 보장 */
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  textarea,
+  select {
+    font-size: max(16px, 1em);
+  }
+}
+
+/* 🔧 데스크톱 마우스 환경에서 클릭 가능한 요소에 손가락 커서 표시 */
+@media (hover: hover) and (pointer: fine) {
+  button:not(:disabled), [role="button"], summary, label[for] { cursor: pointer; }
+}
 
 /* PC(데스크톱 마우스) 환경에서 tel: 링크 클릭 비활성화 — 모바일에서만 통화 동작 */
 @media (hover: hover) and (pointer: fine) {
@@ -110,4 +133,46 @@ body { -webkit-overflow-scrolling: touch; }
 }
 @media (prefers-reduced-motion: reduce) {
   .dearday-logo-left, .dearday-logo-right, .dearday-logo-pencil { animation: none; }
+}
+
+/* ── 랜딩 첫 화면: 실제 카드 세 장이 부채꼴로 펼쳐짐 ──
+   페이지에서 유일한 자동 움직임 — 처음 한 번만 펼쳐지고 멈춘다 */
+.hero-fan {
+  position: relative;
+  width: min(100%, 420px);
+  margin-inline: auto;
+  aspect-ratio: 1 / 1.02;
+}
+.hero-fan-card {
+  position: absolute;
+  left: 50%;
+  top: 4%;
+  width: 52%;
+  margin-left: -26%;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+  container-type: inline-size; /* 카드 안 글자를 카드 폭 기준(cqw)으로 맞추기 위함 */
+  box-shadow: 0 1px 2px rgba(46, 33, 64, 0.12), 0 18px 40px -12px rgba(46, 33, 64, 0.35);
+  transform-origin: 50% 120%;
+  transition: transform 220ms ease-out, box-shadow 220ms ease-out;
+  animation: hero-fan-spread 900ms cubic-bezier(0.22, 0.8, 0.24, 1) 150ms both;
+}
+.hero-fan-left { --fan-rot: -11deg; --fan-x: -30%; z-index: 1; }
+.hero-fan-right { --fan-rot: 11deg; --fan-x: 30%; z-index: 1; }
+.hero-fan-center { --fan-rot: 0deg; --fan-x: 0%; z-index: 2; }
+.hero-fan-card { transform: translateX(var(--fan-x)) rotate(var(--fan-rot)); }
+@keyframes hero-fan-spread {
+  from { transform: translateX(0) rotate(0deg) scale(0.94); opacity: 0; }
+  to { transform: translateX(var(--fan-x)) rotate(var(--fan-rot)); opacity: 1; }
+}
+@media (hover: hover) and (pointer: fine) {
+  .hero-fan-card:hover {
+    transform: translateX(var(--fan-x)) rotate(var(--fan-rot)) translateY(-10px);
+    box-shadow: 0 2px 4px rgba(46, 33, 64, 0.14), 0 28px 50px -14px rgba(46, 33, 64, 0.45);
+    z-index: 3;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-fan-card { animation: none; transition: none; }
 }

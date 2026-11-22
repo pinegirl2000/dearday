@@ -22,18 +22,18 @@ export function MobileHeader({ title, back, right, transparent }: MobileHeaderPr
   return (
     <header
       className={cn(
-        'sticky top-0 z-30 w-full',
+        // 🔧 고정 TopBar 아래에 붙어야 함 — top-0 이면 스크롤 시 TopBar 를 덮어버림
+        'sticky top-[var(--topbar-h)] z-30 w-full',
         transparent ? 'bg-transparent' : 'bg-white/80 backdrop-blur-md border-b border-hydrangea-100/50'
       )}
-      style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
       <div className="h-14 px-2 flex items-center justify-between">
         <div className="w-12 flex items-center">
           {back && (
             <button
               onClick={handleBack}
-              className="w-12 h-12 rounded-full flex items-center justify-center active:bg-hydrangea-50 transition-colors"
-              aria-label="뒤로"
+              className="w-12 h-12 rounded-full flex items-center justify-center hover:bg-hydrangea-50 active:bg-hydrangea-100 transition-colors"
+              aria-label="Back"
             >
               <ChevronLeft className="w-6 h-6 text-hydrangea-700" />
             </button>

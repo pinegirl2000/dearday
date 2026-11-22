@@ -210,28 +210,28 @@ export default function RemindersClient({ initialReminders, initialOptIn }: Prop
               className="mt-1.5 flex items-center gap-2 disabled:opacity-50"
             >
               <span className={`relative w-4 h-4 rounded border-2 flex items-center justify-center ${pushOn ? 'bg-hydrangea-500 border-hydrangea-500' : 'bg-white border-hydrangea-300'}`}>
-                {pushOn && <span className="text-white text-[10px]">✓</span>}
+                {pushOn && <span className="text-white text-[11px]">✓</span>}
               </span>
               <BellRing className="w-3.5 h-3.5 text-hydrangea-500" />
               <span className="text-xs font-medium text-hydrangea-700">Push notifications (browser)</span>
             </button>
-            <p className="text-[10px] text-hydrangea-400 mt-1.5 leading-snug">
+            <p className="text-[11px] text-hydrangea-400 mt-1.5 leading-snug">
               Your reminders are private — only sent to you. You can turn off any time.
             </p>
             {/* 이메일 언어 선택 */}
             <div className="mt-2.5 flex items-center gap-1.5">
-              <span className="text-[10px] text-hydrangea-500">Email language:</span>
+              <span className="text-[11px] text-hydrangea-500">Email language:</span>
               <button
                 type="button"
                 onClick={() => handleLocaleChange('en')}
-                className={`text-[10px] px-2 py-0.5 rounded-full transition active:scale-95 ${
+                className={`text-[11px] px-2 py-0.5 rounded-full transition active:scale-95 ${
                   locale === 'en' ? 'bg-hydrangea-500 text-white' : 'bg-white text-hydrangea-600 border border-hydrangea-200'
                 }`}
               >English</button>
               <button
                 type="button"
                 onClick={() => handleLocaleChange('ko')}
-                className={`text-[10px] px-2 py-0.5 rounded-full transition active:scale-95 ${
+                className={`text-[11px] px-2 py-0.5 rounded-full transition active:scale-95 ${
                   locale === 'ko' ? 'bg-hydrangea-500 text-white' : 'bg-white text-hydrangea-600 border border-hydrangea-200'
                 }`}
               >한국어</button>
@@ -276,14 +276,14 @@ export default function RemindersClient({ initialReminders, initialOptIn }: Prop
                     key={occ.id}
                     type="button"
                     onClick={() => setOccasion(occ.id)}
-                    className={`flex flex-col items-center gap-0.5 py-2 rounded-lg text-[10px] font-medium transition active:scale-95 ${
+                    className={`flex flex-col items-center gap-0.5 py-2 rounded-lg text-[11px] font-medium transition active:scale-95 ${
                       occasion === occ.id
                         ? 'bg-hydrangea-500 text-white'
                         : 'bg-hydrangea-50 text-hydrangea-700 hover:bg-hydrangea-100'
                     }`}
                   >
                     <span className="text-lg">{occ.emoji}</span>
-                    <span className="text-[9px] leading-tight">{occ.label}</span>
+                    <span className="text-[10px] leading-tight">{occ.label}</span>
                   </button>
                 ))}
               </div>
@@ -341,7 +341,7 @@ export default function RemindersClient({ initialReminders, initialOptIn }: Prop
                   </button>
                 ))}
               </div>
-              <p className="text-[10px] text-hydrangea-400 mt-1.5">
+              <p className="text-[11px] text-hydrangea-400 mt-1.5">
                 D-30 추천 — 시즌 카드 미리 준비할 시간이 충분해요
               </p>
             </div>
@@ -393,7 +393,7 @@ export default function RemindersClient({ initialReminders, initialOptIn }: Prop
                   {daysAway <= 14 && (
                     <Link
                       href={`/cards/new?type=${r.occasion === 'other' ? 'etc' : r.occasion}`}
-                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-hydrangea-500 text-white text-[10px] font-semibold active:scale-95 transition flex-shrink-0"
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-hydrangea-500 text-white text-[11px] font-semibold active:scale-95 transition flex-shrink-0"
                     >
                       Make card <ArrowRight className="w-3 h-3" />
                     </Link>

@@ -1,3 +1,4 @@
+import { FONT_STACKS } from '@/lib/font-keys';
 import type { LayoutMeta } from './types';
 
 /**
@@ -12,9 +13,9 @@ export const LAYOUT_THANK_POLAROID: LayoutMeta = {
   aspectRatio: '440/700',
   accent: '#C97796',
   fields: {
-    subtitle: { x: 0, y: 0, w: 100, align: 'center', fontSize: 12, color: '#C97796', letterSpacing: '0.2em', fontWeight: 400, fontFamily: "'Cormorant Garamond', 'Noto Serif KR', serif" },
-    title:    { x: 0, y: 0, w: 100, align: 'center', fontSize: 42, color: '#8B6075', letterSpacing: '0.01em', fontWeight: 400, lineHeight: 1.1, fontFamily: "'Sacramento', 'Great Vibes', 'Noto Serif KR', cursive" },
-    body:     { x: 0, y: 0, w: 100, align: 'center', fontSize: 14, color: '#5A3D4F', lineHeight: 2.0, fontFamily: "'Noto Serif KR', serif" }
+    subtitle: { x: 0, y: 0, w: 100, align: 'center', fontSize: 12, color: '#C97796', letterSpacing: '0.2em', fontWeight: 400, fontFamily: FONT_STACKS.cormorant },
+    title:    { x: 0, y: 0, w: 100, align: 'center', fontSize: 42, color: '#8B6075', letterSpacing: '0.01em', fontWeight: 400, lineHeight: 1.1, fontFamily: FONT_STACKS.sacramento },
+    body:     { x: 0, y: 0, w: 100, align: 'center', fontSize: 14, color: '#5A3D4F', lineHeight: 2.0, fontFamily: FONT_STACKS.notoSerif }
     // 날짜 / 장소 / 연락처 — Thank-Polaroid에서는 사용 안 함
   }
 };

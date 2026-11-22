@@ -77,7 +77,7 @@ export default function RsvpSettingsEditor({ slug, ownerToken, initial }: Props)
         <button
           type="button"
           onClick={openEdit}
-          className="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold text-hydrangea-600 border border-hydrangea-200 bg-white hover:bg-hydrangea-50 active:scale-95 transition"
+          className="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-semibold text-hydrangea-600 border border-hydrangea-200 bg-white hover:bg-hydrangea-50 active:scale-95 transition"
         >
           <Pencil className="w-3 h-3" /> 수정
         </button>
@@ -131,7 +131,7 @@ export default function RsvpSettingsEditor({ slug, ownerToken, initial }: Props)
           className="flex-1 min-w-[170px] px-2 py-1 rounded border border-hydrangea-200 text-[11px] text-hydrangea-700 focus:outline-none focus:ring-2 focus:ring-hydrangea-300"
         />
         {draft.deadline && (
-          <button type="button" onClick={() => setDraft((d) => ({ ...d, deadline: '' }))} className="text-[10px] text-rose-500 hover:underline">
+          <button type="button" onClick={() => setDraft((d) => ({ ...d, deadline: '' }))} className="text-[11px] text-rose-500 hover:underline">
             마감 없음
           </button>
         )}

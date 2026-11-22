@@ -1,4 +1,5 @@
 'use client';
+import { FONT_STACKS } from '@/lib/font-keys';
 
 import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
@@ -320,7 +321,7 @@ function Stamp({ top, right, size = 46, palette }: { top: number; right: number;
         alignItems: 'center',
         justifyContent: 'center',
         color: PALETTE.ink,
-        fontFamily: "'Great Vibes', 'Sacramento', 'Allura', cursive",
+        fontFamily: FONT_STACKS.greatVibes,
         fontSize: Math.max(8, Math.round(size * 0.26)),
         fontWeight: 400,
         letterSpacing: '0',

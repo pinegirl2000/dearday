@@ -1,4 +1,5 @@
 'use client';
+import { FONT_STACKS } from '@/lib/font-keys';
 
 import { Fragment, useState, useEffect, useLayoutEffect, useRef, useTransition } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -8,6 +9,7 @@ import { toast } from 'sonner';
 import { useSession, signIn } from 'next-auth/react';
 import { Check, ChevronDown, ChevronUp, Minus, Plus, Sparkles, Calendar, RotateCcw, Copy } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
+import { PhraseSuggestions } from '@/components/cards/phrase-suggestions';
 import { MobileHeader } from '@/components/layout/MobileHeader';
 import { Input, Textarea, Button, PhoneInput } from '@/components/ui';
 import { ImageUploader } from '@/components/domain/ImageUploader';
@@ -665,7 +667,8 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
       />
 
       {/* 상단 단계 표시 (sticky) — 작은 점/숫자 + 가는 connector. 현재 단계 라벨은 아래 SectionShell에 노출 */}
-      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur border-b border-hydrangea-100/70 px-4 py-3">
+      {/* 🔧 TopBar(가변 높이) + MobileHeader(h-14) 아래에 쌓이도록 top 오프셋 지정 */}
+      <div className="sticky top-[calc(var(--topbar-h)+3.5rem)] z-20 bg-white/95 backdrop-blur border-b border-hydrangea-100/70 px-4 py-3">
         <div className="flex items-start justify-center gap-0">
           {([1, 2, 3] as SectionId[]).map((id, idx) => {
             const active = open === id;
@@ -784,7 +787,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                         }`}
                       >
                         <span className="text-base leading-none">{e.emoji}</span>
-                        <span className="text-[9px] font-medium tracking-tight truncate max-w-full">{displayLabel}</span>
+                        <span className="text-[10px] font-medium tracking-tight truncate max-w-full">{displayLabel}</span>
                         {selected && (
                           <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-hydrangea-500 border border-white flex items-center justify-center shadow-sm">
                             <Check className="w-2.5 h-2.5 text-white" strokeWidth={3.5} />
@@ -799,9 +802,9 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                   return (
                     <div className="space-y-3">
                       <div>
-                        <div className="text-[10px] font-semibold text-hydrangea-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                        <div className="text-[11px] font-semibold text-hydrangea-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                           <span>📅</span><span>Invitation</span>
-                          <span className="text-[9px] text-hydrangea-400 font-normal normal-case tracking-normal">{t('withDate')}</span>
+                          <span className="text-[10px] text-hydrangea-400 font-normal normal-case tracking-normal">{t('withDate')}</span>
                         </div>
                         <div className="grid grid-cols-6 gap-1">
                           {invitationEvents.map(renderEventBtn)}
@@ -809,9 +812,9 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                       </div>
                       {thankEvents.length > 0 && (
                         <div>
-                          <div className="text-[10px] font-semibold text-amber-600 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                          <div className="text-[11px] font-semibold text-amber-600 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                             <span>💌</span><span>Thank Card</span>
-                            <span className="text-[9px] text-hydrangea-400 font-normal normal-case tracking-normal">{t('thanks')}</span>
+                            <span className="text-[10px] text-hydrangea-400 font-normal normal-case tracking-normal">{t('thanks')}</span>
                           </div>
                           <div className="grid grid-cols-6 gap-1">
                             {thankEvents.map(renderEventBtn)}
@@ -820,9 +823,9 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                       )}
                       {congratsEvents.length > 0 && (
                         <div>
-                          <div className="text-[10px] font-semibold text-pink-600 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                          <div className="text-[11px] font-semibold text-pink-600 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                             <span>🎉</span><span>Congrats</span>
-                            <span className="text-[9px] text-hydrangea-400 font-normal normal-case tracking-normal">{t('congratsLabel')}</span>
+                            <span className="text-[10px] text-hydrangea-400 font-normal normal-case tracking-normal">{t('congratsLabel')}</span>
                           </div>
                           <div className="grid grid-cols-6 gap-1">
                             {congratsEvents.map(renderEventBtn)}
@@ -897,7 +900,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                                 </div>
                               );
                             })()}
-                            <div className={`text-[9px] py-0.5 text-center truncate px-0.5 ${
+                            <div className={`text-[10px] py-0.5 text-center truncate px-0.5 ${
                               selected ? 'bg-hydrangea-600 text-white font-bold' : 'bg-hydrangea-50 text-hydrangea-700'
                             }`}>
                               {selected ? `✓ ${t.name}` : t.name}
@@ -1056,7 +1059,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                             selected ? 'border-hydrangea-500 bg-hydrangea-50' : 'border-hydrangea-100/60 bg-white'
                           }`}
                         >
-                          <div className="text-[10px] font-semibold text-hydrangea-700 truncate">{s.label}</div>
+                          <div className="text-[11px] font-semibold text-hydrangea-700 truncate">{s.label}</div>
                           {selected && (
                             <div className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-hydrangea-500 flex items-center justify-center">
                               <Check className="w-2 h-2 text-white" strokeWidth={3} />
@@ -1122,7 +1125,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                           }`}
                         >
                           <div className="text-xs font-semibold text-hydrangea-700 truncate">{lay.name}</div>
-                          <div className="text-[10px] text-hydrangea-400 mt-0.5 truncate">
+                          <div className="text-[11px] text-hydrangea-400 mt-0.5 truncate">
                             {SHORT_DESC[lid] || ''}
                           </div>
                           {selected && (
@@ -1273,9 +1276,9 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                               title={`${fld.label}`}
                             >
                               {/* 번호 + 라벨이 하나의 pill로 결합. flashing/active 시 라벨까지 노출 */}
-                              <span className="w-5 h-5 flex items-center justify-center text-[10px] font-bold flex-shrink-0">{fld.no}</span>
+                              <span className="w-5 h-5 flex items-center justify-center text-[11px] font-bold flex-shrink-0">{fld.no}</span>
                               {(isFlashing || active) && (
-                                <span className="text-[10px] font-semibold pr-2 pl-0.5 whitespace-nowrap">{fld.label}</span>
+                                <span className="text-[11px] font-semibold pr-2 pl-0.5 whitespace-nowrap">{fld.label}</span>
                               )}
                             </button>
                           </div>
@@ -1484,7 +1487,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                             return (
                               <div style={{ textAlign: 'center', padding: '0 8px' }}>
                                 <div style={{
-                                  fontFamily: tf.fontFamily || "'Noto Serif KR', serif",
+                                  fontFamily: tf.fontFamily || FONT_STACKS.notoSerif,
                                   fontWeight: tf.fontWeight,
                                   color: tf.color,
                                   fontSize: Math.min(tf.fontSize, 24),
@@ -1496,7 +1499,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                                 </div>
                                 {dateStr && (
                                   <div style={{
-                                    fontFamily: df?.fontFamily || "'Noto Sans KR', sans-serif",
+                                    fontFamily: df?.fontFamily || FONT_STACKS.notoSans,
                                     color: df?.color || '#666',
                                     fontSize: 11,
                                     letterSpacing: df?.letterSpacing
@@ -1589,7 +1592,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                                 );
                               })}
                             </div>
-                            <div className="text-[10px] text-hydrangea-400 mt-1 text-center">
+                            <div className="text-[11px] text-hydrangea-400 mt-1 text-center">
                               {COLORS_TOP.find((c) => c.id === parsedEnv.color)?.label}
                             </div>
                           </div>
@@ -1680,12 +1683,12 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                       {envelopeOpen ? (
                         <>
                           <RotateCcw className="w-6 h-6" strokeWidth={2.5} />
-                          <span className="text-[10px] font-semibold tracking-wide">{t('replay')}</span>
+                          <span className="text-[11px] font-semibold tracking-wide">{t('replay')}</span>
                         </>
                       ) : (
                         <>
-                          <span className="text-[9px] font-bold tracking-widest uppercase">Sample</span>
-                          <span className="text-[9px] font-semibold tracking-wide">preview</span>
+                          <span className="text-[10px] font-bold tracking-widest uppercase">Sample</span>
+                          <span className="text-[10px] font-semibold tracking-wide">preview</span>
                         </>
                       )}
                     </button>
@@ -1727,7 +1730,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
 
       {/* Edit 모드: 변경사항 있을 때 sticky save bar */}
       {isDirty && (
-        <div className="fixed bottom-0 left-0 right-0 z-30 px-4 py-3 bg-white/95 backdrop-blur border-t border-hydrangea-200 shadow-lg">
+        <div className="fixed bottom-0 left-0 right-0 z-30 px-4 pt-3 bg-white/95 backdrop-blur border-t border-hydrangea-200 shadow-lg" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
           <div className="max-w-md mx-auto flex items-center gap-3">
             <span className="text-xs text-hydrangea-500 flex-1">You have unsaved changes</span>
             <button
@@ -1907,13 +1910,13 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
         </div>
       )}
 
-      {/* 텍스트 편집 모달 — badge 1/2/3 (Subtitle/Title/Message) 클릭 시 열림 */}
+      {/* 텍스트 편집 모달 — badge 1/2/3 (Subtitle/Title/Message) 클릭 시 열림. 추천 문구 목록이 길어 작은 화면에서도 '완료' 버튼까지 스크롤되도록 높이 제한 */}
       {textEditField && (
         <div
           className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-4"
           onClick={() => setTextEditField(null)}
         >
-          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-y-auto max-h-[90dvh]" onClick={(e) => e.stopPropagation()}>
             <div className="px-4 py-3 flex items-center justify-between border-b border-hydrangea-100">
               <div className="text-sm font-semibold text-hydrangea-700">{textEditField.label}</div>
               <button type="button" onClick={() => setTextEditField(null)}
@@ -1951,6 +1954,15 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                   onChange={(e) => setDraft({ [textEditField.key]: e.target.value } as any)}
                 />
               )}
+              {/* 추천 문구 — 행사에 맞는 자주 쓰는 문구를 눌러 넣고 고쳐 쓸 수 있게 (한 줄 문구·본문만) */}
+              <PhraseSuggestions
+                eventId={draft.event_type as string}
+                field={textEditField.key}
+                value={(draft[textEditField.key] as string) || ''}
+                onPick={(phrase) => setDraft({ [textEditField.key]: phrase } as any)}
+                title={t('phraseSuggestionsTitle')}
+                hint={t('phraseSuggestionsHint')}
+              />
             </div>
             <div className="p-3 flex border-t border-hydrangea-100">
               <button type="button" onClick={() => setTextEditField(null)}
@@ -2160,7 +2172,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
               </button>
 
               {/* L2 발신자 공지 — 읽음 추적 명시 */}
-              <p className="mt-3 text-[10px] text-hydrangea-400 leading-snug">
+              <p className="mt-3 text-[11px] text-hydrangea-400 leading-snug">
                 ℹ️ You'll see when your recipient opens this card.
               </p>
             </motion.div>

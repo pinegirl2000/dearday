@@ -7,7 +7,9 @@ export type BackgroundId =
   | 'bg-1' | 'bg-2' | 'bg-3' | 'bg-4' | 'bg-cream'
   | 'bg-img-1' | 'bg-img-2' | 'bg-img-3' | 'bg-img-4'
   | 'bg-img-6' | 'bg-img-7' | 'bg-img-8' | 'bg-img-9' | 'bg-img-10' | 'bg-img-11'
-  | 'bg-img-12' | 'bg-img-13' | 'bg-img-14' | 'bg-img-15' | 'bg-img-16' | 'bg-img-17' | 'bg-img-18' | 'bg-img-19' | 'bg-img-20' | 'bg-img-21';
+  | 'bg-img-12' | 'bg-img-13' | 'bg-img-14' | 'bg-img-15' | 'bg-img-16' | 'bg-img-17' | 'bg-img-18' | 'bg-img-19' | 'bg-img-20' | 'bg-img-21'
+  // 코드로 그린(SVG) 배경 — 글 영역을 처음부터 비워 두고 디자인
+  | 'bg-svg-botanical' | 'bg-svg-confetti' | 'bg-svg-lunar';
 
 export interface BackgroundMeta {
   id: BackgroundId;
@@ -97,6 +99,9 @@ export const BACKGROUNDS: BackgroundMeta[] = [
   { id: 'bg-img-20', name: 'Iris & Hearts', imageUrl: '/templates/template-20-bg.png', tone: 'light', availableEvents: ['birthday', 'etc'] },
   { id: 'bg-img-21', name: 'Lavender Peony Frame', imageUrl: '/templates/template-26-bg.png', tone: 'light', fit: 'fill', availableEvents: ALL_EVENTS },
   // legacy fallback
+  { id: 'bg-svg-botanical', name: 'Botanical Arch', imageUrl: '/templates/svg-botanical-arch.svg', tone: 'light', fit: 'fill', availableEvents: ALL_EVENTS },
+  { id: 'bg-svg-confetti', name: 'Confetti Party', imageUrl: '/templates/svg-confetti-party.svg', tone: 'light', fit: 'fill', availableEvents: ALL_EVENTS },
+  { id: 'bg-svg-lunar', name: 'Lunar Red & Gold', imageUrl: '/templates/svg-lunar-red-gold.svg', tone: 'dark', fit: 'fill', availableEvents: ALL_EVENTS },
   {
     id: 'bg-none',
     name: 'Lavender',

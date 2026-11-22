@@ -1,5 +1,8 @@
 'use client';
+import { FONT_STACKS } from '@/lib/font-keys';
 
+import { layoutFieldToRoleStyle, resolveRoleStyle, typographyForLayout, type ResolvedRoleStyle, type TemplateTypography, type TextRole } from '@/lib/typography';
+import { FitText } from '@/components/typography/fit-text';
 import { motion } from 'framer-motion';
 import { createContext, useContext } from 'react';
 import { useTranslations } from 'next-intl';
@@ -43,6 +46,8 @@ interface Props {
     content_top?: number | null;
     content_side?: number | null;
     box_max_width?: number | null;
+    /** 관리자 글꼴 override (DB) */
+    typography?: TemplateTypography | null;
   };
   /** 카드 타입 — 'thankcard' / 'congrats'면 eventLabel("YOU'RE INVITED") 숨김 */
   eventCardType?: 'invitation' | 'thankcard' | 'congrats';
@@ -175,8 +180,33 @@ function SplitDate({ field, iso, delay = 0 }: { field: TextField; iso: string; d
   );
 }
 
-function FieldText({ field, children, delay = 0 }: { field: TextField; children: React.ReactNode; delay?: number }) {
+/**
+ * 절대배치 텍스트 필드.
+ * fit(역할 스타일 + 원문)이 주어지면 필드 박스(w%) 안에 들어가도록 FitText 로 맞춘다 — 배경 프레임 넘김 방지.
+ * 위치·폭 계산은 그대로 두고(content_side 는 위치 오프셋 의미 유지) 글자 맞춤만 추가.
+ */
+function FieldText({ field, children, delay = 0, fit }: { field: TextField; children: React.ReactNode; delay?: number; fit?: { style: ResolvedRoleStyle; text: string; shrink?: boolean } }) {
   const off = useContext(FieldOffsetCtx);
+  if (fit) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.1 }}
+        transition={{ duration: 0.8, delay, ease: 'easeOut' }}
+        style={{
+          position: 'absolute',
+          left: `calc(${field.x}% + ${off.side}px)`,
+          top: `calc(${field.y}% + ${off.top}px)`,
+          width: `calc(${field.w}% - ${off.side * 2}px)`
+        }}
+      >
+        <FitText text={fit.text} style={fit.style} color={field.color} align={field.align} shrinkToFit={fit.shrink !== false}>
+          {children}
+        </FitText>
+      </motion.div>
+    );
+  }
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -234,6 +264,14 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
   const layout = getLayout(card.layout_id);
   const bg = getBackground(card.bg_id);
   const tpl = findTemplateByPair(card.bg_id, card.layout_id);
+  // 역할별 스타일 — DB(관리자) → 템플릿 기본값 → 레이아웃 필드 정의(크기·자간·글꼴) 순
+  // 템플릿·DB 값은 그 템플릿의 기본 레이아웃에서만 — 절대배치 레이아웃의 필드 정의(필기체 라벨 등) 보존
+  const typoSources = typographyForLayout(tpl, card.layout_id, templateColorOverride?.typography);
+  const roleStyleOf = (role: TextRole, field?: TextField) => resolveRoleStyle(role, {
+    ...typoSources,
+    layout: layoutFieldToRoleStyle(field),
+    layoutFontFamily: field?.fontFamily
+  });
 
   if (layout.renderStyle === 'flow') {
     if (layout.id === 'layout-4') {
@@ -283,6 +321,11 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
     extra: withColor(baseFields.extra, tplSub)
   };
   const greeting = formatGreeting(recipientName, card.recipient_template);
+  // 이벤트 라벨 원문 — 측정(FitText)과 표시에 같은 문자열을 쓰기 위해 한 번만 계산
+  const SCRIPT_LABEL_LAYOUTS = ['layout-4', 'layout-3', 'layout-center', 'layout-5', 'layout-rightbottom', 'layout-6', 'layout-topcenter'];
+  const eventLabelText = card.event_label
+    ? card.event_label
+    : SCRIPT_LABEL_LAYOUTS.includes(layout.id) ? getEventLabelScript(card.event_type) : getEventLabelText(card.event_type);
 
   // admin 배치 override — 카드 폭/최소 높이 + 텍스트 시작 위치(px)
   const mx = templateColorOverride;
@@ -308,14 +351,8 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
         />
       )}
       {f.eventLabel && !hideEventLabel && (
-        <FieldText field={f.eventLabel} delay={0.05}>
-          <Editable fieldKey="event_label">
-            {card.event_label
-              ? card.event_label
-              : ((layout.id === 'layout-4' || (layout.id === 'layout-3' || layout.id === 'layout-center') || (layout.id === 'layout-5' || layout.id === 'layout-rightbottom') || layout.id === 'layout-6' || layout.id === 'layout-topcenter')
-                  ? getEventLabelScript(card.event_type)
-                  : getEventLabelText(card.event_type))}
-          </Editable>
+        <FieldText field={f.eventLabel} delay={0.05} fit={{ style: roleStyleOf('eventLabel', f.eventLabel), text: eventLabelText }}>
+          <Editable fieldKey="event_label">{eventLabelText}</Editable>
         </FieldText>
       )}
       {/* Side Text + Baptism: 우측 컬럼의 가로 중앙에 큰 십자가 — 템플릿 sub 색상 */}
@@ -338,8 +375,8 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
           ✝
         </div>
       )}
-      {(card.greeting_oneliner || editable) && f.subtitle && <FieldText field={f.subtitle} delay={0.1}><Editable fieldKey="greeting_oneliner">{applyName(card.greeting_oneliner || '', recipientName)}</Editable></FieldText>}
-      <FieldText field={f.title} delay={0.2}><Editable fieldKey="title">{applyName(card.title, recipientName)}</Editable></FieldText>
+      {(card.greeting_oneliner || editable) && f.subtitle && <FieldText field={f.subtitle} delay={0.1} fit={{ style: roleStyleOf('subtitle', f.subtitle), text: applyName(card.greeting_oneliner || '', recipientName) }}><Editable fieldKey="greeting_oneliner">{applyName(card.greeting_oneliner || '', recipientName)}</Editable></FieldText>}
+      <FieldText field={f.title} delay={0.2} fit={{ style: roleStyleOf('title', f.title), text: applyName(card.title, recipientName) }}><Editable fieldKey="title">{applyName(card.title, recipientName)}</Editable></FieldText>
       {/* Side Text + Center Text: 하단 date+place 영역 정보 박스 — 템플릿 sub 색상 톤 (없으면 흰색) */}
       {!hideEventLabel && ((layout.id === 'layout-5' || layout.id === 'layout-rightbottom') || layout.id === 'layout-6') && (card.event_date || card.event_place) && f.date && f.place && (() => {
         // 우선순위: 1) tpl.infoBox (template별 명시) 2) tplSub 기반 default 3) 흰색 default
@@ -408,7 +445,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
             top: '88%',
             textAlign: 'center',
             color: tplMain || '#5E6B7C',
-            fontFamily: "'Cormorant Garamond', 'Noto Serif KR', serif",
+            fontFamily: FONT_STACKS.cormorant,
             display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'center'
           }}
         >
@@ -614,7 +651,7 @@ export default function TemplateCard({ card, recipientName, rsvpSlot, guideOverl
           ✽
         </motion.div>
       )}
-      {(card.body || editable) && f.body && <FieldText field={f.body} delay={0.65}><Editable fieldKey="body" multiline>{applyName(card.body || '', recipientName)}</Editable></FieldText>}
+      {(card.body || editable) && f.body && <FieldText field={f.body} delay={0.65} fit={{ style: roleStyleOf('body', f.body), text: applyName(card.body || '', recipientName), shrink: false }}><Editable fieldKey="body" multiline>{applyName(card.body || '', recipientName)}</Editable></FieldText>}
       {(card.extra_info || editable) && f.extra && (
         <FieldText
           field={(layout.id === 'layout-6' || layout.id === 'layout-topcenter') && tplMain ? { ...f.extra, color: tplMain } : f.extra}

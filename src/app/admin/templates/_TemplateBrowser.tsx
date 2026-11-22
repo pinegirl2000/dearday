@@ -12,6 +12,8 @@ import { getTheme } from '@/lib/theme';
 import TemplateInfoPanel from './_TemplateInfoPanel';
 import TemplateColorEditor from './_TemplateColorEditor';
 import TemplateMetricsEditor from './_TemplateMetricsEditor';
+import TemplateTypographyEditor, { type SampleTitleKey } from './_TemplateTypographyEditor';
+import { TYPOGRAPHY_SAMPLE_TITLES } from '@/lib/typography-samples';
 import type { BaseCard, LayoutId } from '@/types/card';
 import type { TemplateColors } from '@/lib/actions/templateConfig';
 
@@ -109,6 +111,11 @@ export default function TemplateBrowser({ configs, colorOverrides }: Props) {
   // 로컬 override — DB 저장 후 즉시 UI 반영 (server props 갱신 전)
   const [localConfigs, setLocalConfigs] = useState<Record<string, string[]>>(() => ({ ...(configs || {}) }));
   const [localColors, setLocalColors] = useState<Record<string, TemplateColors>>(() => ({ ...(colorOverrides || {}) }));
+  // 글꼴 편집기 미리보기 제목 — null 이면 템플릿 샘플 제목 그대로
+  const [sampleTitle, setSampleTitle] = useState<SampleTitleKey | null>(null);
+  // 저장 전 글꼴 편집값 — 미리보기에만 반영. 저장된 값(localColors)과 분리해야
+  // 다른 템플릿에 갔다 돌아왔을 때 저장 안 한 값이 저장된 것처럼 보이지 않음
+  const [typoDraft, setTypoDraft] = useState<{ tplId: string; typography: TemplateColors['typography'] } | null>(null);
 
   const selectedTpl = TEMPLATES.find((t) => t.id === tplId) || TEMPLATES[0];
   const allowedLayouts = useMemo(
@@ -149,6 +156,7 @@ export default function TemplateBrowser({ configs, colorOverrides }: Props) {
             value={tplId}
             onChange={(e) => {
               setTplId(e.target.value);
+              setTypoDraft(null);
               setLayoutId(null);
             }}
             className="w-full px-2 py-2 rounded-lg border border-hydrangea-200 bg-white text-xs text-hydrangea-700 focus:outline-none focus:ring-2 focus:ring-hydrangea-300"
@@ -210,18 +218,38 @@ export default function TemplateBrowser({ configs, colorOverrides }: Props) {
         onSaved={(metrics) => setLocalColors((s) => ({ ...s, [selectedTpl.id]: { ...s[selectedTpl.id], ...metrics } }))}
       />
 
+      {/* 글꼴 override (DB) — 입력 즉시 아래 미리보기에 반영, 저장 시 발행된 카드에도 적용 */}
+      <TemplateTypographyEditor
+        key={`typo-${selectedTpl.id}`}
+        templateId={selectedTpl.id}
+        codeDefaults={selectedTpl.typography}
+        initial={localColors[selectedTpl.id]?.typography || null}
+        onChange={(typography) => setTypoDraft({ tplId: selectedTpl.id, typography })}
+        onSaved={(typography) => {
+          setLocalColors((s) => ({ ...s, [selectedTpl.id]: { ...s[selectedTpl.id], typography } }));
+          setTypoDraft(null);
+        }}
+        sampleTitle={sampleTitle ?? 'short'}
+        onSampleTitleChange={setSampleTitle}
+      />
+
       {activeLayoutId && (
         <>
           <div className="bg-hydrangea-50/40 rounded-2xl p-3">
             {(() => {
-              const previewCard = buildPreview(selectedTpl, activeLayoutId);
+              const basePreview = buildPreview(selectedTpl, activeLayoutId);
+              // 테스트 제목을 고르면 그 문구로 — 긴 제목·한글 제목에서 넘침 확인용
+              const previewCard = sampleTitle ? { ...basePreview, title: TYPOGRAPHY_SAMPLE_TITLES[sampleTitle] } : basePreview;
               const previewTheme = getTheme(previewCard.theme);
+              // 저장 전 글꼴 편집값이 있으면 미리보기에만 덧씌움
+              const saved = localColors[selectedTpl.id];
+              const previewOverride = typoDraft?.tplId === selectedTpl.id ? { ...saved, typography: typoDraft.typography } : saved;
               return (
                 <TemplateCard
                   card={previewCard}
-                  templateColorOverride={localColors[selectedTpl.id]}
+                  templateColorOverride={previewOverride}
                   rsvpSlot={
-                    <RsvpForm card={previewCard} theme={previewTheme} compact templateColorOverride={localColors[selectedTpl.id]} />
+                    <RsvpForm card={previewCard} theme={previewTheme} compact templateColorOverride={previewOverride} />
                   }
                 />
               );

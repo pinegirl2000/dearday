@@ -1,5 +1,10 @@
 'use client';
+import { FONT_STACKS } from '@/lib/font-keys';
 
+import { infoBoxWidthPercent, layoutFieldToRoleStyle, resolveRoleStyle, typographyForLayout, type TemplateTypography, type TextRole, type RoleStyle } from '@/lib/typography';
+import { FitText } from '@/components/typography/fit-text';
+import { useZoneFit } from '@/components/cards/use-zone-fit';
+import { getBackgroundZone } from '@/lib/background-zones';
 import { motion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { imgUrl } from '@/lib/imgUrl';
@@ -50,6 +55,8 @@ interface Props {
     content_top?: number | null;
     content_side?: number | null;
     box_max_width?: number | null;
+    /** 관리자 글꼴 override (DB) */
+    typography?: TemplateTypography | null;
   };
   eventCardType?: 'invitation' | 'thankcard' | 'congrats';
   /** thank_* 레이아웃 상단 원형 사진 클릭 핸들러 (편집 모드 only) — 부모가 file picker 트리거 */
@@ -68,8 +75,23 @@ const COLORS = {
   bgCream: '#FAF5FF'
 } as const;
 
-const SERIF = "'Noto Serif KR', serif";
-const SANS = "'Noto Sans KR', sans-serif";
+const SERIF = FONT_STACKS.notoSerif;
+/** 표지 글 영역에서 제목이 줄어들 수 있는 최소 크기(px) — 이보다 작으면 카드의 얼굴 역할을 못 함 */
+const ZONE_MIN_TITLE_SIZE = 18;
+/** 표지 글 영역 안 조각(라벨·부제·제목·본문) 사이 간격(px) */
+const ZONE_GAP = 8;
+
+/**
+ * 레이아웃 고유 기본값 — 템플릿과 무관하게 그 레이아웃이면 항상 적용되던 모양.
+ * thank_classic 은 어떤 배경과 짝지어져도 필기체 큰 제목이어야 하므로 템플릿이 아니라 레이아웃에 둔다.
+ */
+const LAYOUT_ROLE_DEFAULTS: Partial<Record<string, Partial<Record<TextRole, RoleStyle>>>> = {
+  thank_classic: {
+    title: { font: 'sacramento', size: 44, spacing: 0.01, weight: 400, lineHeight: 1.15 },
+    subtitle: { size: 12 }
+  }
+};
+const SANS = FONT_STACKS.notoSans;
 
 function formatDate(iso?: string | null) {
   if (!iso) return '';
@@ -170,202 +192,38 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
   // 좁은 모바일 화면에서도 텍스트/박스가 프레임 안쪽에 그대로 머문다.
   const refWidth = templateColorOverride?.card_max_width || 440;
   const pctOf = (px?: number | null) => (px == null ? undefined : `${((px / refWidth) * 100).toFixed(3)}%`);
+  // 좌우 여백: DB → 템플릿 코드 기본값. 둘 다 없으면 기존 고정 20px(shorthand) 유지 — 지정 안 한 템플릿 모양 보존
+  const contentSide = templateColorOverride?.content_side ?? tpl?.contentSide;
 
-  return (
-    <div
-      style={{
-        position: 'relative',
-        width: '100%',
-        // admin 배치 override — 미지정 시 코드 default
-        maxWidth: templateColorOverride?.card_max_width || 440,
-        minHeight: templateColorOverride?.card_min_height || undefined,
-        margin: '0 auto',
-        background: hasBgImage ? '#fff' : (background?.gradient || COLORS.bgCream),
-        borderRadius: 24,
-        overflow: 'hidden',
-        boxShadow: '0 20px 50px rgba(123,94,167,0.18)',
-        fontFamily: SERIF,
-        color: dbMain || tpl?.colorMain || COLORS.textDark
-      }}
-    >
-      {hasBgImage && (
-        <img
-          src={imgUrl(background!.imageUrl)}
-          alt=""
-          style={{
-            position: 'absolute', inset: 0, width: '100%', height: '100%',
-            // fit: 'fill' 배경(프레임 디자인)은 카드 크기에 맞춰 늘려 좌우 꽃 잘림 방지
-            objectFit: background!.fit === 'fill' ? 'fill' : 'cover',
-            // text 길이로 카드 높이가 변해도 bg 상단 기준으로 일관되게 — thank_classic은 위 고정
-            objectPosition: card.layout_id === 'thank_classic' ? 'top center' : 'center',
-            zIndex: 0, pointerEvents: 'none'
-          }}
-        />
-      )}
-      <div style={{
-        position: 'relative',
-        padding:
-          card.layout_id === 'layout-7' ? '110px 20px 60px' :
-          card.layout_id === 'thank_classic' ? '378px 20px 60px' :
-          card.layout_id === 'thank_polaroid' ? '300px 20px 60px' :
-          card.layout_id === 'thank_minimal' ? '120px 20px 60px' :
-          '24px 20px 60px',
-        // admin 배치 override — 지정된 항목만 위 default를 덮어씀 (shorthand 뒤에 와야 적용됨)
-        ...(templateColorOverride?.content_top != null && { paddingTop: pctOf(templateColorOverride.content_top) }),
-        ...(templateColorOverride?.content_side != null && {
-          paddingLeft: pctOf(templateColorOverride.content_side),
-          paddingRight: pctOf(templateColorOverride.content_side)
-        }),
-        zIndex: 1
-      }}>
-        {/* thank_classic / thank_polaroid 전용: 상단 사진. thank_minimal은 사진 없음 */}
-        {(card.layout_id === 'thank_classic' || card.layout_id === 'thank_polaroid') && (card.custom_bg_url || editable) && (
-          <div style={{
-            position: 'absolute',
-            top: card.layout_id === 'thank_polaroid' ? 80 : 156,
-            left: 0,
-            right: 0,
-            display: 'flex',
-            justifyContent: 'center',
-            zIndex: 2,
-            pointerEvents: editable ? 'auto' : 'none'
-          }}>
-              {/* polaroid 변형: washi tape 장식 (사진 위쪽 가운데) */}
-              {card.layout_id === 'thank_polaroid' && (
-                <div style={{
-                  position: 'absolute',
-                  top: -14,
-                  left: '50%',
-                  transform: 'translateX(-30%) rotate(-6deg)',
-                  width: 80,
-                  height: 22,
-                  background: 'linear-gradient(180deg, #F8E8C8 0%, #EBD5A8 100%)',
-                  opacity: 0.75,
-                  zIndex: 3,
-                  borderRadius: 1,
-                  boxShadow: '0 1px 2px rgba(0,0,0,0.15)'
-                }} />
-              )}
-              <div
-                onClick={editable ? (e) => { e.stopPropagation(); onPhotoClick?.(); } : undefined}
-                style={{
-                  position: 'relative',
-                  marginLeft: 5,
-                  width: card.layout_id === 'thank_polaroid' ? '62%' : '49%',
-                  maxWidth: card.layout_id === 'thank_polaroid' ? 240 : 195,
-                  aspectRatio: '1 / 1',
-                  borderRadius: card.layout_id === 'thank_polaroid' ? 4 : 0,
-                  overflow: 'hidden',
-                  border: card.layout_id === 'thank_polaroid' ? '14px solid #ffffff' : 'none',
-                  borderBottomWidth: card.layout_id === 'thank_polaroid' ? 40 : undefined,
-                  boxShadow: card.layout_id === 'thank_polaroid'
-                    ? `0 8px 24px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.1)`
-                    : `0 2px 6px ${palette.title}33, 0 12px 28px ${palette.title}26`,
-                  background: '#ffffff',
-                  transform: card.layout_id === 'thank_polaroid' ? 'rotate(-3deg)' : 'none',
-                  cursor: editable ? 'pointer' : 'default',
-                  pointerEvents: 'auto'
-                }}
-              >
-                {card.custom_bg_url ? (
-                  <img
-                    src={imgUrl(card.custom_bg_url)}
-                    alt=""
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                  />
-                ) : (
-                  <div style={{
-                    width: '100%', height: '100%',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 11, color: palette.title, opacity: 0.7, textAlign: 'center', padding: 12, lineHeight: 1.4
-                  }}>
-                    사진 추가<br />(클릭)
-                  </div>
-                )}
-              </div>
-          </div>
-        )}
-        {/* 상단 장식 — 템플릿 메인 색상으로 ✽ + gradient 라인.
-            (Topdown Text, Thank-Classic 제외. 프레임형 배경은 아치 테두리와 겹쳐 생략) */}
-        {card.layout_id !== 'layout-7' && card.layout_id !== 'thank_classic' && background?.fit !== 'fill' && (
-          <FadeUp delay={0.05}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '8px 0 12px' }}>
-              <div style={{ width: 60, height: 1, background: `linear-gradient(90deg, transparent, ${palette.title}, transparent)`, opacity: 0.6 }} />
-              <div style={{ color: palette.title, fontSize: 18 }}>{decoIcon}</div>
-              <div style={{ width: 60, height: 1, background: `linear-gradient(90deg, transparent, ${palette.title}, transparent)`, opacity: 0.6 }} />
-            </div>
-          </FadeUp>
-        )}
+  // 역할별 글꼴·크기·자간 — DB(관리자) → 템플릿 기본값 → (eventLabel 만) 레이아웃 정의 → 전역 기본.
+  // title/subtitle/body 에 레이아웃 정의를 넘기지 않는 이유: 기존 화면이 그 값을 쓰지 않았으므로 기본 모양을 유지하기 위함
+  const layoutMeta = getLayout(card.layout_id);
+  // 템플릿·DB 값은 그 템플릿의 기본 레이아웃에서만 — 다른 레이아웃(thank_classic 등) 고유 모양 보존
+  const typoSources = typographyForLayout(tpl, card.layout_id, templateColorOverride?.typography);
+  const labelStyle = resolveRoleStyle('eventLabel', { ...typoSources, layout: layoutFieldToRoleStyle(layoutMeta.fields.eventLabel) });
+  const layoutRoles = LAYOUT_ROLE_DEFAULTS[card.layout_id];
+  const subtitleStyle = resolveRoleStyle('subtitle', { ...typoSources, layout: layoutRoles?.subtitle });
+  const titleStyle = resolveRoleStyle('title', { ...typoSources, layout: layoutRoles?.title });
+  const bodyStyle = resolveRoleStyle('body', typoSources);
 
-        {/* 앞면: eventLabel(상단 디바이더 바로 아래) + subtitle(작게) + 타이틀 */}
-        <FadeUp delay={0.1}>
-          <div style={{ textAlign: 'center', padding: card.layout_id === 'layout-7' ? '0 10px 4px' : '0 10px 12px' }}>
-            {/* eventLabel — 상단 디바이더 바로 아래 (baptism은 십자가 디자인이 BG에 있어 텍스트 라벨 숨김) */}
-            {(() => {
-              const lay = getLayout(card.layout_id);
-              if (!lay.fields.eventLabel) return null;
-              if (hideEventLabel) return null;
-              // baptism + 사용자 override 없음 → eventLabel 텍스트 미표시
-              if (card.event_type === 'baptism' && !card.event_label) return null;
-              const labelField = lay.fields.eventLabel;
-              return (
-                <div style={{
-                  fontSize: labelField.fontSize,
-                  // 우선순위: DB title_accent → DB main → 템플릿 코드 main → layout default
-                  color: dbTitleAccent || dbMain || tpl?.colorMain || labelField.color,
-                  fontWeight: labelField.fontWeight,
-                  letterSpacing: labelField.letterSpacing,
-                  fontFamily: labelField.fontFamily,
-                  textAlign: labelField.align,
-                  marginTop: -4,
-                  marginBottom: 12
-                }}>
-                  {card.event_label || getEventLabelText(card.event_type)}
-                </div>
-              );
-            })()}
-            {/* subtitle (greeting_oneliner) — eventLabel 아래, title 바로 위 (작은 글씨) */}
-            {(card.greeting_oneliner || editable) && (
-              <div style={{
-                fontSize: card.layout_id === 'thank_classic' ? 12 : 13,
-                color: palette.subtitle,
-                fontWeight: 400,
-                letterSpacing: '0.2em',
-                fontFamily: SERIF,
-                marginTop: card.layout_id === 'thank_classic' ? 10 : 0,
-                marginBottom: 8,
-                lineHeight: 1.5
-              }}>
-                <Editable fieldKey="greeting_oneliner">{applyName(card.greeting_oneliner || '', recipientName)}</Editable>
-              </div>
-            )}
-            <h1 style={card.layout_id === 'thank_classic'
-              ? { fontSize: 44, fontWeight: 400, color: palette.title, letterSpacing: '0.01em', margin: '8px 0 10px', lineHeight: 1.15, whiteSpace: 'pre-wrap', fontFamily: "'Sacramento', 'Great Vibes', 'Noto Serif KR', cursive" }
-              : { fontSize: 24, fontWeight: 500, color: palette.title, letterSpacing: '0.4em', margin: '0 0 8px', lineHeight: 1.3, whiteSpace: 'pre-wrap' }}>
-              <Editable fieldKey="title">{applyName(card.title, recipientName)}</Editable>
-            </h1>
-            {(card.body || editable) && card.layout_id !== 'layout-7' && (
-              <div style={{ marginTop: card.layout_id === 'thank_classic' ? -20 : 0 }}>
-                <Divider color={palette.title} icon={decoIcon} />
-                <div style={{
-                  lineHeight: 2.0,
-                  color: dbMain || tpl?.colorMain || COLORS.textDark,
-                  fontSize: 15,
-                  padding: '0 10px',
-                  textAlign: 'center',
-                  wordBreak: 'keep-all',
-                  overflowWrap: 'break-word',
-                  whiteSpace: 'pre-wrap'
-                }}>
-                  <Editable fieldKey="body" multiline>
-                    {applyName(card.body || '', recipientName)}
-                  </Editable>
-                </div>
-              </div>
-            )}
-          </div>
-        </FadeUp>
+  // 배경에 글 영역이 지정되어 있으면 "표지 + 내용 면" 구조로 그림 (훅은 조건과 무관하게 항상 호출)
+  const bgZone = getBackgroundZone(card.bg_id, card.layout_id);
+  const { plan: zonePlan, debug: zoneDebug, measured: zoneMeasured, refs: zoneRefs } = useZoneFit({
+    enabled: !!bgZone,
+    // 표지에 놓이는 글의 내용·글꼴·크기와 배경(영역)이 바뀌면 처음부터 다시 — 줄어든 쪽으로 바뀌어도 표지로 돌아오게
+    resetKey: [
+      card.title, card.greeting_oneliner, card.body, card.event_label, card.event_type, card.bg_id, hideEventLabel, recipientName,
+      titleStyle.fontFamily, titleStyle.spacing, labelStyle.fontFamily, labelStyle.size,
+      subtitleStyle.fontFamily, subtitleStyle.size, bodyStyle.fontFamily, bodyStyle.size, bodyStyle.lineHeight
+    ].join('\u0001'),
+    baseTitleSize: titleStyle.size,
+    minTitleSize: Math.min(ZONE_MIN_TITLE_SIZE, titleStyle.size),
+    gap: ZONE_GAP
+  });
 
+  // ── 행사 정보·RSVP·연락처 — 기존 흐름형과 "표지+내용 면" 구조가 함께 쓰는 블록 ──
+  const detailsBlock = (
+    <>
         {/* 행사 정보: 일시 / 장소 / 주소 / 전화 */}
         <FadeUp delay={0.3}>
           <div style={{ textAlign: 'center', padding: '0 16px 16px' }}>
@@ -382,7 +240,11 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
                 margin: card.layout_id === 'layout-7' ? '24px auto 14px' : '20px auto 14px',
                 // admin 배치 override — 정보 박스 가로.
                 // 기준 폭 대비 %로 환산 → 좁은 화면에서도 프레임 안쪽에 여백을 두고 들어감
-                maxWidth: pctOf(templateColorOverride?.box_max_width || 320),
+                // 템플릿 기본 여백으로 콘텐츠가 좁아져도 박스 실제 폭은 유지 ("8 PM" 줄바꿈 방지)
+                // 내용 면은 배경 프레임과 무관한 깨끗한 면이라 px 폭 그대로 — % 로 좁히면 "8 PM" 이 두 줄로 깨짐
+                maxWidth: bgZone
+                  ? (templateColorOverride?.box_max_width || 320)
+                  : infoBoxWidthPercent(templateColorOverride?.box_max_width || 320, refWidth, templateColorOverride?.content_side, tpl?.contentSide),
                 background: boxBg,
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)',
@@ -524,7 +386,7 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
           const titleColor = dbMain || tpl?.colorMain || palette.title;
           return (
             <div style={{ textAlign: 'center', padding: '6px 20px 24px' }}>
-              <p style={{ margin: 0, lineHeight: 1.2, color: titleColor, fontFamily: "'Sacramento', 'Great Vibes', 'Noto Serif KR', cursive" }}>
+              <p style={{ margin: 0, lineHeight: 1.2, color: titleColor, fontFamily: FONT_STACKS.sacramento }}>
                 <Editable fieldKey="contact_name">
                   {prefix && (
                     <span style={{ fontSize: 14, opacity: 0.75, marginRight: 4 }}>{prefix.trim()} </span>
@@ -583,6 +445,308 @@ export default function ClassicTemplateCard({ card, recipientName, background, r
             </p>
           </div>
         )}
+
+    </>
+  );
+
+  // ── 표지 + 내용 면 구조 (배경에 글 영역이 지정된 경우) ──
+  // 그림의 빈 자리에 제목부만 두고, 나머지는 표지 아래 깨끗한 면에 둔다 — 글과 그림이 겹치지 않게
+  if (bgZone && background) {
+    const z = bgZone.zone;
+    const zAlign = z.align || 'center';
+    const showLabel = !!layoutMeta.fields.eventLabel && !hideEventLabel && !(card.event_type === 'baptism' && !card.event_label);
+    const labelText = card.event_label || getEventLabelText(card.event_type);
+    const subtitleText = applyName(card.greeting_oneliner || '', recipientName);
+    const titleText = applyName(card.title, recipientName);
+    const bodyText = applyName(card.body || '', recipientName);
+    const mainColor = dbMain || tpl?.colorMain || COLORS.textDark;
+    // 영역 높이에 맞춰 줄어든 제목 크기 — 가로 맞춤(FitText)의 하한도 그보다 크지 않게
+    const zoneTitleStyle = { ...titleStyle, size: zonePlan.titleSize, minSize: Math.min(titleStyle.minSize, zonePlan.titleSize) };
+
+    const labelEl = showLabel
+      ? <FitText text={labelText} style={labelStyle} color={dbTitleAccent || dbMain || tpl?.colorMain || palette.title} align={zAlign} />
+      : null;
+    const subtitleEl = (card.greeting_oneliner || editable)
+      ? <FitText text={subtitleText} style={subtitleStyle} color={palette.subtitle} align={zAlign}><Editable fieldKey="greeting_oneliner">{subtitleText}</Editable></FitText>
+      : null;
+    const titleEl = (
+      <FitText as="h1" text={titleText} style={zoneTitleStyle} color={palette.title} align={zAlign}>
+        <Editable fieldKey="title">{titleText}</Editable>
+      </FitText>
+    );
+    const bodyEl = (card.body || editable)
+      ? <FitText text={bodyText} style={bodyStyle} color={mainColor} align={zAlign} shrinkToFit={false}><Editable fieldKey="body" multiline>{bodyText}</Editable></FitText>
+      : null;
+    // 측정 전용 사본 — 내용 면으로 내려간 조각을 영역 안에서 숨긴 채 잴 때 쓴다.
+    // 편집 버튼(Editable)·h1 을 빼는 이유: 보이지 않는 사본이 Tab 포커스를 받거나 h1 이 두 개가 되면 안 되므로
+    const subtitleGhost = subtitleEl ? <FitText text={subtitleText} style={subtitleStyle} color={palette.subtitle} align={zAlign} /> : null;
+    const titleGhost = <FitText text={titleText} style={zoneTitleStyle} color={palette.title} align={zAlign} />;
+    const bodyGhost = bodyEl ? <FitText text={bodyText} style={bodyStyle} color={mainColor} align={zAlign} shrinkToFit={false} /> : null;
+
+    // 내용 면으로 내려간 조각은 영역 안에서 숨긴 채 남겨 높이를 계속 잰다(결과가 왔다 갔다 하지 않게)
+    // opacity 0 도 함께 — 안쪽 FitText 가 visibility: visible 을 직접 지정해 부모의 hidden 을 뚫고 보이기 때문
+    const parked: React.CSSProperties = { position: 'absolute', left: 0, right: 0, visibility: 'hidden', opacity: 0, pointerEvents: 'none' };
+    const { headBelow, subtitleBelow, bodyBelow } = zonePlan;
+    // 조각 감싸기 스타일: 내려간 조각은 숨긴 채 유지, 내용이 없는 조각은 흐름에서 제외
+    // (빈 div 도 flex gap 을 차지해 간격이 벌어지고 planZone 계산과 실제 높이가 어긋나기 때문)
+    const slotStyle = (el: React.ReactNode, below: boolean): React.CSSProperties | undefined =>
+      !el ? { display: 'none' } : below ? parked : undefined;
+    // 숨긴 사본은 포커스·검색·스크린리더에서 완전히 제외
+    // inert 는 React 18 이 불리언을 속성으로 내보내지 않아 빈 문자열로 전달(타입은 불리언만 허용해 object 로 우회)
+    const ghostProps = (below: boolean): React.HTMLAttributes<HTMLDivElement> =>
+      (below ? { 'aria-hidden': true, ...({ inert: '' } as object) } : {});
+    const hasPanelText = headBelow || (subtitleBelow && !!subtitleEl) || (bodyBelow && !!bodyEl);
+
+    return (
+      <div
+        style={{
+          position: 'relative',
+          width: '100%',
+          maxWidth: templateColorOverride?.card_max_width || 440,
+          margin: '0 auto',
+          background: bgZone.panelColor,
+          borderRadius: 24,
+          overflow: 'hidden',
+          boxShadow: '0 20px 50px rgba(123,94,167,0.18)',
+          fontFamily: SERIF,
+          color: mainColor
+        }}
+      >
+        {/* 표지 — 배경 원본 비율 고정이라 글 길이와 무관하게 그림이 잘리거나 움직이지 않음 */}
+        {/* coverCrop 이 있으면 그림 위쪽만 보이도록 표지를 낮춤(가로는 그대로라 그림 비율은 유지) */}
+        <div style={{ position: 'relative', width: '100%', aspectRatio: String(bgZone.aspect / (bgZone.coverCrop ?? 1)), overflow: 'hidden' }}>
+          <img
+            src={imgUrl(background.imageUrl)}
+            alt=""
+            style={{ position: 'absolute', left: 0, top: 0, width: '100%', aspectRatio: String(bgZone.aspect), pointerEvents: 'none' }}
+          />
+          <div
+            ref={zoneRefs.zoneRef}
+            style={{
+              position: 'absolute',
+              left: `${z.x}%`, top: `${z.y}%`, width: `${z.w}%`, height: `${z.h}%`,
+              display: 'flex', flexDirection: 'column', gap: ZONE_GAP,
+              justifyContent: z.valign === 'top' ? 'flex-start' : z.valign === 'bottom' ? 'flex-end' : 'center',
+              // 첫 측정이 끝나기 전에는 숨김 — 서버가 보낸 첫 화면에서 본문이 그림 위에 겹쳐 보였다가 내려가는 것 방지
+              visibility: zoneMeasured ? undefined : 'hidden',
+              outline: zoneDebug ? '1px dashed rgba(255,0,80,0.8)' : undefined
+            }}
+          >
+            <div ref={zoneRefs.labelRef} {...ghostProps(headBelow)} style={slotStyle(labelEl, headBelow)}>{labelEl}</div>
+            <div ref={zoneRefs.subtitleRef} {...ghostProps(headBelow || subtitleBelow)} style={slotStyle(subtitleEl, headBelow || subtitleBelow)}>{headBelow || subtitleBelow ? subtitleGhost : subtitleEl}</div>
+            <div ref={zoneRefs.titleRef} {...ghostProps(headBelow)} style={slotStyle(titleEl, headBelow)}>{headBelow ? titleGhost : titleEl}</div>
+            <div ref={zoneRefs.bodyRef} {...ghostProps(headBelow || bodyBelow)} style={slotStyle(bodyEl, headBelow || bodyBelow)}>{headBelow || bodyBelow ? bodyGhost : bodyEl}</div>
+          </div>
+        </div>
+
+        {/* 내용 면 — 표지에 들어가지 못한 글 + 날짜·장소·RSVP·연락처 */}
+        <div style={{ position: 'relative', padding: '22px 20px 44px' }}>
+          {hasPanelText && (
+            <FadeUp delay={0.2}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: ZONE_GAP, padding: '0 10px 18px', textAlign: 'center' }}>
+                {headBelow && labelEl}
+                {(headBelow || subtitleBelow) && subtitleEl}
+                {headBelow && titleEl}
+                {(headBelow || bodyBelow) && bodyEl}
+              </div>
+            </FadeUp>
+          )}
+          {detailsBlock}
+        </div>
+        {guideOverlay}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        position: 'relative',
+        width: '100%',
+        // admin 배치 override — 미지정 시 코드 default
+        maxWidth: templateColorOverride?.card_max_width || 440,
+        minHeight: templateColorOverride?.card_min_height || undefined,
+        margin: '0 auto',
+        background: hasBgImage ? '#fff' : (background?.gradient || COLORS.bgCream),
+        borderRadius: 24,
+        overflow: 'hidden',
+        boxShadow: '0 20px 50px rgba(123,94,167,0.18)',
+        fontFamily: SERIF,
+        color: dbMain || tpl?.colorMain || COLORS.textDark
+      }}
+    >
+      {hasBgImage && (
+        <img
+          src={imgUrl(background!.imageUrl)}
+          alt=""
+          style={{
+            position: 'absolute', inset: 0, width: '100%', height: '100%',
+            // fit: 'fill' 배경(프레임 디자인)은 카드 크기에 맞춰 늘려 좌우 꽃 잘림 방지
+            objectFit: background!.fit === 'fill' ? 'fill' : 'cover',
+            // text 길이로 카드 높이가 변해도 bg 상단 기준으로 일관되게 — thank_classic은 위 고정
+            objectPosition: card.layout_id === 'thank_classic' ? 'top center' : 'center',
+            zIndex: 0, pointerEvents: 'none'
+          }}
+        />
+      )}
+      <div style={{
+        position: 'relative',
+        padding:
+          card.layout_id === 'layout-7' ? '110px 20px 60px' :
+          card.layout_id === 'thank_classic' ? '378px 20px 60px' :
+          card.layout_id === 'thank_polaroid' ? '300px 20px 60px' :
+          card.layout_id === 'thank_minimal' ? '120px 20px 60px' :
+          '24px 20px 60px',
+        // admin 배치 override — 지정된 항목만 위 default를 덮어씀 (shorthand 뒤에 와야 적용됨)
+        ...(templateColorOverride?.content_top != null && { paddingTop: pctOf(templateColorOverride.content_top) }),
+        ...(contentSide != null && {
+          paddingLeft: pctOf(contentSide),
+          paddingRight: pctOf(contentSide)
+        }),
+        zIndex: 1
+      }}>
+        {/* thank_classic / thank_polaroid 전용: 상단 사진. thank_minimal은 사진 없음 */}
+        {(card.layout_id === 'thank_classic' || card.layout_id === 'thank_polaroid') && (card.custom_bg_url || editable) && (
+          <div style={{
+            position: 'absolute',
+            top: card.layout_id === 'thank_polaroid' ? 80 : 156,
+            left: 0,
+            right: 0,
+            display: 'flex',
+            justifyContent: 'center',
+            zIndex: 2,
+            pointerEvents: editable ? 'auto' : 'none'
+          }}>
+              {/* polaroid 변형: washi tape 장식 (사진 위쪽 가운데) */}
+              {card.layout_id === 'thank_polaroid' && (
+                <div style={{
+                  position: 'absolute',
+                  top: -14,
+                  left: '50%',
+                  transform: 'translateX(-30%) rotate(-6deg)',
+                  width: 80,
+                  height: 22,
+                  background: 'linear-gradient(180deg, #F8E8C8 0%, #EBD5A8 100%)',
+                  opacity: 0.75,
+                  zIndex: 3,
+                  borderRadius: 1,
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.15)'
+                }} />
+              )}
+              <div
+                onClick={editable ? (e) => { e.stopPropagation(); onPhotoClick?.(); } : undefined}
+                style={{
+                  position: 'relative',
+                  marginLeft: 5,
+                  width: card.layout_id === 'thank_polaroid' ? '62%' : '49%',
+                  maxWidth: card.layout_id === 'thank_polaroid' ? 240 : 195,
+                  aspectRatio: '1 / 1',
+                  borderRadius: card.layout_id === 'thank_polaroid' ? 4 : 0,
+                  overflow: 'hidden',
+                  border: card.layout_id === 'thank_polaroid' ? '14px solid #ffffff' : 'none',
+                  borderBottomWidth: card.layout_id === 'thank_polaroid' ? 40 : undefined,
+                  boxShadow: card.layout_id === 'thank_polaroid'
+                    ? `0 8px 24px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.1)`
+                    : `0 2px 6px ${palette.title}33, 0 12px 28px ${palette.title}26`,
+                  background: '#ffffff',
+                  transform: card.layout_id === 'thank_polaroid' ? 'rotate(-3deg)' : 'none',
+                  cursor: editable ? 'pointer' : 'default',
+                  pointerEvents: 'auto'
+                }}
+              >
+                {card.custom_bg_url ? (
+                  <img
+                    src={imgUrl(card.custom_bg_url)}
+                    alt=""
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  />
+                ) : (
+                  <div style={{
+                    width: '100%', height: '100%',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 11, color: palette.title, opacity: 0.7, textAlign: 'center', padding: 12, lineHeight: 1.4
+                  }}>
+                    사진 추가<br />(클릭)
+                  </div>
+                )}
+              </div>
+          </div>
+        )}
+        {/* 상단 장식 — 템플릿 메인 색상으로 ✽ + gradient 라인.
+            (Topdown Text, Thank-Classic 제외. 프레임형 배경은 아치 테두리와 겹쳐 생략) */}
+        {card.layout_id !== 'layout-7' && card.layout_id !== 'thank_classic' && background?.fit !== 'fill' && (
+          <FadeUp delay={0.05}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '8px 0 12px' }}>
+              <div style={{ width: 60, height: 1, background: `linear-gradient(90deg, transparent, ${palette.title}, transparent)`, opacity: 0.6 }} />
+              <div style={{ color: palette.title, fontSize: 18 }}>{decoIcon}</div>
+              <div style={{ width: 60, height: 1, background: `linear-gradient(90deg, transparent, ${palette.title}, transparent)`, opacity: 0.6 }} />
+            </div>
+          </FadeUp>
+        )}
+
+        {/* 앞면: eventLabel(상단 디바이더 바로 아래) + subtitle(작게) + 타이틀 */}
+        <FadeUp delay={0.1}>
+          <div style={{ textAlign: 'center', padding: card.layout_id === 'layout-7' ? '0 10px 4px' : '0 10px 12px' }}>
+            {/* eventLabel — 상단 디바이더 바로 아래 (baptism은 십자가 디자인이 BG에 있어 텍스트 라벨 숨김) */}
+            {(() => {
+              const lay = getLayout(card.layout_id);
+              if (!lay.fields.eventLabel) return null;
+              if (hideEventLabel) return null;
+              // baptism + 사용자 override 없음 → eventLabel 텍스트 미표시
+              if (card.event_type === 'baptism' && !card.event_label) return null;
+              const labelField = lay.fields.eventLabel;
+              return (
+                <FitText
+                  text={card.event_label || getEventLabelText(card.event_type)}
+                  style={labelStyle}
+                  // 우선순위: DB title_accent → DB main → 템플릿 코드 main → layout default
+                  color={dbTitleAccent || dbMain || tpl?.colorMain || labelField.color}
+                  align={labelField.align}
+                  extraStyle={{ marginTop: -4, marginBottom: 12 }}
+                />
+              );
+            })()}
+            {/* subtitle (greeting_oneliner) — eventLabel 아래, title 바로 위 (작은 글씨) */}
+            {(card.greeting_oneliner || editable) && (
+              <FitText
+                text={applyName(card.greeting_oneliner || '', recipientName)}
+                style={subtitleStyle}
+                color={palette.subtitle}
+                extraStyle={{ marginTop: card.layout_id === 'thank_classic' ? 10 : 0, marginBottom: 8 }}
+              >
+                <Editable fieldKey="greeting_oneliner">{applyName(card.greeting_oneliner || '', recipientName)}</Editable>
+              </FitText>
+            )}
+            {/* 글꼴·크기·자간은 템플릿 설정에서 — 여백만 레이아웃별로 다름 */}
+            <FitText
+              as="h1"
+              text={applyName(card.title, recipientName)}
+              style={titleStyle}
+              color={palette.title}
+              extraStyle={{ margin: card.layout_id === 'thank_classic' ? '8px 0 10px' : '0 0 8px' }}
+            >
+              <Editable fieldKey="title">{applyName(card.title, recipientName)}</Editable>
+            </FitText>
+            {(card.body || editable) && card.layout_id !== 'layout-7' && (
+              <div style={{ marginTop: card.layout_id === 'thank_classic' ? -20 : 0 }}>
+                <Divider color={palette.title} icon={decoIcon} />
+                <FitText
+                  text={applyName(card.body || '', recipientName)}
+                  style={bodyStyle}
+                  color={dbMain || tpl?.colorMain || COLORS.textDark}
+                  shrinkToFit={false}
+                  extraStyle={{ padding: '0 10px', boxSizing: 'border-box' }}
+                >
+                  <Editable fieldKey="body" multiline>
+                    {applyName(card.body || '', recipientName)}
+                  </Editable>
+                </FitText>
+              </div>
+            )}
+          </div>
+        </FadeUp>
+
+        {detailsBlock}
 
       </div>
       {/* wizard 가이드 오버레이 — 카드 외각에 absolute로 (flow layout 좌표 없이도 표시 가능) */}

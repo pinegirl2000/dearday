@@ -1,4 +1,5 @@
 'use client';
+import { FONT_STACKS } from '@/lib/font-keys';
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -66,14 +67,14 @@ export default function LiveDemo() {
               className="text-center text-2xl mb-3"
               style={{
                 color: active.accent,
-                fontFamily: "var(--font-cormorant), 'Cormorant Garamond', serif",
+                fontFamily: FONT_STACKS.cormorant,
                 letterSpacing: '0.06em'
               }}
             >
               {active.title}
             </div>
             <div className="text-center text-[11px] text-hydrangea-500 italic mb-5"
-              style={{ fontFamily: "var(--font-cormorant), serif" }}>
+              style={{ fontFamily: FONT_STACKS.cormorant }}>
               {active.sub}
             </div>
             <div className="flex items-center justify-center gap-2 mb-1">

@@ -199,7 +199,7 @@ export default function ManageClient({ slug, cardTitle }: Props) {
         )}
 
         {loading ? (
-          <p className="text-center py-12 text-hydrangea-300">{t('loading')}</p>
+          <p className="text-center py-12 text-hydrangea-400">{t('loading')}</p>
         ) : recipients.length === 0 ? (
           <div className="rounded-2xl border-2 border-dashed border-hydrangea-100 p-10 text-center">
             <p className="text-sm text-hydrangea-400 mb-4">{t('emptyHintLine1')}<br />{t('emptyHintLine2')}</p>
@@ -209,7 +209,7 @@ export default function ManageClient({ slug, cardTitle }: Props) {
           </div>
         ) : (
           <div className="rounded-2xl border border-hydrangea-100 bg-white overflow-hidden pb-1 mb-12">
-            <div className="grid grid-cols-[32px_80px_1fr_56px_56px_24px] items-center gap-2 px-3 py-2 border-b border-hydrangea-100 bg-hydrangea-50/40 text-[10px] font-semibold text-hydrangea-500 uppercase tracking-wider">
+            <div className="grid grid-cols-[32px_80px_1fr_56px_56px_24px] items-center gap-2 px-3 py-2 border-b border-hydrangea-100 bg-hydrangea-50/40 text-[11px] font-semibold text-hydrangea-500 uppercase tracking-wider">
               <div>#</div>
               <div>Name</div>
               <div>Link / Comment</div>
@@ -296,13 +296,13 @@ export default function ManageClient({ slug, cardTitle }: Props) {
                       <div className="px-3 pb-3 -mt-1 space-y-1.5">
                         {hasNames && (
                           <div className="bg-hydrangea-50 rounded-lg p-2 text-xs text-hydrangea-700">
-                            <div className="text-[10px] uppercase tracking-wider text-hydrangea-400 mb-0.5">Attendees</div>
+                            <div className="text-[11px] uppercase tracking-wider text-hydrangea-400 mb-0.5">Attendees</div>
                             {r.rsvp_attendee_names!.join(', ')}
                           </div>
                         )}
                         {hasOneliner && (
                           <div className="bg-hydrangea-50 rounded-lg p-2 text-xs text-hydrangea-700 italic">
-                            <div className="text-[10px] uppercase tracking-wider text-hydrangea-400 mb-0.5 not-italic">Reply</div>
+                            <div className="text-[11px] uppercase tracking-wider text-hydrangea-400 mb-0.5 not-italic">Reply</div>
                             "{r.rsvp_oneliner}"
                           </div>
                         )}

@@ -76,7 +76,8 @@ export default function InAppBrowserBanner() {
   if (isGuestRoute(pathname) || !info.isInApp || dismissed) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[60] bg-amber-50 border-b border-amber-300 px-3 py-2.5 shadow-sm">
+    // 🔧 fixed 제거 — TopBar 헤더 안에서 일반 흐름으로 쌓여 상단바를 덮지 않음 (헤더 높이가 그만큼 늘어남)
+    <div role="status" className="bg-amber-50 border-b border-amber-300 px-3 py-2.5">
       <div className="max-w-md mx-auto flex items-start gap-2">
         <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
         <div className="flex-1 min-w-0">
@@ -94,7 +95,7 @@ export default function InAppBrowserBanner() {
             <button
               type="button"
               onClick={openExternal}
-              className="mt-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-amber-600 text-white text-[11px] font-semibold hover:bg-amber-700 active:scale-95 transition"
+              className="mt-2 inline-flex items-center gap-1 min-h-[36px] px-3 rounded-md bg-amber-600 text-white text-[11px] font-semibold hover:bg-amber-700 active:scale-95 transition"
             >
               <ExternalLink className="w-3 h-3" />
               {info.isAndroid ? t('openChromeBtn') : t('copyForSafari')}
@@ -105,9 +106,9 @@ export default function InAppBrowserBanner() {
           type="button"
           onClick={handleDismiss}
           aria-label={t('closeAria')}
-          className="flex-shrink-0 p-1 rounded text-amber-700 hover:bg-amber-100 transition"
+          className="flex-shrink-0 -m-1.5 w-10 h-10 inline-flex items-center justify-center rounded-full text-amber-700 hover:bg-amber-100 transition"
         >
-          <X className="w-3.5 h-3.5" />
+          <X className="w-4 h-4" />
         </button>
       </div>
     </div>

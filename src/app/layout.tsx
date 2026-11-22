@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
-import { Noto_Serif_KR, Noto_Sans_KR, Gothic_A1, Playfair_Display, Great_Vibes, Cormorant_Garamond, Sacramento } from 'next/font/google';
+import { FONT_VARIABLE_CLASSNAMES } from '@/lib/fonts';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 import { getServerSession } from 'next-auth';
@@ -8,58 +8,9 @@ import { Toaster } from 'sonner';
 import { authOptions } from '@/lib/auth';
 import SessionProvider from '@/components/auth/SessionProvider';
 import TopBar from '@/components/layout/TopBar';
-import InAppBrowserBanner from '@/components/layout/InAppBrowserBanner';
 import './globals.css';
 
 const ADSENSE_CLIENT = 'ca-pub-1846879536072566';
-
-const notoSerif = Noto_Serif_KR({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-noto-serif',
-  display: 'swap'
-});
-
-const notoSans = Noto_Sans_KR({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '700'],
-  variable: '--font-noto-sans',
-  display: 'swap'
-});
-
-// 봉투 수신자 이름용 고딕 — Noto Sans KR과 구분되는 한글 고딕
-const gothicA1 = Gothic_A1({
-  subsets: ['latin'],
-  weight: ['300', '400', '500'],
-  variable: '--font-gothic-a1',
-  display: 'swap'
-});
-
-const playfair = Playfair_Display({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  style: ['normal', 'italic'],
-  display: 'swap'
-});
-
-const greatVibes = Great_Vibes({
-  subsets: ['latin'],
-  weight: ['400'],
-  display: 'swap'
-});
-
-const cormorant = Cormorant_Garamond({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-cormorant',
-  display: 'swap'
-});
-
-const sacramento = Sacramento({
-  subsets: ['latin'],
-  weight: ['400'],
-  display: 'swap'
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://dearday.sg'),
@@ -84,7 +35,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
+  // 🔧 maximumScale 제한 제거 — 저시력 사용자의 핀치 확대를 막지 않기 위함. 입력 포커스 시 iOS 자동 확대는 globals.css 의 16px 규칙으로 방지
   themeColor: '#7B5EA7',
   viewportFit: 'cover'
 };
@@ -95,7 +46,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const session = await getServerSession(authOptions);
 
   return (
-    <html lang={locale} className={`${notoSerif.variable} ${notoSans.variable} ${gothicA1.variable} ${cormorant.variable}`}>
+    <html lang={locale} className={FONT_VARIABLE_CLASSNAMES}>
       <head>
         <Script
           id="adsense-script"
@@ -105,10 +56,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           crossOrigin="anonymous"
         />
       </head>
-      <body className="font-sans bg-hydrangea-50">
+      <body className="font-sans bg-hydrangea-50 antialiased">
         <SessionProvider session={session}>
           <NextIntlClientProvider messages={messages} locale={locale}>
-            <InAppBrowserBanner />
             <TopBar />
             {children}
           </NextIntlClientProvider>
