@@ -168,6 +168,12 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
           <Check className="w-6 h-6 text-white" strokeWidth={3} />
         </div>
         <p className="font-semibold text-base" style={{ color: ACCENT_DEEP }}>{hasExisting ? 'Your reply has been updated!' : 'Thank you for replying!'}</p>
+        {/* 한 번의 탭으로 바로 저장되므로, 무엇으로 답했는지 다시 보여 줘 잘못 누른 경우를 알아챌 수 있게 */}
+        {attend !== null && (
+          <p className="text-sm mt-1.5" style={{ color: ACCENT_DEEP, opacity: 0.85 }}>
+            {attend ? "You replied: I'll be there" : "You replied: Sorry, can't make it"}
+          </p>
+        )}
         {attend && oneliner && (
           <p className="text-sm mt-2" style={{ color: ACCENT_DEEP, opacity: 0.7 }}>Your one-line greeting has been added to the feed</p>
         )}
@@ -234,7 +240,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
             whileTap={{ scale: 0.96 }}
             onClick={() => { setAttend(true); if (max <= 1) handleSubmit(true); }}
             disabled={pending || locked}
-            className="min-h-[34px] text-xs rounded-lg border font-medium transition flex items-center justify-center gap-1 disabled:opacity-50"
+            className="min-h-[44px] text-sm rounded-lg border font-medium transition flex items-center justify-center gap-1 disabled:opacity-50"
             style={{
               background: ACCENT,
               color: '#fff',
@@ -251,7 +257,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
             whileTap={{ scale: 0.96 }}
             onClick={() => { setAttend(false); if (max <= 1) handleSubmit(false); }}
             disabled={pending || locked}
-            className="min-h-[34px] text-xs rounded-lg border font-medium transition flex items-center justify-center gap-1 disabled:opacity-50"
+            className="min-h-[44px] text-sm rounded-lg border font-medium transition flex items-center justify-center gap-1 disabled:opacity-50"
             style={{
               background: ACCENT_DEEP,
               color: '#fff',

@@ -50,7 +50,7 @@ export async function ensureShareToken(slug: string, ownerToken?: string | null)
     return { ok: true, token };
   } catch (e: any) {
     console.error('ensureShareToken error:', e);
-    return { ok: false, error: e.message || '토큰 발급 실패' };
+    return { ok: false, error: '토큰 발급 실패' };
   }
 }
 
@@ -64,7 +64,7 @@ export async function regenerateShareToken(slug: string, ownerToken?: string | n
     return { ok: true, token };
   } catch (e: any) {
     console.error('regenerateShareToken error:', e);
-    return { ok: false, error: e.message || '토큰 재발급 실패' };
+    return { ok: false, error: '토큰 재발급 실패' };
   }
 }
 

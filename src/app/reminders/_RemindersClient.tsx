@@ -249,7 +249,7 @@ export default function RemindersClient({ initialReminders, initialOptIn }: Prop
           <button
             type="button"
             onClick={() => setAddOpen(!addOpen)}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-hydrangea-500 text-white text-xs font-medium active:scale-95 transition"
+            className="inline-flex items-center gap-1 px-4 min-h-[40px] rounded-full bg-hydrangea-500 text-white text-sm font-medium active:scale-95 transition"
           >
             <Plus className="w-3.5 h-3.5" /> Add
           </button>

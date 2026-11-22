@@ -130,7 +130,7 @@ export async function publishCard(draft: CardDraft): Promise<PublishResult> {
     return { ok: true, slug, ownerToken };
   } catch (e: any) {
     console.error('publishCard error:', e);
-    return { ok: false, error: e.message || '발행 중 오류가 발생했습니다.' };
+    return { ok: false, error: '발행 중 오류가 발생했습니다.' };
   }
 }
 
@@ -216,7 +216,7 @@ export async function updateCard(slug: string, draft: CardDraft): Promise<Update
     return { ok: true, slug };
   } catch (e: any) {
     console.error('updateCard error:', e);
-    return { ok: false, error: e.message || '수정 중 오류가 발생했습니다.' };
+    return { ok: false, error: '수정 중 오류가 발생했습니다.' };
   }
 }
 
@@ -257,6 +257,6 @@ export async function duplicateCard(slug: string, ownerToken?: string | null): P
     return { ok: true, slug: newSlug, ownerToken: newOwnerToken };
   } catch (e: any) {
     console.error('duplicateCard error:', e);
-    return { ok: false, error: e.message || '복제 중 오류가 발생했습니다.' };
+    return { ok: false, error: '복제 중 오류가 발생했습니다.' };
   }
 }

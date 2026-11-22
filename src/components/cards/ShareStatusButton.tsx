@@ -71,7 +71,7 @@ export default function ShareStatusButton({ slug, ownerToken, cardTitle, compact
         onClick={openPanel}
         className={
           compact
-            ? 'inline-flex items-center gap-1 px-2 py-1 rounded-md border border-hydrangea-200 bg-white text-[11px] font-semibold text-hydrangea-600 hover:bg-hydrangea-50 active:scale-95 transition'
+            ? 'inline-flex items-center gap-1 px-2.5 min-h-[36px] rounded-md border border-hydrangea-200 bg-white text-[11px] font-semibold text-hydrangea-600 hover:bg-hydrangea-50 active:scale-95 transition'
             : 'inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-hydrangea-200 bg-white text-xs font-semibold text-hydrangea-700 hover:bg-hydrangea-50 active:scale-95 transition'
         }
         title="로그인 없이 볼 수 있는 응답 현황 링크"

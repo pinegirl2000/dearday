@@ -12,6 +12,7 @@ const useIsoLayoutEffect = typeof window === 'undefined' ? useEffect : useLayout
 
 // React 18 타입에 아직 없는 text-wrap — 줄바꿈 시 두 줄 길이를 고르게 맞추기 위함
 const BALANCE_STYLE = { textWrap: 'balance' } as unknown as CSSProperties;
+const PRETTY_STYLE = { textWrap: 'pretty' } as unknown as CSSProperties;
 
 const sameFit = (a: FitResult, b: FitResult) => a.size === b.size && a.spacing === b.spacing && a.wrap === b.wrap;
 
@@ -117,7 +118,9 @@ export function FitText({
     // 제목류는 단어 중간 끊김 금지(축소로 해결), 본문은 긴 URL 등이 넘치지 않도록 단어 끊기 허용
     overflowWrap: shrinkToFit ? 'normal' : 'break-word',
     visibility: ready ? 'visible' : 'hidden',
-    ...(fit.wrap ? BALANCE_STYLE : null)
+    ...(fit.wrap ? BALANCE_STYLE : null),
+    // 본문은 마지막 줄에 단어 하나만 덩그러니 남지 않게
+    ...(!shrinkToFit ? PRETTY_STYLE : null)
   };
 
   return (

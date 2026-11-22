@@ -3,7 +3,7 @@
 import { useState, useEffect, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { ChevronDown, ExternalLink, Settings, Pencil, Check, Send, Users, ThumbsUp, ThumbsDown, TrendingUp, X, Maximize2, RotateCcw, RefreshCw, Copy, Lock } from 'lucide-react';
 import { getCardStats } from '@/lib/actions/getCardStats';
@@ -25,10 +25,17 @@ interface CardStats {
   declinedRecords: number;
 }
 
-function fmtDate(iso?: string | null) {
+/** 날짜 표기 시간대 — 서비스 지역(싱가포르) 기준으로 고정 */
+const DISPLAY_TIME_ZONE = 'Asia/Singapore';
+
+/**
+ * 언어·시간대를 명시해 포맷한다.
+ * undefined(실행 환경 기본값)로 두면 서버는 영어, 브라우저는 한국어로 그려져 하이드레이션이 깨지고 페이지 전체가 다시 그려짐.
+ */
+function fmtDate(iso: string | null | undefined, locale: string, month: 'short' | 'long' = 'short') {
   if (!iso) return '';
   try {
-    return new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    return new Date(iso).toLocaleDateString(locale, { year: 'numeric', month, day: 'numeric', timeZone: DISPLAY_TIME_ZONE });
   } catch { return ''; }
 }
 
@@ -43,6 +50,7 @@ export default function RecentCardSelector({
   owners?: Record<string, { name?: string | null; email?: string | null }>;
 }) {
   const t = useTranslations('RecentCards');
+  const locale = useLocale();
   const [liveStats, setLiveStats] = useState<Record<string, CardStats>>(stats);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -153,7 +161,7 @@ export default function RecentCardSelector({
           )}
           {(c.updated_at || c.created_at) && (
             <div className="text-[11px] opacity-75 mt-0.5">
-              {t('lastEdited', { date: fmtDate(c.updated_at || c.created_at) })}
+              {t('lastEdited', { date: fmtDate(c.updated_at || c.created_at, locale) })}
             </div>
           )}
         </div>
@@ -190,7 +198,7 @@ export default function RecentCardSelector({
                     </div>
                   )}
                 </div>
-                <span className="text-[11px] text-hydrangea-400 flex-shrink-0">{fmtDate(card.event_date)}</span>
+                <span className="text-[11px] text-hydrangea-400 flex-shrink-0">{fmtDate(card.event_date, locale)}</span>
                 {isSelected && <Check className="w-3.5 h-3.5 text-hydrangea-500 flex-shrink-0" strokeWidth={3} />}
               </button>
             );
@@ -301,7 +309,7 @@ export default function RecentCardSelector({
               <TrendingUp className="w-3.5 h-3.5" /> {t('statsTitle')}
             </h3>
             <span className="text-[11px] text-hydrangea-400">
-              {t('asOf', { date: new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) })}
+              {t('asOf', { date: fmtDate(new Date().toISOString(), locale, 'long') })}
             </span>
           </div>
           <button

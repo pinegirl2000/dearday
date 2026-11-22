@@ -1220,7 +1220,8 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                   }
                 }}
                 guideOverlay={
-                  <div className="absolute inset-0" style={{ zIndex: 50, pointerEvents: 'none' }}>
+                  // zIndex 10: 카드 내용보다는 위, 상단 고정 헤더(z-20~40)보다는 아래 — 스크롤 시 번호 배지가 헤더를 덮지 않게
+                  <div className="absolute inset-0" style={{ zIndex: 10, pointerEvents: 'none' }}>
                     {/* 위치 기반 highlight 박스 제거 — 대신 Editable 컴포넌트가 highlightedField에 따라 텍스트 정확한 영역에 dashed 박스 표시 */}
                     {fieldsOrder.map((fld) => {
                       const active = nextEmptyNo === fld.no;
@@ -1309,7 +1310,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                   <div className="text-sm text-hydrangea-700">Enable RSVP</div>
                   <button type="button" onClick={() => setDraft({ rsvp_enabled: !draft.rsvp_enabled })}
                     className={`relative w-11 h-6 rounded-full transition ${draft.rsvp_enabled ? 'bg-hydrangea-500' : 'bg-hydrangea-100'}`}>
-                    <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${draft.rsvp_enabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                    <span className={`absolute left-0 top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${draft.rsvp_enabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
                   </button>
                 </div>
                 {draft.rsvp_enabled && (
@@ -1342,7 +1343,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                         <div className="text-sm text-hydrangea-700">Collect attendee names</div>
                         <button type="button" onClick={() => setDraft({ rsvp_collect_names: !draft.rsvp_collect_names })}
                           className={`relative w-11 h-6 rounded-full transition ${draft.rsvp_collect_names ? 'bg-hydrangea-500' : 'bg-hydrangea-100'}`}>
-                          <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${draft.rsvp_collect_names ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                          <span className={`absolute left-0 top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${draft.rsvp_collect_names ? 'translate-x-5' : 'translate-x-0.5'}`} />
                         </button>
                       </div>
                     )}
@@ -1356,7 +1357,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                       </div>
                       <button type="button" onClick={() => setDraft({ rsvp_allow_change: !(draft.rsvp_allow_change ?? true) })}
                         className={`relative w-11 h-6 rounded-full transition flex-shrink-0 ${(draft.rsvp_allow_change ?? true) ? 'bg-hydrangea-500' : 'bg-hydrangea-100'}`}>
-                        <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${(draft.rsvp_allow_change ?? true) ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                        <span className={`absolute left-0 top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${(draft.rsvp_allow_change ?? true) ? 'translate-x-5' : 'translate-x-0.5'}`} />
                       </button>
                     </div>
                     {/* Allow one-line reply 옵션은 화면에서 숨김 (default off) */}
