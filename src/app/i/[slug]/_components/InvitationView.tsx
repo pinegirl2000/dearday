@@ -1,4 +1,5 @@
 'use client';
+import { FONT_STACKS } from '@/lib/font-keys';
 
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
@@ -295,7 +296,7 @@ export default function InvitationView({ card, feed, recipientName, recipientId,
             <div style={{ textAlign: 'center', padding: '0 8px' }}>
               <div
                 style={{
-                  fontFamily: titleField.fontFamily || "'Noto Serif KR', serif",
+                  fontFamily: titleField.fontFamily || FONT_STACKS.notoSerif,
                   fontWeight: titleField.fontWeight,
                   // 봉투 색상 계열로 통일
                   color: envelopeDeep,
@@ -310,7 +311,7 @@ export default function InvitationView({ card, feed, recipientName, recipientId,
               {card.event_date && (
                 <div
                   style={{
-                    fontFamily: dateField?.fontFamily || "'Noto Sans KR', sans-serif",
+                    fontFamily: dateField?.fontFamily || FONT_STACKS.notoSans,
                     // 봉투 색상 계열, 살짝 옅게
                     color: envelopeDeep,
                     opacity: 0.75,

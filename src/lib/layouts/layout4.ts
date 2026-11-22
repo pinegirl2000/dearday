@@ -1,3 +1,4 @@
+import { FONT_STACKS } from '@/lib/font-keys';
 import type { LayoutMeta } from './types';
 
 // 레이아웃 4 — Vintage Script
@@ -18,48 +19,48 @@ export const LAYOUT_4: LayoutMeta = {
       x: 12, y: 8, w: 76, align: 'center',
       fontSize: 11, fontWeight: 400, color: '#1A2A3A',
       letterSpacing: '0.22em', lineHeight: 1.7,
-      fontFamily: "'Cormorant Garamond', 'Noto Serif KR', serif"
+      fontFamily: FONT_STACKS.cormorant
     },
     // 큰 스크립트 라벨 — 이벤트별 자동 ('Wedding Party' / 'Birthday Party' 등)
     eventLabel: {
       x: 8, y: 18, w: 84, align: 'center',
       fontSize: 42, fontWeight: 400, color: '#1A2A3A',
       letterSpacing: '0',
-      fontFamily: "'Sacramento', 'Great Vibes', cursive"
+      fontFamily: FONT_STACKS.sacramento
     },
     // 메인 이름 — 큰 볼드 세리프
     title: {
       x: 6, y: 32, w: 88, align: 'center',
       fontSize: 30, fontWeight: 700, color: '#1A2A3A',
       letterSpacing: '0.06em', lineHeight: 1.2,
-      fontFamily: "'Playfair Display', 'Cormorant Garamond', serif"
+      fontFamily: FONT_STACKS.playfair
     },
     // 자유 메시지 (본문)
     body: {
       x: 14, y: 50, w: 72, align: 'center',
       fontSize: 12, color: '#1A2A3A',
       lineHeight: 1.7,
-      fontFamily: "'Cormorant Garamond', 'Noto Serif KR', serif"
+      fontFamily: FONT_STACKS.cormorant
     },
     // 날짜 — TemplateCard에서 SUNDAY | 15 NOV | AT 5 PM 분할 렌더
     date: {
       x: 12, y: 55, w: 76, align: 'center',
       fontSize: 13, fontWeight: 500, color: '#1A2A3A',
       letterSpacing: '0.2em',
-      fontFamily: "'Cormorant Garamond', 'Noto Serif KR', serif"
+      fontFamily: FONT_STACKS.cormorant
     },
     place: {
       x: 12, y: 66, w: 76, align: 'center',
       fontSize: 12, color: '#1A2A3A',
       letterSpacing: '0.18em',
-      fontFamily: "'Cormorant Garamond', 'Noto Serif KR', serif"
+      fontFamily: FONT_STACKS.cormorant
     },
     // place 아래 contact 영역(place.y+8% = 74%)과 겹치지 않도록
     extra: {
       x: 12, y: 84, w: 76, align: 'center',
       fontSize: 10, color: '#1A2A3A',
       lineHeight: 1.7, letterSpacing: '0.04em',
-      fontFamily: "'Cormorant Garamond', 'Noto Serif KR', serif"
+      fontFamily: FONT_STACKS.cormorant
     }
   }
 };

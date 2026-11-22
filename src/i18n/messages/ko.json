@@ -145,7 +145,9 @@
     "phonePlaceholder": "전화번호",
     "phoneClickToEnter": "전화번호 (클릭해서 입력)",
     "messageClickToEnter": "메시지 (클릭해서 입력)",
-    "extraClickToEnter": "추가 정보 (클릭해서 입력)"
+    "extraClickToEnter": "추가 정보 (클릭해서 입력)",
+    "phraseSuggestionsTitle": "자주 쓰는 문구",
+    "phraseSuggestionsHint": "누르면 입력칸에 들어가요. 넣은 뒤 자유롭게 고쳐 쓰세요"
   },
   "Invitation": {
     "openCard": "초대장 열기",
@@ -422,5 +424,13 @@
     "deadline": "회신 마감",
     "refresh": "새로고침",
     "poweredBy": "DearDay로 만든 초대장"
+  },
+  "Nav": {
+    "create": "만들기",
+    "myCards": "내 카드",
+    "reminders": "리마인더",
+    "blog": "블로그",
+    "main": "주요 메뉴",
+    "home": "DearDay 홈"
   }
 }

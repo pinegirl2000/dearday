@@ -230,7 +230,7 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
           >
             <LinkIcon className="w-4 h-4 text-hydrangea-500 mb-1" />
             <div className="text-xs font-semibold text-hydrangea-700">Link only</div>
-            <div className="text-[10px] text-hydrangea-400 mt-0.5 leading-snug">
+            <div className="text-[11px] text-hydrangea-400 mt-0.5 leading-snug">
               {t('linkOnlyDesc')}
               <span className="inline-flex items-center gap-0.5 mx-0.5"><Copy className="inline w-2.5 h-2.5" /></span>
               {t('linkCopyHint')}
@@ -246,9 +246,9 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
             <Mail className="w-4 h-4 text-hydrangea-300 mb-1" />
             <div className="text-xs font-semibold text-hydrangea-400 flex items-center gap-1.5">
               Email
-              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-hydrangea-200 text-hydrangea-600">{t('comingSoon')}</span>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-hydrangea-200 text-hydrangea-600">{t('comingSoon')}</span>
             </div>
-            <div className="text-[10px] text-hydrangea-300 mt-0.5">{t('emailDesc')}</div>
+            <div className="text-[11px] text-hydrangea-400 mt-0.5">{t("emailDesc")}</div>
           </button>
         </div>
       </div>
@@ -355,7 +355,7 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                className="text-[10px] px-1.5 py-0.5 rounded-md border border-hydrangea-200 bg-white text-hydrangea-600 font-medium focus:outline-none focus:ring-2 focus:ring-hydrangea-300"
+                className="text-[11px] px-1.5 py-0.5 rounded-md border border-hydrangea-200 bg-white text-hydrangea-600 font-medium focus:outline-none focus:ring-2 focus:ring-hydrangea-300"
               >
                 <option value="recent_response">{t('sortRecentResponse')}</option>
                 <option value="recent_input">{t('sortRecentInput')}</option>
@@ -478,7 +478,7 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
         {/* Smart copy 메시지 프리셋 — copy 시 링크 앞에 메시지 자동 prepend */}
         {recipients.length > 0 && (
           <div className="mb-2 p-2 rounded-xl bg-hydrangea-50/60 border border-hydrangea-100">
-            <div className="text-[10px] font-semibold text-hydrangea-700 mb-1.5 flex items-center gap-1">
+            <div className="text-[11px] font-semibold text-hydrangea-700 mb-1.5 flex items-center gap-1">
               <Copy className="w-3 h-3" /> {t('smartCopyLabel')}
             </div>
             <div className="flex flex-wrap gap-1">
@@ -487,7 +487,7 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
                   key={p.id}
                   type="button"
                   onClick={() => setSmartPresetId(p.id)}
-                  className={`text-[10px] px-2 py-1 rounded-full transition active:scale-95 ${
+                  className={`text-[11px] px-2 py-1 rounded-full transition active:scale-95 ${
                     smartPresetId === p.id
                       ? 'bg-hydrangea-500 text-white font-semibold'
                       : 'bg-white text-hydrangea-600 border border-hydrangea-200 hover:bg-hydrangea-100'
@@ -580,11 +580,11 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
                 </button>
                 {/* col3: 읽음/안읽음 */}
                 {r.read_at ? (
-                  <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-hydrangea-50 text-hydrangea-700 border border-hydrangea-200 text-[10px] font-semibold">
+                  <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-hydrangea-50 text-hydrangea-700 border border-hydrangea-200 text-[11px] font-semibold">
                     {t('read')}
                   </span>
                 ) : (
-                  <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-gray-50 text-gray-500 border border-gray-200 text-[10px]">
+                  <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-gray-50 text-gray-500 border border-gray-200 text-[11px]">
                     {t('unread')}
                   </span>
                 )}
@@ -594,7 +594,7 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
                     type="button"
                     onClick={() => setExpandedId((cur) => (cur === r.id ? null : r.id))}
                     title={t('viewAttendees')}
-                    className="inline-flex items-center justify-center gap-0.5 px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-semibold hover:bg-emerald-100 active:scale-95 transition cursor-pointer"
+                    className="inline-flex items-center justify-center gap-0.5 px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-semibold hover:bg-emerald-100 active:scale-95 transition cursor-pointer"
                   >
                     {t('attend')}
                     {r.rsvp_count && r.rsvp_count > 0 && (
@@ -602,11 +602,11 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
                     )}
                   </button>
                 ) : r.rsvp_attend === false ? (
-                  <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-semibold">
+                  <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-semibold">
                     {t('decline')}
                   </span>
                 ) : (
-                  <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-gray-50 text-gray-400 border border-gray-200 text-[10px]">
+                  <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-gray-50 text-gray-400 border border-gray-200 text-[11px]">
                     {t('noResponse')}
                   </span>
                 )}
@@ -636,7 +636,7 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
               {/* 펼침 영역 — 참석자 이름 + 한줄 응답 (옵션) */}
               {expandedId === r.id && r.rsvp_attend === true && (
                 <div className="px-3 pb-2 pt-0 border-t border-hydrangea-100/60 bg-emerald-50/30">
-                  <div className="text-[10px] font-semibold text-emerald-700 mt-1.5 mb-1">
+                  <div className="text-[11px] font-semibold text-emerald-700 mt-1.5 mb-1">
                     {t('attendees', { n: r.rsvp_count || 1 })}
                   </div>
                   {r.rsvp_attendee_names && r.rsvp_attendee_names.length > 0 ? (
@@ -644,19 +644,19 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
                       {r.rsvp_attendee_names.map((n, i) => (
                         <span
                           key={i}
-                          className="inline-block px-2 py-0.5 rounded-full bg-white text-emerald-700 border border-emerald-200 text-[10px] font-medium"
+                          className="inline-block px-2 py-0.5 rounded-full bg-white text-emerald-700 border border-emerald-200 text-[11px] font-medium"
                         >
                           {n}
                         </span>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-[10px] text-emerald-600/70">
+                    <div className="text-[11px] text-emerald-600/70">
                       {t('noIndividualNames')}
                     </div>
                   )}
                   {r.rsvp_oneliner && (
-                    <div className="mt-1.5 text-[10px] text-emerald-700 italic">
+                    <div className="mt-1.5 text-[11px] text-emerald-700 italic">
                       💬 {r.rsvp_oneliner}
                     </div>
                   )}
@@ -688,7 +688,7 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
               <h3 className="text-[11px] font-bold text-hydrangea-700 uppercase tracking-wide flex items-center gap-1">
                 <TrendingUp className="w-3.5 h-3.5" /> {t('statsTitle')}
               </h3>
-              <span className="text-[10px] text-hydrangea-400">
+              <span className="text-[11px] text-hydrangea-400">
                 {t('asOf', { date: new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) })}
               </span>
               {/* 로그인 없이 볼 수 있는 읽기 전용 현황 링크 */}
@@ -700,13 +700,13 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
               <div className="rounded-xl bg-gradient-to-br from-hydrangea-50 to-hydrangea-100 border border-hydrangea-200 p-3 shadow-sm relative overflow-hidden">
                 <Send className="absolute -bottom-2 -right-2 w-12 h-12 text-hydrangea-300/40" strokeWidth={1.5} />
                 <div className="relative">
-                  <div className="text-[10px] font-semibold text-hydrangea-500 mb-0.5">{t('totalLinksSent')}</div>
+                  <div className="text-[11px] font-semibold text-hydrangea-500 mb-0.5">{t('totalLinksSent')}</div>
                   <div className="flex items-baseline gap-0.5">
                     <span className="text-2xl font-extrabold leading-none text-hydrangea-700">{totalRecipients}</span>
-                    <span className="text-[10px] text-hydrangea-500">{t('unit')}</span>
+                    <span className="text-[11px] text-hydrangea-500">{t('unit')}</span>
                   </div>
                   <div className="mt-1">
-                    <div className="text-[10px] inline-flex items-center gap-1 bg-hydrangea-500 text-white px-1.5 py-0.5 rounded-full font-semibold">
+                    <div className="text-[11px] inline-flex items-center gap-1 bg-hydrangea-500 text-white px-1.5 py-0.5 rounded-full font-semibold">
                       👁 {t('readCount', { n: readRecipients })}
                     </div>
                   </div>
@@ -715,12 +715,12 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
               <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200 p-3 shadow-sm relative overflow-hidden">
                 <ThumbsUp className="absolute -bottom-2 -right-2 w-12 h-12 text-emerald-300/40" strokeWidth={1.5} />
                 <div className="relative">
-                  <div className="text-[10px] font-semibold text-emerald-600 mb-0.5">{t('attendingLabel')}</div>
+                  <div className="text-[11px] font-semibold text-emerald-600 mb-0.5">{t('attendingLabel')}</div>
                   <div className="flex items-baseline gap-0.5">
                     <span className="text-2xl font-extrabold leading-none text-emerald-700">{attendingRecords}</span>
-                    <span className="text-[10px] text-emerald-600">{t('unit')}</span>
+                    <span className="text-[11px] text-emerald-600">{t('unit')}</span>
                   </div>
-                  <div className="text-[10px] mt-1 inline-flex items-center gap-1 bg-emerald-500 text-white px-1.5 py-0.5 rounded-full font-semibold">
+                  <div className="text-[11px] mt-1 inline-flex items-center gap-1 bg-emerald-500 text-white px-1.5 py-0.5 rounded-full font-semibold">
                     <Users className="w-2.5 h-2.5" /> {t('totalPeople', { n: attendingTotal })}
                   </div>
                 </div>
@@ -728,10 +728,10 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
               <div className="rounded-xl bg-gradient-to-br from-rose-50 to-rose-100 border border-rose-200 p-3 shadow-sm relative overflow-hidden">
                 <ThumbsDown className="absolute -bottom-2 -right-2 w-12 h-12 text-rose-300/40" strokeWidth={1.5} />
                 <div className="relative">
-                  <div className="text-[10px] font-semibold text-rose-600 mb-0.5">{t('declinedLabel')}</div>
+                  <div className="text-[11px] font-semibold text-rose-600 mb-0.5">{t('declinedLabel')}</div>
                   <div className="flex items-baseline gap-0.5">
                     <span className="text-2xl font-extrabold leading-none text-rose-700">{declinedRecords}</span>
-                    <span className="text-[10px] text-rose-600">{t('unit')}</span>
+                    <span className="text-[11px] text-rose-600">{t('unit')}</span>
                   </div>
                 </div>
               </div>
@@ -739,7 +739,7 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
             {totalRecipients > 0 && (
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] font-semibold text-hydrangea-600">{t('responseRate')}</span>
+                  <span className="text-[11px] font-semibold text-hydrangea-600">{t('responseRate')}</span>
                   <span className="text-[11px] font-bold text-hydrangea-700">
                     {t('replyVsSend', { replies: totalReplies, total: totalRecipients })}
                     <span className="text-hydrangea-400 font-medium ml-1">({replyRate}%)</span>
@@ -753,7 +753,7 @@ export default function SendStep({ slug, ownerToken, card }: Props) {
                     <div className="bg-rose-400 h-full" style={{ width: `${declinePct}%` }} title={t('declinedLabel') + ' ' + declinedRecords} />
                   )}
                 </div>
-                <div className="flex items-center gap-3 mt-1.5 text-[9px] text-hydrangea-500">
+                <div className="flex items-center gap-3 mt-1.5 text-[10px] text-hydrangea-500">
                   <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> {t('attendingLabel')}</span>
                   <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-400" /> {t('declinedLabel')}</span>
                   <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-hydrangea-100 border border-hydrangea-200" /> {t('noResponse')}</span>

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import {
-  Sparkles, Heart, ArrowRight, List, Calendar, Bell,
+  Sparkles, Heart, ArrowRight, List, Calendar, Bell, PartyPopper, CalendarHeart,
   Cake, Baby, Home as HomeIcon, Gem, Feather, Users, Flower, Flower2,
   GraduationCap, Briefcase, HandHeart, TrendingUp, HeartCrack,
   HeartHandshake, Gift, Moon, Flame, Cookie, TreePine, Flag,
@@ -10,11 +10,17 @@ import {
 import { PageContainer } from '@/components/layout/PageContainer';
 import MobileShowcase from './_components/MobileShowcase';
 import FadeIn from './_components/FadeIn';
+import HeroCards from './_components/HeroCards';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getUpcomingReminders } from '@/lib/actions/reminders';
 
 const GOLD = '#C4A36A';
+// 랜딩 본문 글자색 — 순검정 대신 브랜드 보라를 깊게 내린 가지색 (흰 배경 대비 13:1 / 보조 7:1)
+const INK = '#2E2140';
+const INK_SOFT = '#5B4C70';
+// 🔧 장식선은 GOLD 유지, 작은 글자는 대비 확보를 위해 짙은 금색 사용 (#C4A36A 는 흰 배경 2.4:1)
+const GOLD_TEXT = '#8A6D33';
 
 interface Occasion { id: string; Icon: LucideIcon; label: string; tint: string }
 
@@ -81,14 +87,22 @@ function getSeasonalHighlights(): Array<{ id: string; label: string; daysAway: n
   return highlights.slice(0, 2); // 최대 2개만
 }
 
+/** 사용법 3단계 — 카드 만들기 화면의 실제 순서(디자인 → 내용 → 보내기)와 같다 */
+const HOW_IT_WORKS = [
+  { title: 'Pick a design', body: 'Choose an occasion and a card. Each one comes with an envelope that opens when your guest taps it.' },
+  { title: 'Write your message', body: 'Start from wording people actually use for that occasion, then make it yours. Add the date and place.' },
+  { title: 'Share one link', body: 'Send it on WhatsApp or anywhere else. Replies come in as guests answer, so you always know the headcount.' }
+];
+
 function OccasionGrid({ items }: { items: Occasion[] }) {
+  // 🔧 모바일 4열 → 데스크톱 8열: 카테고리 한 줄에 모두 보이도록
   return (
-    <div className="grid grid-cols-4 gap-2">
+    <div className="grid grid-cols-4 md:grid-cols-8 gap-2 md:gap-3">
       {items.map((occ) => (
         <Link
           key={occ.id}
           href={`/cards/new?type=${occ.id}`}
-          className="group relative flex flex-col items-center justify-center gap-2 py-4 min-h-[86px] rounded-xl bg-gradient-to-b from-white to-hydrangea-50/40 border border-hydrangea-100/60 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-md hover:border-hydrangea-200 active:scale-95 transition"
+          className="group relative flex flex-col items-center justify-center gap-2 py-4 min-h-[88px] md:min-h-[104px] rounded-xl bg-gradient-to-b from-white to-hydrangea-50/40 border border-hydrangea-100/60 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-md hover:border-hydrangea-200 hover:-translate-y-0.5 active:scale-95 transition duration-200"
         >
           <span
             className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white border border-hydrangea-100/80 group-hover:scale-105 transition"
@@ -96,7 +110,7 @@ function OccasionGrid({ items }: { items: Occasion[] }) {
           >
             <occ.Icon className="w-5 h-5" strokeWidth={1.5} aria-hidden />
           </span>
-          <span className="text-[11px] font-medium text-hydrangea-700 text-center leading-tight px-1 tracking-tight">
+          <span className="text-xs md:text-[13px] font-medium text-hydrangea-700 text-center leading-tight px-1 tracking-tight">
             {occ.label}
           </span>
         </Link>
@@ -113,42 +127,44 @@ export default async function Home() {
   const upcomingReminders = session ? await getUpcomingReminders(14) : [];
 
   return (
-    <PageContainer noPadding className="bg-gradient-to-b from-hydrangea-50 via-white to-hydrangea-100/30">
-      {/* ===== Hero ===== */}
-      <section className="px-6 pt-10 pb-6 text-center relative">
-        <div className="absolute top-6 left-4 w-10 h-10 border-t border-l opacity-40 pointer-events-none" style={{ borderColor: GOLD }} />
-        <div className="absolute top-6 right-4 w-10 h-10 border-t border-r opacity-40 pointer-events-none" style={{ borderColor: GOLD }} />
-
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-hydrangea-100/60 text-xs text-hydrangea-700 font-medium mb-4">
-          <Sparkles className="w-3 h-3" />
-          Beta · Free
+    <PageContainer noPadding size="wide" className="bg-white">
+      {/* ===== Hero — 왼쪽: 무엇을 하는 서비스인지 한 문장 + 시작 버튼 / 오른쪽: 실제 카드 세 장 ===== */}
+      {/* overflow-x-clip: 기울어진 카드 모서리가 화면 밖으로 나가 가로 스크롤이 생기는 것 방지(세로 그림자는 유지) */}
+      <section className="px-6 md:px-10 pt-10 md:pt-16 pb-10 md:pb-16 grid gap-10 md:gap-6 md:grid-cols-[1.05fr_1fr] md:items-center overflow-x-clip">
+        <div className="text-center md:text-left">
+          <h1
+            className="text-[2.75rem] leading-[1.04] md:text-6xl lg:text-7xl md:leading-[1.02]"
+            style={{ fontFamily: 'var(--font-cormorant), serif', fontWeight: 500, color: INK, letterSpacing: '-0.01em' }}
+          >
+            Invitations people are happy to open
+          </h1>
+          <p className="mt-4 md:mt-5 text-base md:text-lg leading-relaxed mx-auto md:mx-0 max-w-[34ch]" style={{ color: INK_SOFT }}>
+            Pick a design, write your message and share one link. Guests reply on their phone and you see who is coming.
+          </p>
+          <div className="mt-6 md:mt-8 flex flex-col sm:flex-row items-center gap-3 justify-center md:justify-start">
+            <Link
+              href="/cards/new"
+              className="inline-flex items-center justify-center h-12 px-7 rounded-full text-white text-base font-medium shadow-lg hover:shadow-xl active:scale-[0.98] transition"
+              style={{ background: INK }}
+            >
+              {t('createButton')}
+            </Link>
+            <Link
+              href="#occasions"
+              className="inline-flex items-center justify-center h-12 px-5 rounded-full text-base font-medium underline-offset-4 hover:underline"
+              style={{ color: INK }}
+            >
+              Browse by occasion
+            </Link>
+          </div>
+          <p className="mt-4 text-sm" style={{ color: INK_SOFT }}>Free while in beta. No app to install.</p>
         </div>
-
-        <h1
-          className="text-6xl mb-2 leading-[1.0] tracking-wide"
-          style={{
-            fontFamily: "var(--font-cormorant), 'Cormorant Garamond', serif",
-            fontWeight: 600,
-            background: `linear-gradient(135deg, #4A2D6F 0%, #7B5EA7 55%, ${GOLD} 130%)`,
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            color: '#4A2D6F'
-          }}
-        >
-          DearDay
-        </h1>
-        <p className="text-base text-hydrangea-700 mb-1" style={{ fontFamily: "var(--font-cormorant), serif" }}>
-          Send a heartfelt card in 30 seconds
-        </p>
-        <p className="text-xs text-hydrangea-400 tracking-wide">
-          Invitations · Greetings · Holidays — all in one place
-        </p>
+        <HeroCards />
       </section>
 
       {/* ===== Personal reminders (로그인 사용자의 다가오는 기념일) ===== */}
       {upcomingReminders.length > 0 && (
-        <section className="px-5 pb-4">
+        <section className="px-5 md:px-10 pb-4">
           <FadeIn>
             <div className="space-y-2">
               {upcomingReminders.slice(0, 2).map((r) => {
@@ -174,7 +190,7 @@ export default async function Home() {
                           <div className="text-sm font-semibold text-hydrangea-700">
                             {r.person_name}'s {meta.label}
                           </div>
-                          <div className="text-[10px] text-hydrangea-500">
+                          <div className="text-[11px] text-hydrangea-500">
                             {r.days_away === 0 ? 'Today' : r.days_away === 1 ? 'Tomorrow' : `in ${r.days_away} days`} · Tap to make a card →
                           </div>
                         </div>
@@ -186,7 +202,7 @@ export default async function Home() {
               })}
               <Link
                 href="/reminders"
-                className="block text-center text-[10px] text-hydrangea-500 hover:text-hydrangea-700 py-1"
+                className="block text-center text-[11px] text-hydrangea-500 hover:text-hydrangea-700 py-2"
               >
                 <Bell className="w-3 h-3 inline -mt-0.5 mr-0.5" />
                 Manage my reminders
@@ -198,7 +214,7 @@ export default async function Home() {
 
       {/* ===== Seasonal highlights ===== */}
       {seasonals.length > 0 && (
-        <section className="px-5 pb-4">
+        <section className="px-5 md:px-10 pb-4">
           <FadeIn>
             <div className="space-y-2">
               {seasonals.map((s) => (
@@ -214,7 +230,7 @@ export default async function Home() {
                         <div className="text-sm font-semibold text-rose-700">
                           {s.label}{s.daysAway > 0 ? ` in ${s.daysAway} ${s.daysAway === 1 ? 'day' : 'days'}` : ' is here'}
                         </div>
-                        <div className="text-[10px] text-rose-500">Tap to start your card →</div>
+                        <div className="text-[11px] text-rose-600">Tap to start your card →</div>
                       </div>
                     </div>
                     <ArrowRight className="w-4 h-4 text-rose-600 flex-shrink-0" />
@@ -227,47 +243,51 @@ export default async function Home() {
       )}
 
       {/* ===== 3 Categories ===== */}
-      <section className="px-5 pb-8 space-y-6">
-        <FadeIn delay={0.05}>
+      <section id="occasions" className="px-5 md:px-10 pb-10 md:pb-16 space-y-7 md:space-y-10 scroll-mt-16">
+        <div className="text-center md:text-left">
+          <h2 className="text-3xl md:text-4xl" style={{ fontFamily: 'var(--font-cormorant), serif', fontWeight: 500, color: INK }}>What are you celebrating?</h2>
+          <p className="mt-1 text-sm md:text-base" style={{ color: INK_SOFT }}>Choose an occasion and we will suggest designs and wording for it.</p>
+        </div>
+        <div>
           <div>
             <div className="flex items-baseline justify-between mb-2">
-              <h2 className="text-base font-semibold text-hydrangea-700 flex items-center gap-1.5">
-                🎉 <span>Invitation</span>
-              </h2>
-              <span className="text-[10px] text-hydrangea-400">Date · Place · RSVP</span>
+              <h3 className="text-xl md:text-2xl flex items-center gap-2" style={{ fontFamily: 'var(--font-cormorant), serif', fontWeight: 600, color: INK }}>
+                <PartyPopper className="w-4 h-4 text-hydrangea-500" aria-hidden /> <span>Invitation</span>
+              </h3>
+              <span className="text-xs md:text-sm" style={{ color: INK_SOFT }}>Date · Place · RSVP</span>
             </div>
             <OccasionGrid items={INVITATIONS} />
           </div>
-        </FadeIn>
+        </div>
 
-        <FadeIn delay={0.1}>
+        <div>
           <div>
             <div className="flex items-baseline justify-between mb-2">
-              <h2 className="text-base font-semibold text-hydrangea-700 flex items-center gap-1.5">
-                💝 <span>Thank · Congrats</span>
-              </h2>
-              <span className="text-[10px] text-hydrangea-400">For someone special</span>
+              <h3 className="text-xl md:text-2xl flex items-center gap-2" style={{ fontFamily: 'var(--font-cormorant), serif', fontWeight: 600, color: INK }}>
+                <Heart className="w-4 h-4 text-hydrangea-500" aria-hidden /> <span>Thank · Congrats</span>
+              </h3>
+              <span className="text-xs md:text-sm" style={{ color: INK_SOFT }}>For someone special</span>
             </div>
             <OccasionGrid items={THANKS} />
           </div>
-        </FadeIn>
+        </div>
 
-        <FadeIn delay={0.15}>
+        <div>
           <div>
             <div className="flex items-baseline justify-between mb-2">
-              <h2 className="text-base font-semibold text-hydrangea-700 flex items-center gap-1.5">
-                📅 <span>Anniversary · Holiday</span>
-              </h2>
-              <span className="text-[10px] text-hydrangea-400">Seasonal & annual</span>
+              <h3 className="text-xl md:text-2xl flex items-center gap-2" style={{ fontFamily: 'var(--font-cormorant), serif', fontWeight: 600, color: INK }}>
+                <CalendarHeart className="w-4 h-4 text-hydrangea-500" aria-hidden /> <span>Anniversary · Holiday</span>
+              </h3>
+              <span className="text-xs md:text-sm" style={{ color: INK_SOFT }}>Seasonal & annual</span>
             </div>
             <OccasionGrid items={ANNIVERSARIES} />
           </div>
-        </FadeIn>
+        </div>
 
         <div className="text-center pt-2">
           <Link
             href="/cards"
-            className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-full bg-white text-hydrangea-600 text-xs font-medium border border-hydrangea-100 active:scale-95 transition"
+            className="inline-flex items-center justify-center gap-1.5 h-11 px-5 rounded-full bg-white text-hydrangea-600 text-sm font-medium border border-hydrangea-100 hover:border-hydrangea-300 hover:bg-hydrangea-50 active:scale-95 transition"
           >
             <List className="w-3.5 h-3.5" />
             {t('myInvitations')}
@@ -275,47 +295,65 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* ===== 사용법 — 실제로 순서가 있는 3단계라 번호를 붙임 ===== */}
+      <section className="px-6 md:px-10 py-10 md:py-16 border-t" style={{ borderColor: 'rgba(46,33,64,0.08)' }}>
+        <h2 className="text-3xl md:text-4xl text-center md:text-left" style={{ fontFamily: 'var(--font-cormorant), serif', fontWeight: 500, color: INK }}>
+          From idea to sent in a minute
+        </h2>
+        <ol className="mt-6 md:mt-8 grid gap-6 md:gap-8 md:grid-cols-3">
+          {HOW_IT_WORKS.map((step, i) => (
+            <li key={step.title} className="flex md:block gap-4">
+              <span
+                aria-hidden
+                className="flex-none text-5xl leading-none md:mb-3 md:block"
+                style={{ fontFamily: 'var(--font-cormorant), serif', color: GOLD_TEXT, fontWeight: 500, minWidth: '2.2rem' }}
+              >
+                {i + 1}
+              </span>
+              <div>
+                <h3 className="text-lg font-semibold" style={{ color: INK }}>{step.title}</h3>
+                <p className="mt-1 text-sm md:text-base leading-relaxed" style={{ color: INK_SOFT }}>{step.body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+
       {/* ===== Mobile Showcase ===== */}
-      <section className="px-4 pb-10">
-        <FadeIn>
-          <div className="text-center mb-4">
-            <div className="flex items-center justify-center gap-3 mb-1.5">
-              <span className="block w-6 h-px" style={{ background: GOLD, opacity: 0.6 }} />
-              <span className="text-[10px] tracking-[0.4em]" style={{ color: GOLD }}>SHOWCASE</span>
-              <span className="block w-6 h-px" style={{ background: GOLD, opacity: 0.6 }} />
-            </div>
-            <h2 className="text-2xl text-hydrangea-700" style={{ fontFamily: "var(--font-cormorant), serif", fontWeight: 500 }}>
-              Beautiful by default
-            </h2>
-            <p className="text-xs text-hydrangea-400 mt-1">
-              No design skills needed — your card is ready in seconds
-            </p>
-          </div>
-          <MobileShowcase />
-        </FadeIn>
+      <section className="px-4 md:px-10 py-10 md:py-16 border-t" style={{ borderColor: 'rgba(46,33,64,0.08)' }}>
+        <div className="text-center mb-6">
+          <h2 className="text-3xl md:text-4xl" style={{ fontFamily: 'var(--font-cormorant), serif', fontWeight: 500, color: INK }}>
+            See it the way your guests will
+          </h2>
+          <p className="text-sm md:text-base mt-1" style={{ color: INK_SOFT }}>
+            Every card is made for the phone screen it will be opened on.
+          </p>
+        </div>
+        <MobileShowcase />
       </section>
 
       {/* ===== Footer ===== */}
-      <footer className="px-6 pb-10 pt-4 text-center space-y-3 border-t border-hydrangea-100/50 mt-2">
-        <p className="text-xs text-hydrangea-300 flex items-center justify-center gap-1">
+      <footer className="px-6 pb-10 pt-6 text-center space-y-3 border-t border-hydrangea-100/50 mt-2">
+        <p className="text-xs text-hydrangea-400 flex items-center justify-center gap-1">
           {t('footer')} <Heart className="w-3 h-3 fill-current text-hydrangea-400" /> DearDay
         </p>
-        <nav className="flex items-center justify-center gap-3 text-[11px] text-hydrangea-400 flex-wrap">
-          <Link href="/reminders" className="hover:text-hydrangea-700">Reminders</Link>
-          <span>·</span>
-          <Link href="/about" className="hover:text-hydrangea-700">About</Link>
-          <span>·</span>
-          <Link href="/blog" className="hover:text-hydrangea-700">Blog</Link>
-          <span>·</span>
-          <Link href="/envelopes-demo" className="hover:text-hydrangea-700">Templates</Link>
-          <span>·</span>
-          <Link href="/privacy" className="hover:text-hydrangea-700">Privacy</Link>
-          <span>·</span>
-          <Link href="/terms" className="hover:text-hydrangea-700">Terms</Link>
-          <span>·</span>
-          <Link href="/contact" className="hover:text-hydrangea-700">Contact</Link>
+        {/* 🔧 링크 사이 간격·세로 패딩을 키워 손가락 오탭 방지 */}
+        <nav className="flex items-center justify-center gap-x-1 gap-y-0 text-xs text-hydrangea-500 flex-wrap" aria-label="Footer">
+          <Link href="/reminders" className="inline-flex items-center min-h-[44px] px-2 hover:text-hydrangea-700">Reminders</Link>
+          <span aria-hidden>·</span>
+          <Link href="/about" className="inline-flex items-center min-h-[44px] px-2 hover:text-hydrangea-700">About</Link>
+          <span aria-hidden>·</span>
+          <Link href="/blog" className="inline-flex items-center min-h-[44px] px-2 hover:text-hydrangea-700">Blog</Link>
+          <span aria-hidden>·</span>
+          <Link href="/envelopes-demo" className="inline-flex items-center min-h-[44px] px-2 hover:text-hydrangea-700">Templates</Link>
+          <span aria-hidden>·</span>
+          <Link href="/privacy" className="inline-flex items-center min-h-[44px] px-2 hover:text-hydrangea-700">Privacy</Link>
+          <span aria-hidden>·</span>
+          <Link href="/terms" className="inline-flex items-center min-h-[44px] px-2 hover:text-hydrangea-700">Terms</Link>
+          <span aria-hidden>·</span>
+          <Link href="/contact" className="inline-flex items-center min-h-[44px] px-2 hover:text-hydrangea-700">Contact</Link>
         </nav>
-        <p className="text-[10px] text-hydrangea-300">© {new Date().getFullYear()} Steward+AI</p>
+        <p className="text-[11px] text-hydrangea-400">© {new Date().getFullYear()} Steward+AI</p>
       </footer>
     </PageContainer>
   );

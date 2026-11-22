@@ -128,14 +128,14 @@ export default function BlogPostPage({ params }: Props) {
   if (!post) notFound();
 
   return (
-    <PageContainer>
+    <PageContainer size="prose">
       <article className="max-w-2xl mx-auto px-4 py-8">
         <Link href="/blog" className="text-xs text-hydrangea-400 hover:text-hydrangea-700 inline-block mb-4">← All posts</Link>
         <header className="mb-6">
           <div className="flex items-center gap-2 mb-2">
             <time className="text-[11px] text-hydrangea-400">{fmt(post.publishedAt)}</time>
             {post.tags.map((t) => (
-              <span key={t} className="text-[10px] px-1.5 py-0.5 rounded-full bg-hydrangea-50 text-hydrangea-500">
+              <span key={t} className="text-[11px] px-1.5 py-0.5 rounded-full bg-hydrangea-50 text-hydrangea-500">
                 {t}
               </span>
             ))}

@@ -105,7 +105,9 @@ export async function createReminder(input: {
     revalidatePath('/');
     return { ok: true, id: rows[0].id };
   } catch (e: any) {
-    return { ok: false, error: e.message };
+    // 원인은 서버 로그로만 — 내부 오류 문구(DB 컬럼명 등)를 사용자에게 노출하지 않음
+    console.error('reminders.ts error:', e);
+    return { ok: false, error: 'Something went wrong. Please try again.' };
   }
 }
 
@@ -139,7 +141,9 @@ export async function updateReminder(id: string, input: Partial<Omit<Reminder, '
     revalidatePath('/reminders');
     return { ok: true };
   } catch (e: any) {
-    return { ok: false, error: e.message };
+    // 원인은 서버 로그로만 — 내부 오류 문구(DB 컬럼명 등)를 사용자에게 노출하지 않음
+    console.error('reminders.ts error:', e);
+    return { ok: false, error: 'Something went wrong. Please try again.' };
   }
 }
 
@@ -151,7 +155,9 @@ export async function deleteReminder(id: string): Promise<{ ok: boolean; error?:
     revalidatePath('/reminders');
     return { ok: true };
   } catch (e: any) {
-    return { ok: false, error: e.message };
+    // 원인은 서버 로그로만 — 내부 오류 문구(DB 컬럼명 등)를 사용자에게 노출하지 않음
+    console.error('reminders.ts error:', e);
+    return { ok: false, error: 'Something went wrong. Please try again.' };
   }
 }
 
@@ -187,7 +193,9 @@ export async function savePushSubscription(subscription: any): Promise<{ ok: boo
     revalidatePath('/reminders');
     return { ok: true };
   } catch (e: any) {
-    return { ok: false, error: e.message };
+    // 원인은 서버 로그로만 — 내부 오류 문구(DB 컬럼명 등)를 사용자에게 노출하지 않음
+    console.error('reminders.ts error:', e);
+    return { ok: false, error: 'Something went wrong. Please try again.' };
   }
 }
 
@@ -199,7 +207,9 @@ export async function removePushSubscription(): Promise<{ ok: boolean; error?: s
     revalidatePath('/reminders');
     return { ok: true };
   } catch (e: any) {
-    return { ok: false, error: e.message };
+    // 원인은 서버 로그로만 — 내부 오류 문구(DB 컬럼명 등)를 사용자에게 노출하지 않음
+    console.error('reminders.ts error:', e);
+    return { ok: false, error: 'Something went wrong. Please try again.' };
   }
 }
 
@@ -211,7 +221,9 @@ export async function setReminderLocale(locale: 'en' | 'ko'): Promise<{ ok: bool
     revalidatePath('/reminders');
     return { ok: true };
   } catch (e: any) {
-    return { ok: false, error: e.message };
+    // 원인은 서버 로그로만 — 내부 오류 문구(DB 컬럼명 등)를 사용자에게 노출하지 않음
+    console.error('reminders.ts error:', e);
+    return { ok: false, error: 'Something went wrong. Please try again.' };
   }
 }
 
@@ -223,6 +235,8 @@ export async function setReminderEmailOptIn(optIn: boolean): Promise<{ ok: boole
     revalidatePath('/reminders');
     return { ok: true };
   } catch (e: any) {
-    return { ok: false, error: e.message };
+    // 원인은 서버 로그로만 — 내부 오류 문구(DB 컬럼명 등)를 사용자에게 노출하지 않음
+    console.error('reminders.ts error:', e);
+    return { ok: false, error: 'Something went wrong. Please try again.' };
   }
 }

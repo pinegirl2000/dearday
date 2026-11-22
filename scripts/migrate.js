@@ -160,6 +160,10 @@ CREATE TABLE IF NOT EXISTS dearday_rsvp (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 성인/어린이 인원 — RSVP 저장 코드(submitRsvp)가 쓰는 컬럼. 새 DB 에서도 RSVP 가 저장되도록 멱등 추가
+ALTER TABLE dearday_rsvp ADD COLUMN IF NOT EXISTS adult_count INT DEFAULT 1;
+ALTER TABLE dearday_rsvp ADD COLUMN IF NOT EXISTS child_count INT DEFAULT 0;
+
 -- 템플릿 설정 override (admin이 코드 default를 덮어쓰기)
 CREATE TABLE IF NOT EXISTS dearday_template_config (
   template_id TEXT PRIMARY KEY,
@@ -181,6 +185,8 @@ ALTER TABLE dearday_template_config ADD COLUMN IF NOT EXISTS card_min_height INT
 ALTER TABLE dearday_template_config ADD COLUMN IF NOT EXISTS content_top INT;
 ALTER TABLE dearday_template_config ADD COLUMN IF NOT EXISTS content_side INT;
 ALTER TABLE dearday_template_config ADD COLUMN IF NOT EXISTS box_max_width INT;
+-- 템플릿별 글꼴·크기·자간 override (역할별 부분 지정이라 JSONB 하나로 보관)
+ALTER TABLE dearday_template_config ADD COLUMN IF NOT EXISTS typography JSONB;
 
 -- 이벤트별 템플릿 노출 순서 (admin drag&drop으로 지정)
 CREATE TABLE IF NOT EXISTS dearday_template_event_order (

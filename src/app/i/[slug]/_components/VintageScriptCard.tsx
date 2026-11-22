@@ -1,4 +1,5 @@
 'use client';
+import { FONT_STACKS } from '@/lib/font-keys';
 
 import { motion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
@@ -37,9 +38,9 @@ interface Props {
   eventCardType?: 'invitation' | 'thankcard' | 'congrats';
 }
 
-const SCRIPT = "'Playfair Display', 'Cormorant Garamond', 'Noto Serif KR', serif";
-const SERIF_BOLD = "'Playfair Display', 'Cormorant Garamond', 'Noto Serif KR', serif";
-const SERIF = "'Cormorant Garamond', 'Noto Serif KR', serif";
+const SCRIPT = FONT_STACKS.playfair;
+const SERIF_BOLD = FONT_STACKS.playfair;
+const SERIF = FONT_STACKS.cormorant;
 
 function FadeUp({ delay = 0, children, style }: { delay?: number; children: React.ReactNode; style?: React.CSSProperties }) {
   return (

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -14,6 +14,7 @@ import {
   removePushSubscription,
   type Reminder
 } from '@/lib/actions/reminders';
+import ReminderPreview from './_ReminderPreview';
 
 // VAPID 공개 키 (env에서 받아옴) — base64url → Uint8Array 변환 헬퍼
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
@@ -53,6 +54,9 @@ interface Props {
 export default function RemindersClient({ initialReminders, initialOptIn }: Props) {
   const router = useRouter();
   const [reminders, setReminders] = useState<Reminder[]>(initialReminders);
+  // 저장 후 router.refresh() 로 서버가 새 목록을 내려주면 반영 — useState 초기값만으로는 갱신되지 않아
+  // 방금 저장한 리마인더가 새로고침 전까지 목록에 안 보이던 문제
+  useEffect(() => { setReminders(initialReminders); }, [initialReminders]);
   const [emailOptIn, setEmailOptIn] = useState(initialOptIn.email);
   const [pushOn, setPushOn] = useState(initialOptIn.pushSubscribed);
   const [locale, setLocaleState] = useState<'en' | 'ko'>(initialOptIn.locale);
@@ -180,7 +184,7 @@ export default function RemindersClient({ initialReminders, initialOptIn }: Prop
   };
 
   return (
-    <div className="px-4 py-4 space-y-4">
+    <div className="px-4 md:px-6 py-4 space-y-4 lg:max-w-5xl mx-auto">
       {/* 안내 + 이메일 opt-in */}
       <div className="rounded-2xl bg-gradient-to-br from-hydrangea-50 to-white border border-hydrangea-100 p-4">
         <div className="flex items-start gap-3">
@@ -210,28 +214,28 @@ export default function RemindersClient({ initialReminders, initialOptIn }: Prop
               className="mt-1.5 flex items-center gap-2 disabled:opacity-50"
             >
               <span className={`relative w-4 h-4 rounded border-2 flex items-center justify-center ${pushOn ? 'bg-hydrangea-500 border-hydrangea-500' : 'bg-white border-hydrangea-300'}`}>
-                {pushOn && <span className="text-white text-[10px]">✓</span>}
+                {pushOn && <span className="text-white text-[11px]">✓</span>}
               </span>
               <BellRing className="w-3.5 h-3.5 text-hydrangea-500" />
               <span className="text-xs font-medium text-hydrangea-700">Push notifications (browser)</span>
             </button>
-            <p className="text-[10px] text-hydrangea-400 mt-1.5 leading-snug">
+            <p className="text-[11px] text-hydrangea-400 mt-1.5 leading-snug">
               Your reminders are private — only sent to you. You can turn off any time.
             </p>
             {/* 이메일 언어 선택 */}
             <div className="mt-2.5 flex items-center gap-1.5">
-              <span className="text-[10px] text-hydrangea-500">Email language:</span>
+              <span className="text-[11px] text-hydrangea-500">Email language:</span>
               <button
                 type="button"
                 onClick={() => handleLocaleChange('en')}
-                className={`text-[10px] px-2 py-0.5 rounded-full transition active:scale-95 ${
+                className={`text-[11px] px-2 py-0.5 rounded-full transition active:scale-95 ${
                   locale === 'en' ? 'bg-hydrangea-500 text-white' : 'bg-white text-hydrangea-600 border border-hydrangea-200'
                 }`}
               >English</button>
               <button
                 type="button"
                 onClick={() => handleLocaleChange('ko')}
-                className={`text-[10px] px-2 py-0.5 rounded-full transition active:scale-95 ${
+                className={`text-[11px] px-2 py-0.5 rounded-full transition active:scale-95 ${
                   locale === 'ko' ? 'bg-hydrangea-500 text-white' : 'bg-white text-hydrangea-600 border border-hydrangea-200'
                 }`}
               >한국어</button>
@@ -249,7 +253,7 @@ export default function RemindersClient({ initialReminders, initialOptIn }: Prop
           <button
             type="button"
             onClick={() => setAddOpen(!addOpen)}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-hydrangea-500 text-white text-xs font-medium active:scale-95 transition"
+            className="inline-flex items-center gap-1 px-4 min-h-[40px] rounded-full bg-hydrangea-500 text-white text-sm font-medium active:scale-95 transition"
           >
             <Plus className="w-3.5 h-3.5" /> Add
           </button>
@@ -257,15 +261,19 @@ export default function RemindersClient({ initialReminders, initialOptIn }: Prop
 
         {/* 추가 폼 */}
         {addOpen && (
-          <div className="rounded-2xl bg-white border border-hydrangea-200 p-4 mb-3 space-y-3">
+          // 넓은 화면: 왼쪽 입력 / 오른쪽 미리보기. 휴대폰: 입력 → 미리보기 → 저장 순서
+          <div className="rounded-2xl bg-white border border-hydrangea-200 p-4 mb-3 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,400px)] lg:gap-6">
+           <div className="space-y-3">
             <div>
-              <label className="block text-xs font-semibold text-hydrangea-700 mb-1">Who?</label>
+              <label htmlFor="reminder-person" className="block text-xs font-semibold text-hydrangea-700 mb-1">Who?</label>
               <input
+                id="reminder-person"
                 type="text"
+                autoComplete="off"
                 value={personName}
                 onChange={(e) => setPersonName(e.target.value)}
                 placeholder="e.g. Mom, Sarah, friend's name"
-                className="w-full px-3 py-2 rounded-xl border border-hydrangea-200 text-sm focus:outline-none focus:ring-2 focus:ring-hydrangea-300"
+                className="w-full px-3 min-h-[44px] rounded-xl border border-hydrangea-200 text-sm focus:outline-none focus:ring-2 focus:ring-hydrangea-300"
               />
             </div>
             <div>
@@ -276,14 +284,15 @@ export default function RemindersClient({ initialReminders, initialOptIn }: Prop
                     key={occ.id}
                     type="button"
                     onClick={() => setOccasion(occ.id)}
-                    className={`flex flex-col items-center gap-0.5 py-2 rounded-lg text-[10px] font-medium transition active:scale-95 ${
+                    aria-pressed={occasion === occ.id}
+                    className={`flex flex-col items-center gap-0.5 py-2 min-h-[56px] rounded-lg text-[11px] font-medium transition active:scale-95 ${
                       occasion === occ.id
                         ? 'bg-hydrangea-500 text-white'
                         : 'bg-hydrangea-50 text-hydrangea-700 hover:bg-hydrangea-100'
                     }`}
                   >
                     <span className="text-lg">{occ.emoji}</span>
-                    <span className="text-[9px] leading-tight">{occ.label}</span>
+                    <span className="text-[11px] leading-tight text-center">{occ.label}</span>
                   </button>
                 ))}
               </div>
@@ -293,7 +302,7 @@ export default function RemindersClient({ initialReminders, initialOptIn }: Prop
                   value={occasionLabel}
                   onChange={(e) => setOccasionLabel(e.target.value)}
                   placeholder="e.g. Promotion, Anniversary..."
-                  className="mt-2 w-full px-3 py-2 rounded-xl border border-hydrangea-200 text-sm"
+                  className="mt-2 w-full px-3 min-h-[44px] rounded-xl border border-hydrangea-200 text-sm"
                 />
               )}
             </div>
@@ -303,14 +312,16 @@ export default function RemindersClient({ initialReminders, initialOptIn }: Prop
                 <select
                   value={month}
                   onChange={(e) => setMonth(Number(e.target.value))}
-                  className="flex-1 px-3 py-2 rounded-xl border border-hydrangea-200 text-sm"
+                  aria-label="Month"
+                  className="flex-1 px-3 min-h-[44px] rounded-xl border border-hydrangea-200 text-sm"
                 >
                   {MONTH_NAMES.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
                 </select>
                 <select
                   value={day}
                   onChange={(e) => setDay(Number(e.target.value))}
-                  className="w-20 px-3 py-2 rounded-xl border border-hydrangea-200 text-sm"
+                  aria-label="Day"
+                  className="w-24 px-3 min-h-[44px] rounded-xl border border-hydrangea-200 text-sm"
                 >
                   {Array.from({ length: 31 }, (_, i) => <option key={i + 1} value={i + 1}>{i + 1}</option>)}
                 </select>
@@ -331,7 +342,8 @@ export default function RemindersClient({ initialReminders, initialOptIn }: Prop
                     key={opt.v}
                     type="button"
                     onClick={() => setNotifyDays(opt.v)}
-                    className={`py-1.5 rounded-lg text-[11px] font-medium transition active:scale-95 ${
+                    aria-pressed={notifyDays === opt.v}
+                    className={`min-h-[40px] rounded-lg text-[11px] font-medium transition active:scale-95 ${
                       notifyDays === opt.v
                         ? 'bg-hydrangea-500 text-white'
                         : 'bg-hydrangea-50 text-hydrangea-700 hover:bg-hydrangea-100'
@@ -341,15 +353,29 @@ export default function RemindersClient({ initialReminders, initialOptIn }: Prop
                   </button>
                 ))}
               </div>
-              <p className="text-[10px] text-hydrangea-400 mt-1.5">
+              <p className="text-[11px] text-hydrangea-400 mt-1.5">
                 D-30 추천 — 시즌 카드 미리 준비할 시간이 충분해요
               </p>
             </div>
-            <div className="flex gap-2 pt-1">
+           </div>
+            <div className="mt-4 lg:mt-0 lg:row-span-2 lg:col-start-2 lg:row-start-1 rounded-2xl bg-hydrangea-50/60 p-3">
+              <ReminderPreview
+                personName={personName}
+                occasion={occasion}
+                occasionLabel={occasionLabel}
+                month={month}
+                day={day}
+                notifyDaysBefore={notifyDays}
+                locale={locale}
+                emailOptIn={emailOptIn}
+                pushSubscribed={pushOn}
+              />
+            </div>
+            <div className="flex gap-2 pt-4 lg:col-start-1">
               <button
                 type="button"
                 onClick={() => setAddOpen(false)}
-                className="flex-1 py-2.5 rounded-xl border border-hydrangea-200 text-hydrangea-600 text-sm font-medium"
+                className="flex-1 min-h-[44px] rounded-xl border border-hydrangea-200 text-hydrangea-600 text-sm font-medium"
               >
                 Cancel
               </button>
@@ -357,7 +383,7 @@ export default function RemindersClient({ initialReminders, initialOptIn }: Prop
                 type="button"
                 onClick={handleAdd}
                 disabled={pending}
-                className="flex-1 py-2.5 rounded-xl bg-hydrangea-500 text-white text-sm font-semibold disabled:opacity-60 active:scale-95 transition"
+                className="flex-1 min-h-[44px] rounded-xl bg-hydrangea-500 text-white text-sm font-semibold disabled:opacity-60 active:scale-95 transition"
               >
                 {pending ? 'Adding…' : 'Save reminder'}
               </button>
@@ -393,7 +419,7 @@ export default function RemindersClient({ initialReminders, initialOptIn }: Prop
                   {daysAway <= 14 && (
                     <Link
                       href={`/cards/new?type=${r.occasion === 'other' ? 'etc' : r.occasion}`}
-                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-hydrangea-500 text-white text-[10px] font-semibold active:scale-95 transition flex-shrink-0"
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-hydrangea-500 text-white text-[11px] font-semibold active:scale-95 transition flex-shrink-0"
                     >
                       Make card <ArrowRight className="w-3 h-3" />
                     </Link>

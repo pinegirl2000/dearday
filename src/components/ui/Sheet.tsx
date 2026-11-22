@@ -18,10 +18,11 @@ export function Sheet({ open, onOpenChange, title, description, children }: Shee
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-black/40 z-40" />
         <Drawer.Content className={cn(
-          'bg-white rounded-t-3xl fixed bottom-0 left-0 right-0 max-h-[90vh] z-50',
+          // 🔧 90dvh — 모바일 주소창 높이 변화에도 잘리지 않게 / 데스크톱에선 화면 전체 폭으로 퍼지지 않도록 앱 폭(480px)에 맞춰 가운데 정렬
+          'bg-white rounded-t-3xl fixed bottom-0 inset-x-0 mx-auto w-full md:max-w-[480px] max-h-[90dvh] z-50',
           'flex flex-col outline-none'
         )}>
-          <div className="mx-auto w-12 h-1.5 rounded-full bg-hydrangea-100 mt-3 mb-2" />
+          <div aria-hidden className="mx-auto w-12 h-1.5 rounded-full bg-hydrangea-200 mt-3 mb-2" />
           {title && (
             <div className="px-6 pt-2 pb-3">
               <Drawer.Title className="text-lg font-semibold text-hydrangea-700">{title}</Drawer.Title>
@@ -30,7 +31,7 @@ export function Sheet({ open, onOpenChange, title, description, children }: Shee
               )}
             </div>
           )}
-          <div className="px-6 pb-8 pt-2 overflow-y-auto no-scrollbar flex-1">{children}</div>
+          <div className="px-6 pt-2 overflow-y-auto no-scrollbar flex-1" style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}>{children}</div>
         </Drawer.Content>
       </Drawer.Portal>
     </Drawer.Root>

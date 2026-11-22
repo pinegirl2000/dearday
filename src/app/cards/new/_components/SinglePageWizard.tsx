@@ -1,4 +1,5 @@
 'use client';
+import { FONT_STACKS } from '@/lib/font-keys';
 
 import { Fragment, useState, useEffect, useLayoutEffect, useRef, useTransition } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -8,6 +9,8 @@ import { toast } from 'sonner';
 import { useSession, signIn } from 'next-auth/react';
 import { Check, ChevronDown, ChevronUp, Minus, Plus, Sparkles, Calendar, RotateCcw, Copy } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
+import { imgUrl } from '@/lib/imgUrl';
+import { PhraseSuggestions } from '@/components/cards/phrase-suggestions';
 import { MobileHeader } from '@/components/layout/MobileHeader';
 import { Input, Textarea, Button, PhoneInput } from '@/components/ui';
 import { ImageUploader } from '@/components/domain/ImageUploader';
@@ -120,7 +123,7 @@ function SectionShell({ id, title, summary, open, done, enabled, onToggle, child
   // 닫힌 섹션은 렌더하지 않음 — 상단 탭바가 네비게이션 담당
   if (!open) return null;
   return (
-    <section className="rounded-2xl border border-hydrangea-100 bg-white overflow-hidden">
+    <section className="border-y sm:border sm:rounded-2xl border-hydrangea-100 bg-white overflow-hidden">
       {/* 활성 섹션 헤더 — 상단 탭바와 동일한 보라색으로 일관성 강조 */}
       <div className="w-full flex items-center gap-3 p-4 text-left bg-hydrangea-500 text-white">
         <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 bg-white/25">
@@ -149,7 +152,7 @@ function SectionShell({ id, title, summary, open, done, enabled, onToggle, child
         transition={{ duration: 0.2 }}
         className="overflow-hidden"
       >
-        <div className="p-4">{children}</div>
+        <div className="px-3 py-4 sm:p-4">{children}</div>
       </motion.div>
     </section>
   );
@@ -652,7 +655,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
   };
 
   return (
-    <PageContainer noPadding>
+    <PageContainer noPadding size="editor">
       <MobileHeader title={isEditMode ? 'Edit Invitation' : t('headerTitle')} back />
 
       {/* thank_* 상단 사진 업로드용 hidden input — 카드 미리보기의 원형 placeholder 클릭으로 트리거 */}
@@ -665,7 +668,8 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
       />
 
       {/* 상단 단계 표시 (sticky) — 작은 점/숫자 + 가는 connector. 현재 단계 라벨은 아래 SectionShell에 노출 */}
-      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur border-b border-hydrangea-100/70 px-4 py-3">
+      {/* 🔧 TopBar(가변 높이) + MobileHeader(h-14) 아래에 쌓이도록 top 오프셋 지정 */}
+      <div className="sticky top-[calc(var(--topbar-h)+3.5rem)] z-20 bg-white/95 backdrop-blur border-b border-hydrangea-100/70 px-4 py-3">
         <div className="flex items-start justify-center gap-0">
           {([1, 2, 3] as SectionId[]).map((id, idx) => {
             const active = open === id;
@@ -724,7 +728,8 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
         </div>
       </div>
 
-      <div className="px-4 py-4 space-y-3 pb-24">
+      {/* 휴대폰에선 좌우 여백 없이(섹션이 화면 끝까지) — 겹겹의 여백 때문에 카드 미리보기가 322px 로 줄던 문제 */}
+      <div className="px-0 sm:px-4 py-3 sm:py-4 space-y-3 pb-24">
         {/* 1. 이벤트 선택 */}
         <SectionShell
           id={1}
@@ -777,14 +782,14 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                           setEventType(e.id as EventType);
                           setDraft({ bg_id: undefined, layout_id: undefined } as any);
                         }}
-                        className={`relative flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 rounded-lg transition min-w-0 ${
+                        className={`relative flex flex-col items-center justify-center gap-1 px-1 py-2 min-h-[56px] rounded-lg transition min-w-0 ${
                           selected
                             ? 'bg-white text-hydrangea-700 border-2 border-hydrangea-500 font-semibold'
                             : 'bg-white text-hydrangea-700 border border-hydrangea-100 active:bg-hydrangea-50'
                         }`}
                       >
                         <span className="text-base leading-none">{e.emoji}</span>
-                        <span className="text-[9px] font-medium tracking-tight truncate max-w-full">{displayLabel}</span>
+                        <span className="text-[11px] font-medium tracking-tight leading-tight text-center line-clamp-2 max-w-full">{displayLabel}</span>
                         {selected && (
                           <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-hydrangea-500 border border-white flex items-center justify-center shadow-sm">
                             <Check className="w-2.5 h-2.5 text-white" strokeWidth={3.5} />
@@ -799,32 +804,32 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                   return (
                     <div className="space-y-3">
                       <div>
-                        <div className="text-[10px] font-semibold text-hydrangea-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                        <div className="text-[11px] font-semibold text-hydrangea-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                           <span>📅</span><span>Invitation</span>
-                          <span className="text-[9px] text-hydrangea-400 font-normal normal-case tracking-normal">{t('withDate')}</span>
+                          <span className="text-[10px] text-hydrangea-400 font-normal normal-case tracking-normal">{t('withDate')}</span>
                         </div>
-                        <div className="grid grid-cols-6 gap-1">
+                        <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-1.5">
                           {invitationEvents.map(renderEventBtn)}
                         </div>
                       </div>
                       {thankEvents.length > 0 && (
                         <div>
-                          <div className="text-[10px] font-semibold text-amber-600 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                          <div className="text-[11px] font-semibold text-amber-600 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                             <span>💌</span><span>Thank Card</span>
-                            <span className="text-[9px] text-hydrangea-400 font-normal normal-case tracking-normal">{t('thanks')}</span>
+                            <span className="text-[10px] text-hydrangea-400 font-normal normal-case tracking-normal">{t('thanks')}</span>
                           </div>
-                          <div className="grid grid-cols-6 gap-1">
+                          <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-1.5">
                             {thankEvents.map(renderEventBtn)}
                           </div>
                         </div>
                       )}
                       {congratsEvents.length > 0 && (
                         <div>
-                          <div className="text-[10px] font-semibold text-pink-600 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                          <div className="text-[11px] font-semibold text-pink-600 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                             <span>🎉</span><span>Congrats</span>
-                            <span className="text-[9px] text-hydrangea-400 font-normal normal-case tracking-normal">{t('congratsLabel')}</span>
+                            <span className="text-[10px] text-hydrangea-400 font-normal normal-case tracking-normal">{t('congratsLabel')}</span>
                           </div>
-                          <div className="grid grid-cols-6 gap-1">
+                          <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-1.5">
                             {congratsEvents.map(renderEventBtn)}
                           </div>
                         </div>
@@ -843,7 +848,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                       {t('noTemplates')}
                     </div>
                   ) : (
-                    <div className="grid grid-cols-5 gap-1.5">
+                    <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-6 gap-2">
                       {tpls.map((t) => {
                         const bg = getBackground(t.bg_id);
                         // 카드의 layout_id가 template의 default와 다를 수 있음 (allowed_layouts 중 다른 것 선택)
@@ -863,7 +868,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                             {/* 템플릿 이미지 — 3:4 비율 */}
                             <div className="relative w-full aspect-[3/4]">
                               {bg.imageUrl ? (
-                                <img src={bg.imageUrl} alt={t.name} className="absolute inset-0 w-full h-full object-cover" />
+                                <img src={imgUrl(bg.imageUrl)} alt={t.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
                               ) : (
                                 <div className="absolute inset-0" style={{ background: bg.gradient }} />
                               )}
@@ -897,7 +902,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                                 </div>
                               );
                             })()}
-                            <div className={`text-[9px] py-0.5 text-center truncate px-0.5 ${
+                            <div className={`text-[10px] py-0.5 text-center truncate px-0.5 ${
                               selected ? 'bg-hydrangea-600 text-white font-bold' : 'bg-hydrangea-50 text-hydrangea-700'
                             }`}>
                               {selected ? `✓ ${t.name}` : t.name}
@@ -1037,7 +1042,9 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
             };
             const nextEmptyNo = fieldsOrder.find((f) => isEmpty(f.key))?.no;
             return (
-          <div className="space-y-4 mt-2">
+          // 넓은 화면(lg)에서는 2단: 위쪽 안내·레이아웃 선택은 전체 폭, 그 아래 왼쪽=카드 미리보기 / 오른쪽=RSVP 설정·다음 버튼.
+          // DOM 순서는 그대로 두고 열만 지정 — 모바일의 위→아래 순서를 유지하기 위함
+          <div className="space-y-4 mt-2 lg:space-y-0 lg:grid lg:grid-cols-[minmax(0,440px)_minmax(0,1fr)] lg:gap-x-8 lg:gap-y-4 lg:items-start lg:[&>*]:col-span-2">
             {/* Sample 선택 — 상단 토글로 최대 3개 노출. 클릭 시 해당 sample data로 draft 적용 */}
             {availableSamples.length > 0 && (() => {
               const samplesToShow = availableSamples.slice(0, 3);
@@ -1056,7 +1063,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                             selected ? 'border-hydrangea-500 bg-hydrangea-50' : 'border-hydrangea-100/60 bg-white'
                           }`}
                         >
-                          <div className="text-[10px] font-semibold text-hydrangea-700 truncate">{s.label}</div>
+                          <div className="text-[11px] font-semibold text-hydrangea-700 truncate">{s.label}</div>
                           {selected && (
                             <div className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-hydrangea-500 flex items-center justify-center">
                               <Check className="w-2 h-2 text-white" strokeWidth={3} />
@@ -1122,7 +1129,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                           }`}
                         >
                           <div className="text-xs font-semibold text-hydrangea-700 truncate">{lay.name}</div>
-                          <div className="text-[10px] text-hydrangea-400 mt-0.5 truncate">
+                          <div className="text-[11px] text-hydrangea-400 mt-0.5 truncate">
                             {SHORT_DESC[lid] || ''}
                           </div>
                           {selected && (
@@ -1150,7 +1157,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
               </div>
             </div>
             {/* 선택한 템플릿 미리보기 + 번호 가이드 오버레이 (카드 내부 좌표계 사용) */}
-            <div ref={previewWrapRef} className="rounded-2xl overflow-hidden border border-hydrangea-100">
+            <div ref={previewWrapRef} className="rounded-2xl overflow-hidden border border-hydrangea-100 lg:!col-span-1 lg:col-start-1">
               <TemplateCard
                 card={previewCard}
                 recipientName="John"
@@ -1217,7 +1224,8 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                   }
                 }}
                 guideOverlay={
-                  <div className="absolute inset-0" style={{ zIndex: 50, pointerEvents: 'none' }}>
+                  // zIndex 10: 카드 내용보다는 위, 상단 고정 헤더(z-20~40)보다는 아래 — 스크롤 시 번호 배지가 헤더를 덮지 않게
+                  <div className="absolute inset-0" style={{ zIndex: 10, pointerEvents: 'none' }}>
                     {/* 위치 기반 highlight 박스 제거 — 대신 Editable 컴포넌트가 highlightedField에 따라 텍스트 정확한 영역에 dashed 박스 표시 */}
                     {fieldsOrder.map((fld) => {
                       const active = nextEmptyNo === fld.no;
@@ -1273,9 +1281,9 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                               title={`${fld.label}`}
                             >
                               {/* 번호 + 라벨이 하나의 pill로 결합. flashing/active 시 라벨까지 노출 */}
-                              <span className="w-5 h-5 flex items-center justify-center text-[10px] font-bold flex-shrink-0">{fld.no}</span>
+                              <span className="w-5 h-5 flex items-center justify-center text-[11px] font-bold flex-shrink-0">{fld.no}</span>
                               {(isFlashing || active) && (
-                                <span className="text-[10px] font-semibold pr-2 pl-0.5 whitespace-nowrap">{fld.label}</span>
+                                <span className="text-[11px] font-semibold pr-2 pl-0.5 whitespace-nowrap">{fld.label}</span>
                               )}
                             </button>
                           </div>
@@ -1287,6 +1295,8 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
               />
             </div>
 
+            {/* 카드 옆(넓은 화면) 또는 카드 아래(휴대폰)에 놓이는 설정 묶음 */}
+            <div className="space-y-4 lg:!col-span-1 lg:col-start-2">
             {layoutHasPhoto(draft.layout_id) && (
               <div className="pt-3 border-t border-hydrangea-100/60">
                 <h4 className="text-xs font-semibold text-hydrangea-700 mb-2">{t('topPhotoTitle')}</h4>
@@ -1306,7 +1316,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                   <div className="text-sm text-hydrangea-700">Enable RSVP</div>
                   <button type="button" onClick={() => setDraft({ rsvp_enabled: !draft.rsvp_enabled })}
                     className={`relative w-11 h-6 rounded-full transition ${draft.rsvp_enabled ? 'bg-hydrangea-500' : 'bg-hydrangea-100'}`}>
-                    <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${draft.rsvp_enabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                    <span className={`absolute left-0 top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${draft.rsvp_enabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
                   </button>
                 </div>
                 {draft.rsvp_enabled && (
@@ -1339,7 +1349,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                         <div className="text-sm text-hydrangea-700">Collect attendee names</div>
                         <button type="button" onClick={() => setDraft({ rsvp_collect_names: !draft.rsvp_collect_names })}
                           className={`relative w-11 h-6 rounded-full transition ${draft.rsvp_collect_names ? 'bg-hydrangea-500' : 'bg-hydrangea-100'}`}>
-                          <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${draft.rsvp_collect_names ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                          <span className={`absolute left-0 top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${draft.rsvp_collect_names ? 'translate-x-5' : 'translate-x-0.5'}`} />
                         </button>
                       </div>
                     )}
@@ -1353,7 +1363,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                       </div>
                       <button type="button" onClick={() => setDraft({ rsvp_allow_change: !(draft.rsvp_allow_change ?? true) })}
                         className={`relative w-11 h-6 rounded-full transition flex-shrink-0 ${(draft.rsvp_allow_change ?? true) ? 'bg-hydrangea-500' : 'bg-hydrangea-100'}`}>
-                        <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${(draft.rsvp_allow_change ?? true) ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                        <span className={`absolute left-0 top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${(draft.rsvp_allow_change ?? true) ? 'translate-x-5' : 'translate-x-0.5'}`} />
                       </button>
                     </div>
                     {/* Allow one-line reply 옵션은 화면에서 숨김 (default off) */}
@@ -1399,6 +1409,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
             {!detailsCanProceed && (
               <p className="text-xs text-hydrangea-400 text-center">All fields marked with * are required</p>
             )}
+            </div>
           </div>
             );
           })()}
@@ -1484,7 +1495,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                             return (
                               <div style={{ textAlign: 'center', padding: '0 8px' }}>
                                 <div style={{
-                                  fontFamily: tf.fontFamily || "'Noto Serif KR', serif",
+                                  fontFamily: tf.fontFamily || FONT_STACKS.notoSerif,
                                   fontWeight: tf.fontWeight,
                                   color: tf.color,
                                   fontSize: Math.min(tf.fontSize, 24),
@@ -1496,7 +1507,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                                 </div>
                                 {dateStr && (
                                   <div style={{
-                                    fontFamily: df?.fontFamily || "'Noto Sans KR', sans-serif",
+                                    fontFamily: df?.fontFamily || FONT_STACKS.notoSans,
                                     color: df?.color || '#666',
                                     fontSize: 11,
                                     letterSpacing: df?.letterSpacing
@@ -1589,7 +1600,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                                 );
                               })}
                             </div>
-                            <div className="text-[10px] text-hydrangea-400 mt-1 text-center">
+                            <div className="text-[11px] text-hydrangea-400 mt-1 text-center">
                               {COLORS_TOP.find((c) => c.id === parsedEnv.color)?.label}
                             </div>
                           </div>
@@ -1680,12 +1691,12 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                       {envelopeOpen ? (
                         <>
                           <RotateCcw className="w-6 h-6" strokeWidth={2.5} />
-                          <span className="text-[10px] font-semibold tracking-wide">{t('replay')}</span>
+                          <span className="text-[11px] font-semibold tracking-wide">{t('replay')}</span>
                         </>
                       ) : (
                         <>
-                          <span className="text-[9px] font-bold tracking-widest uppercase">Sample</span>
-                          <span className="text-[9px] font-semibold tracking-wide">preview</span>
+                          <span className="text-[10px] font-bold tracking-widest uppercase">Sample</span>
+                          <span className="text-[10px] font-semibold tracking-wide">preview</span>
                         </>
                       )}
                     </button>
@@ -1727,7 +1738,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
 
       {/* Edit 모드: 변경사항 있을 때 sticky save bar */}
       {isDirty && (
-        <div className="fixed bottom-0 left-0 right-0 z-30 px-4 py-3 bg-white/95 backdrop-blur border-t border-hydrangea-200 shadow-lg">
+        <div className="fixed bottom-0 left-0 right-0 z-30 px-4 pt-3 bg-white/95 backdrop-blur border-t border-hydrangea-200 shadow-lg" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
           <div className="max-w-md mx-auto flex items-center gap-3">
             <span className="text-xs text-hydrangea-500 flex-1">You have unsaved changes</span>
             <button
@@ -1907,13 +1918,13 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
         </div>
       )}
 
-      {/* 텍스트 편집 모달 — badge 1/2/3 (Subtitle/Title/Message) 클릭 시 열림 */}
+      {/* 텍스트 편집 모달 — badge 1/2/3 (Subtitle/Title/Message) 클릭 시 열림. 추천 문구 목록이 길어 작은 화면에서도 '완료' 버튼까지 스크롤되도록 높이 제한 */}
       {textEditField && (
         <div
           className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-4"
           onClick={() => setTextEditField(null)}
         >
-          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-y-auto max-h-[90dvh]" onClick={(e) => e.stopPropagation()}>
             <div className="px-4 py-3 flex items-center justify-between border-b border-hydrangea-100">
               <div className="text-sm font-semibold text-hydrangea-700">{textEditField.label}</div>
               <button type="button" onClick={() => setTextEditField(null)}
@@ -1951,6 +1962,15 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                   onChange={(e) => setDraft({ [textEditField.key]: e.target.value } as any)}
                 />
               )}
+              {/* 추천 문구 — 행사에 맞는 자주 쓰는 문구를 눌러 넣고 고쳐 쓸 수 있게 (한 줄 문구·본문만) */}
+              <PhraseSuggestions
+                eventId={draft.event_type as string}
+                field={textEditField.key}
+                value={(draft[textEditField.key] as string) || ''}
+                onPick={(phrase) => setDraft({ [textEditField.key]: phrase } as any)}
+                title={t('phraseSuggestionsTitle')}
+                hint={t('phraseSuggestionsHint')}
+              />
             </div>
             <div className="p-3 flex border-t border-hydrangea-100">
               <button type="button" onClick={() => setTextEditField(null)}
@@ -2160,7 +2180,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
               </button>
 
               {/* L2 발신자 공지 — 읽음 추적 명시 */}
-              <p className="mt-3 text-[10px] text-hydrangea-400 leading-snug">
+              <p className="mt-3 text-[11px] text-hydrangea-400 leading-snug">
                 ℹ️ You'll see when your recipient opens this card.
               </p>
             </motion.div>

@@ -3,7 +3,7 @@
 import { useState, useEffect, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { ChevronDown, ExternalLink, Settings, Pencil, Check, Send, Users, ThumbsUp, ThumbsDown, TrendingUp, X, Maximize2, RotateCcw, RefreshCw, Copy, Lock } from 'lucide-react';
 import { getCardStats } from '@/lib/actions/getCardStats';
@@ -25,10 +25,17 @@ interface CardStats {
   declinedRecords: number;
 }
 
-function fmtDate(iso?: string | null) {
+/** 날짜 표기 시간대 — 서비스 지역(싱가포르) 기준으로 고정 */
+const DISPLAY_TIME_ZONE = 'Asia/Singapore';
+
+/**
+ * 언어·시간대를 명시해 포맷한다.
+ * undefined(실행 환경 기본값)로 두면 서버는 영어, 브라우저는 한국어로 그려져 하이드레이션이 깨지고 페이지 전체가 다시 그려짐.
+ */
+function fmtDate(iso: string | null | undefined, locale: string, month: 'short' | 'long' = 'short') {
   if (!iso) return '';
   try {
-    return new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    return new Date(iso).toLocaleDateString(locale, { year: 'numeric', month, day: 'numeric', timeZone: DISPLAY_TIME_ZONE });
   } catch { return ''; }
 }
 
@@ -43,6 +50,7 @@ export default function RecentCardSelector({
   owners?: Record<string, { name?: string | null; email?: string | null }>;
 }) {
   const t = useTranslations('RecentCards');
+  const locale = useLocale();
   const [liveStats, setLiveStats] = useState<Record<string, CardStats>>(stats);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -136,7 +144,7 @@ export default function RecentCardSelector({
         className="w-full px-4 py-3.5 bg-gradient-to-r from-hydrangea-600 to-hydrangea-500 text-white flex items-center gap-2 hover:from-hydrangea-700 hover:to-hydrangea-600 transition shadow-inner"
       >
         <div className="flex-1 min-w-0 text-left">
-          <div className="text-[10px] font-medium opacity-80 mb-0.5 flex items-center gap-1">
+          <div className="text-[11px] font-medium opacity-80 mb-0.5 flex items-center gap-1">
             <span>✨</span>
             <span>{c.id === cards[0].id ? t('mostRecent') : t('selected')}</span>
           </div>
@@ -144,7 +152,7 @@ export default function RecentCardSelector({
             {c.title || t('untitled')}
           </div>
           {owners && (owners[c.id]?.name || owners[c.id]?.email) && (
-            <div className="text-[10px] opacity-90 mt-0.5 truncate">
+            <div className="text-[11px] opacity-90 mt-0.5 truncate">
               👤 by {owners[c.id]?.name || ''}
               {owners[c.id]?.email && (
                 <span className="opacity-75"> · {owners[c.id]?.email}</span>
@@ -152,12 +160,12 @@ export default function RecentCardSelector({
             </div>
           )}
           {(c.updated_at || c.created_at) && (
-            <div className="text-[10px] opacity-75 mt-0.5">
-              {t('lastEdited', { date: fmtDate(c.updated_at || c.created_at) })}
+            <div className="text-[11px] opacity-75 mt-0.5">
+              {t('lastEdited', { date: fmtDate(c.updated_at || c.created_at, locale) })}
             </div>
           )}
         </div>
-        <span className="flex-shrink-0 text-[10px] bg-white/20 px-2 py-1 rounded-full font-semibold">
+        <span className="flex-shrink-0 text-[11px] bg-white/20 px-2 py-1 rounded-full font-semibold">
           {t('totalCount', { n: cards.length })}
         </span>
         <ChevronDown className={`flex-shrink-0 w-5 h-5 transition-transform ${open ? 'rotate-180' : ''}`} strokeWidth={2.5} />
@@ -181,16 +189,16 @@ export default function RecentCardSelector({
                 <span className="text-base flex-shrink-0">{cMeta.emoji}</span>
                 <div className="flex-1 min-w-0">
                   <div className="truncate">
-                    {idx === 0 && <span className="text-[10px] text-hydrangea-400 mr-1">{t('recentBadge')}</span>}
+                    {idx === 0 && <span className="text-[11px] text-hydrangea-400 mr-1">{t('recentBadge')}</span>}
                     {card.title || t('untitled')}
                   </div>
                   {owners && (owners[card.id]?.name || owners[card.id]?.email) && (
-                    <div className="text-[10px] text-hydrangea-400 truncate font-normal">
+                    <div className="text-[11px] text-hydrangea-400 truncate font-normal">
                       👤 {owners[card.id]?.name || owners[card.id]?.email}
                     </div>
                   )}
                 </div>
-                <span className="text-[10px] text-hydrangea-400 flex-shrink-0">{fmtDate(card.event_date)}</span>
+                <span className="text-[11px] text-hydrangea-400 flex-shrink-0">{fmtDate(card.event_date, locale)}</span>
                 {isSelected && <Check className="w-3.5 h-3.5 text-hydrangea-500 flex-shrink-0" strokeWidth={3} />}
               </button>
             );
@@ -219,7 +227,7 @@ export default function RecentCardSelector({
         {/* 하단 텍스트 가독성을 위한 subtle 그라데이션만 — 그림 색상은 최대한 보존 */}
         <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
         {/* 클릭 가능 힌트 — hover 시 노출 */}
-        <div className="absolute top-3 right-3 z-10 inline-flex items-center gap-1 bg-black/55 backdrop-blur text-white text-[10px] font-semibold px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition">
+        <div className="absolute top-3 right-3 z-10 inline-flex items-center gap-1 bg-black/55 backdrop-blur text-white text-[11px] font-semibold px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition">
           <Maximize2 className="w-3 h-3" /> {t('viewLarge')}
         </div>
       </button>
@@ -247,7 +255,7 @@ export default function RecentCardSelector({
                 <><Copy className="w-4 h-4" /> {t('duplicateAndResend')}</>
               )}
             </button>
-            <p className="text-[10px] text-hydrangea-400 leading-snug flex items-center gap-1 justify-center">
+            <p className="text-[11px] text-hydrangea-400 leading-snug flex items-center gap-1 justify-center">
               <Lock className="w-3 h-3" /> {t('lockedHint')}
             </p>
           </div>
@@ -300,8 +308,8 @@ export default function RecentCardSelector({
             <h3 className="text-[11px] font-bold text-hydrangea-700 uppercase tracking-wide flex items-center gap-1">
               <TrendingUp className="w-3.5 h-3.5" /> {t('statsTitle')}
             </h3>
-            <span className="text-[10px] text-hydrangea-400">
-              {t('asOf', { date: new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) })}
+            <span className="text-[11px] text-hydrangea-400">
+              {t('asOf', { date: fmtDate(new Date().toISOString(), locale, 'long') })}
             </span>
           </div>
           <button
@@ -331,23 +339,23 @@ export default function RecentCardSelector({
             <div className="rounded-xl bg-gradient-to-br from-hydrangea-50 to-hydrangea-100 border border-hydrangea-200 p-3 shadow-sm relative overflow-hidden">
               <Send className="absolute -bottom-2 -right-2 w-12 h-12 text-hydrangea-300/40" strokeWidth={1.5} />
               <div className="relative">
-                <div className="text-[10px] font-semibold text-hydrangea-500 mb-0.5">{t('totalLinksSent')}</div>
+                <div className="text-[11px] font-semibold text-hydrangea-500 mb-0.5">{t('totalLinksSent')}</div>
                 <div className="flex items-baseline gap-0.5">
                   <span className="text-2xl font-extrabold leading-none text-hydrangea-700">{s.totalRecipients}</span>
-                  <span className="text-[10px] text-hydrangea-500">{t('unitCount')}</span>
+                  <span className="text-[11px] text-hydrangea-500">{t('unitCount')}</span>
                 </div>
               </div>
             </div>
             <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200 p-3 shadow-sm relative overflow-hidden">
               <span className="absolute -bottom-2 -right-2 text-5xl opacity-20">👁</span>
               <div className="relative">
-                <div className="text-[10px] font-semibold text-emerald-600 mb-0.5">Opened</div>
+                <div className="text-[11px] font-semibold text-emerald-600 mb-0.5">Opened</div>
                 <div className="flex items-baseline gap-0.5">
                   <span className="text-2xl font-extrabold leading-none text-emerald-700">{s.readRecipients}</span>
-                  <span className="text-[10px] text-emerald-600">{t('unitCount')}</span>
+                  <span className="text-[11px] text-emerald-600">{t('unitCount')}</span>
                 </div>
                 {s.totalRecipients > 0 && (
-                  <div className="text-[10px] mt-1 inline-flex items-center gap-1 bg-emerald-500 text-white px-1.5 py-0.5 rounded-full font-semibold">
+                  <div className="text-[11px] mt-1 inline-flex items-center gap-1 bg-emerald-500 text-white px-1.5 py-0.5 rounded-full font-semibold">
                     {Math.round((s.readRecipients / s.totalRecipients) * 100)}% open rate
                   </div>
                 )}
@@ -362,13 +370,13 @@ export default function RecentCardSelector({
           <div className="rounded-xl bg-gradient-to-br from-hydrangea-50 to-hydrangea-100 border border-hydrangea-200 p-3 shadow-sm relative overflow-hidden">
             <Send className="absolute -bottom-2 -right-2 w-12 h-12 text-hydrangea-300/40" strokeWidth={1.5} />
             <div className="relative">
-              <div className="text-[10px] font-semibold text-hydrangea-500 mb-0.5">{t('totalLinksSent')}</div>
+              <div className="text-[11px] font-semibold text-hydrangea-500 mb-0.5">{t('totalLinksSent')}</div>
               <div className="flex items-baseline gap-0.5">
                 <span className="text-2xl font-extrabold leading-none text-hydrangea-700">{s.totalRecipients}</span>
-                <span className="text-[10px] text-hydrangea-500">{t('unitCount')}</span>
+                <span className="text-[11px] text-hydrangea-500">{t('unitCount')}</span>
               </div>
               <div className="mt-1">
-                <div className="text-[10px] inline-flex items-center gap-1 bg-hydrangea-500 text-white px-1.5 py-0.5 rounded-full font-semibold">
+                <div className="text-[11px] inline-flex items-center gap-1 bg-hydrangea-500 text-white px-1.5 py-0.5 rounded-full font-semibold">
                   👁 {t('readCount', { n: s.readRecipients })}
                 </div>
               </div>
@@ -379,12 +387,12 @@ export default function RecentCardSelector({
           <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200 p-3 shadow-sm relative overflow-hidden">
             <ThumbsUp className="absolute -bottom-2 -right-2 w-12 h-12 text-emerald-300/40" strokeWidth={1.5} />
             <div className="relative">
-              <div className="text-[10px] font-semibold text-emerald-600 mb-0.5">{t('attendingLabel')}</div>
+              <div className="text-[11px] font-semibold text-emerald-600 mb-0.5">{t('attendingLabel')}</div>
               <div className="flex items-baseline gap-0.5">
                 <span className="text-2xl font-extrabold leading-none text-emerald-700">{s.attendingRecords}</span>
-                <span className="text-[10px] text-emerald-600">{t('unitCount')}</span>
+                <span className="text-[11px] text-emerald-600">{t('unitCount')}</span>
               </div>
-              <div className="text-[10px] mt-1 inline-flex items-center gap-1 bg-emerald-500 text-white px-1.5 py-0.5 rounded-full font-semibold">
+              <div className="text-[11px] mt-1 inline-flex items-center gap-1 bg-emerald-500 text-white px-1.5 py-0.5 rounded-full font-semibold">
                 <Users className="w-2.5 h-2.5" /> {t('totalPeople', { n: s.attendingTotal })}
               </div>
             </div>
@@ -394,10 +402,10 @@ export default function RecentCardSelector({
           <div className="rounded-xl bg-gradient-to-br from-rose-50 to-rose-100 border border-rose-200 p-3 shadow-sm relative overflow-hidden">
             <ThumbsDown className="absolute -bottom-2 -right-2 w-12 h-12 text-rose-300/40" strokeWidth={1.5} />
             <div className="relative">
-              <div className="text-[10px] font-semibold text-rose-600 mb-0.5">{t('declinedLabel')}</div>
+              <div className="text-[11px] font-semibold text-rose-600 mb-0.5">{t('declinedLabel')}</div>
               <div className="flex items-baseline gap-0.5">
                 <span className="text-2xl font-extrabold leading-none text-rose-700">{s.declinedRecords}</span>
-                <span className="text-[10px] text-rose-600">{t('unitCount')}</span>
+                <span className="text-[11px] text-rose-600">{t('unitCount')}</span>
               </div>
             </div>
           </div>
@@ -407,7 +415,7 @@ export default function RecentCardSelector({
         {s.totalRecipients > 0 && (
           <div>
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] font-semibold text-hydrangea-600">{t('responseRate')}</span>
+              <span className="text-[11px] font-semibold text-hydrangea-600">{t('responseRate')}</span>
               <span className="text-[11px] font-bold text-hydrangea-700">
                 {t('replyVsSend', { replies: totalReplies, total: s.totalRecipients })}
                 <span className="text-hydrangea-400 font-medium ml-1">({replyRate}%)</span>
@@ -429,7 +437,7 @@ export default function RecentCardSelector({
                 />
               )}
             </div>
-            <div className="flex items-center gap-3 mt-1.5 text-[9px] text-hydrangea-500">
+            <div className="flex items-center gap-3 mt-1.5 text-[10px] text-hydrangea-500">
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> {t('attendingLabel')}</span>
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-400" /> {t('declinedLabel')}</span>
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-hydrangea-100 border border-hydrangea-200" /> {t('noRespondent')}</span>
@@ -492,12 +500,12 @@ export default function RecentCardSelector({
                   {cardOpened ? (
                     <>
                       <RotateCcw className="w-6 h-6" strokeWidth={2.5} />
-                      <span className="text-[10px] font-semibold tracking-wide">{t('replay')}</span>
+                      <span className="text-[11px] font-semibold tracking-wide">{t('replay')}</span>
                     </>
                   ) : (
                     <>
-                      <span className="text-[9px] font-bold tracking-widest uppercase">Sample</span>
-                      <span className="text-[9px] font-semibold tracking-wide">preview</span>
+                      <span className="text-[10px] font-bold tracking-widest uppercase">Sample</span>
+                      <span className="text-[10px] font-semibold tracking-wide">preview</span>
                     </>
                   )}
                 </button>

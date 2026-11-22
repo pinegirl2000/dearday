@@ -71,7 +71,7 @@ export function ImageUploader({ kind, value, onChange, label, hint }: Props) {
             <X className="w-4 h-4 text-white" />
           </motion.button>
           {previewSize && (
-            <span className="absolute bottom-2 right-2 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur text-[10px] text-white">
+            <span className="absolute bottom-2 right-2 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur text-[11px] text-white">
               {formatBytes(previewSize)}
             </span>
           )}
@@ -168,7 +168,7 @@ export function MultiImageUploader({ onChange, value, max = 9 }: MultiProps) {
             className="aspect-square rounded-xl border-2 border-dashed border-hydrangea-200 bg-hydrangea-50/50 flex flex-col items-center justify-center text-hydrangea-400 disabled:opacity-50"
           >
             {uploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <ImageIcon className="w-5 h-5" />}
-            <span className="text-[10px] mt-1">{uploading ? '업로드' : `${value.length}/${max}`}</span>
+            <span className="text-[11px] mt-1">{uploading ? '업로드' : `${value.length}/${max}`}</span>
           </motion.button>
         )}
       </div>

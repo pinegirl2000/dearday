@@ -15,7 +15,7 @@ export default function BlogIndexPage() {
   const posts = getAllPosts();
 
   return (
-    <PageContainer>
+    <PageContainer size="prose">
       <div className="max-w-2xl mx-auto px-4 py-8">
         <header className="mb-8">
           <h1 className="text-2xl font-serif text-hydrangea-700 mb-2">Blog</h1>
@@ -24,7 +24,7 @@ export default function BlogIndexPage() {
           </p>
         </header>
 
-        <ul className="space-y-4">
+        <ul className="grid gap-4 md:grid-cols-2">
           {posts.map((p) => (
             <li key={p.slug}>
               <Link
@@ -34,7 +34,7 @@ export default function BlogIndexPage() {
                 <div className="flex items-center gap-2 mb-1">
                   <time className="text-[11px] text-hydrangea-400">{fmt(p.publishedAt)}</time>
                   {p.tags.slice(0, 2).map((t) => (
-                    <span key={t} className="text-[10px] px-1.5 py-0.5 rounded-full bg-hydrangea-50 text-hydrangea-500">
+                    <span key={t} className="text-[11px] px-1.5 py-0.5 rounded-full bg-hydrangea-50 text-hydrangea-500">
                       {t}
                     </span>
                   ))}

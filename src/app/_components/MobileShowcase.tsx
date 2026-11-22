@@ -1,4 +1,5 @@
 'use client';
+import { FONT_STACKS } from '@/lib/font-keys';
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -180,7 +181,7 @@ function PhoneFrame({ children }: { children: React.ReactNode }) {
 
 function CardPreview({ sample }: { sample: Sample }) {
   const titleStyle = {
-    fontFamily: "var(--font-cormorant), 'Cormorant Garamond', serif",
+    fontFamily: FONT_STACKS.cormorant,
     fontWeight: 600,
     color: sample.main,
     letterSpacing: '0.04em',
@@ -224,23 +225,23 @@ function CardPreview({ sample }: { sample: Sample }) {
           <img src="/samples/mom-thank.webp" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
         </div>
         {/* subtitle (small serif) */}
-        <p className="text-[9px] tracking-[0.2em] font-medium mb-1" style={{ color: sample.sub, fontFamily: "'Cormorant Garamond', serif" }}>
+        <p className="text-[9px] tracking-[0.2em] font-medium mb-1" style={{ color: sample.sub, fontFamily: FONT_STACKS.cormorant }}>
           {sample.subtitle}
         </p>
         {/* title (script font, large) */}
         <h3 className="mb-2" style={{
-          fontFamily: "'Sacramento', 'Great Vibes', cursive",
+          fontFamily: FONT_STACKS.sacramento,
           fontWeight: 400, fontSize: 30, lineHeight: 1.05,
           color: sample.main, letterSpacing: '0.01em'
         }}>{sample.title}</h3>
         {/* small ✽ divider */}
         <span className="text-[10px] mb-2" style={{ color: sample.main, opacity: 0.6 }}>✽</span>
         {/* body */}
-        <p className="text-[9.5px] whitespace-pre-line mb-3" style={{ color: sample.main, opacity: 0.85, lineHeight: 1.6, fontFamily: "'Cormorant Garamond', serif" }}>
+        <p className="text-[9.5px] whitespace-pre-line mb-3" style={{ color: sample.main, opacity: 0.85, lineHeight: 1.6, fontFamily: FONT_STACKS.cormorant }}>
           {sample.body}
         </p>
         {/* From line — 작은 'from' + 큰 이름 in script. body 바로 아래에 (flex spacer 없음) */}
-        <p style={{ margin: '8px 0 0', lineHeight: 1.2, color: sample.main, fontFamily: "'Sacramento', 'Great Vibes', cursive" }}>
+        <p style={{ margin: '8px 0 0', lineHeight: 1.2, color: sample.main, fontFamily: FONT_STACKS.sacramento }}>
           <span style={{ fontSize: 9, opacity: 0.7, marginRight: 3 }}>from </span>
           <span style={{ fontSize: 17 }}>{sample.host}</span>
         </p>
@@ -403,14 +404,12 @@ export default function MobileShowcase() {
               </motion.div>
             </AnimatePresence>
 
-            {/* sample event chip */}
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+            {/* 🔧 진행 표시 점 — 6px 크기라 터치 대상으로는 부적합. 선택은 오른쪽 이벤트 칩이 담당하므로 순수 표시용으로 전환 */}
+            <div aria-hidden className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 pointer-events-none">
               {SAMPLES.map((s, i) => (
-                <button
+                <span
                   key={s.id}
-                  onClick={() => setIdx(i)}
-                  aria-label={s.event}
-                  className="transition"
+                  className="block transition-all duration-300"
                   style={{
                     width: i === idx ? 18 : 6,
                     height: 6,
@@ -432,7 +431,7 @@ export default function MobileShowcase() {
 
           <h3
             className="text-2xl text-hydrangea-700 mb-3"
-            style={{ fontFamily: "var(--font-cormorant), serif", fontWeight: 600, lineHeight: 1.15 }}
+            style={{ fontFamily: FONT_STACKS.cormorant, fontWeight: 600, lineHeight: 1.15 }}
           >
             Editorial templates,<br />tuned for every event.
           </h3>
@@ -455,22 +454,24 @@ export default function MobileShowcase() {
               >
                 <div
                   className="text-lg leading-none mb-0.5"
-                  style={{ fontFamily: "var(--font-cormorant), serif", fontWeight: 600, color: GOLD }}
+                  style={{ fontFamily: FONT_STACKS.cormorant, fontWeight: 600, color: GOLD }}
                 >
                   {s.num}
                 </div>
-                <div className="text-[9px] tracking-wider uppercase text-hydrangea-400">{s.label}</div>
+                <div className="text-[10px] tracking-wider uppercase text-hydrangea-400">{s.label}</div>
               </div>
             ))}
           </div>
 
           {/* Mini event tags */}
-          <div className="flex flex-wrap gap-1.5 mb-5 justify-center sm:justify-start">
+          {/* 🔧 칩 높이 25px → 40px: 손가락 오탭 방지. aria-pressed 로 현재 선택 상태를 스크린리더에 전달 */}
+          <div className="flex flex-wrap gap-2 mb-5 justify-center sm:justify-start">
             {SAMPLES.map((s, i) => (
               <button
                 key={s.id}
                 onClick={() => setIdx(i)}
-                className={`px-2.5 py-1 rounded-full text-[10px] font-medium transition active:scale-95 ${
+                aria-pressed={i === idx}
+                className={`inline-flex items-center min-h-[40px] px-3 rounded-full text-xs font-medium transition active:scale-95 ${
                   i === idx
                     ? 'bg-hydrangea-700 text-white'
                     : 'bg-white text-hydrangea-600 border border-hydrangea-200/70'
@@ -484,7 +485,7 @@ export default function MobileShowcase() {
 
           <Link
             href="/cards/new"
-            className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-full text-white text-sm font-medium shadow-lg active:scale-95 transition"
+            className="inline-flex items-center justify-center gap-1.5 h-11 px-6 rounded-full text-white text-sm font-medium shadow-lg hover:shadow-xl active:scale-95 transition"
             style={{ background: `linear-gradient(135deg, #5A3D7A 0%, #7B5EA7 60%, ${GOLD} 140%)` }}
           >
             Try this template <ArrowRight className="w-3.5 h-3.5" />

@@ -57,7 +57,7 @@ export async function createCheckoutSession(plan: PlanType): Promise<{ ok: boole
     return { ok: true, url: checkout.url || undefined };
   } catch (e: any) {
     console.error('createCheckoutSession error:', e);
-    return { ok: false, error: e.message || 'Checkout creation failed' };
+    return { ok: false, error: 'Checkout creation failed' };
   }
 }
 
@@ -108,7 +108,9 @@ export async function reserveSlot(
     if (rows.length === 0) return { ok: false, error: 'No available slot' };
     return { ok: true, slotId: rows[0].id };
   } catch (e: any) {
-    return { ok: false, error: e.message };
+    // 원인은 서버 로그로만 — 내부 오류 문구(DB 컬럼명 등)를 사용자에게 노출하지 않음
+    console.error('payment.ts error:', e);
+    return { ok: false, error: 'Something went wrong. Please try again.' };
   }
 }
 
@@ -124,7 +126,9 @@ export async function markSlotSent(slotId: string): Promise<{ ok: boolean; error
     );
     return { ok: true };
   } catch (e: any) {
-    return { ok: false, error: e.message };
+    // 원인은 서버 로그로만 — 내부 오류 문구(DB 컬럼명 등)를 사용자에게 노출하지 않음
+    console.error('payment.ts error:', e);
+    return { ok: false, error: 'Something went wrong. Please try again.' };
   }
 }
 
@@ -162,6 +166,8 @@ export async function reclaimSlot(slotId: string): Promise<{ ok: boolean; error?
     if (rowCount === 0) return { ok: false, error: 'Slot already locked or not found' };
     return { ok: true };
   } catch (e: any) {
-    return { ok: false, error: e.message };
+    // 원인은 서버 로그로만 — 내부 오류 문구(DB 컬럼명 등)를 사용자에게 노출하지 않음
+    console.error('payment.ts error:', e);
+    return { ok: false, error: 'Something went wrong. Please try again.' };
   }
 }

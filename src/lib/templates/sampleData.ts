@@ -3,35 +3,59 @@
 import type { BaseCard, EventType, LayoutId } from '@/types/card';
 import { getTemplateLayouts } from '@/lib/templates';
 
+/** 싱가포르는 UTC+8, 서머타임 없음 */
+const SG_OFFSET_HOURS = 8;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+/**
+ * 샘플 행사 날짜 — 오늘 기준 몇 주 뒤의 특정 요일·시각(싱가포르 시간).
+ * 고정 날짜를 쓰면 시간이 지나 과거가 되고, 날짜를 고치지 않은 카드가 "이미 지난 날짜"로 발행된다.
+ * weekday: 0=일 … 6=토. 결과는 now + weeksAhead주 이후 처음 오는 그 요일.
+ */
+export function upcomingSampleDate(
+  opts: { weeksAhead: number; weekday: number; hour: number; minute?: number },
+  now: Date = new Date()
+): string {
+  // 싱가포르 벽시계 기준으로 요일을 계산하기 위해 +8시간 한 값을 UTC 로 다룬다
+  const sgNow = new Date(now.getTime() + SG_OFFSET_HOURS * 60 * 60 * 1000);
+  const base = Date.UTC(sgNow.getUTCFullYear(), sgNow.getUTCMonth(), sgNow.getUTCDate()) + opts.weeksAhead * 7 * MS_PER_DAY;
+  const daysToWeekday = (opts.weekday - new Date(base).getUTCDay() + 7) % 7;
+  const sgWall = base + daysToWeekday * MS_PER_DAY + (opts.hour * 60 + (opts.minute ?? 0)) * 60 * 1000;
+  let utc = sgWall - SG_OFFSET_HOURS * 60 * 60 * 1000;
+  // 같은 요일의 이른 시각이면 weeksAhead 를 못 채울 수 있어 한 주 미룸
+  if (utc - now.getTime() < opts.weeksAhead * 7 * MS_PER_DAY) utc += 7 * MS_PER_DAY;
+  return new Date(utc).toISOString();
+}
+
 export const SAMPLE_BY_EVENT: Record<string, Partial<BaseCard>> = {
   birthday: {
     title: "Avery's Birthday Party", greeting_oneliner: 'Cheers to another year!',
     body: "Come share laughter, joy, and cake as we celebrate Avery's special day.",
-    event_date: '2026-07-05T11:00:00.000Z', event_place: 'The Lounge function room',
+    event_date: upcomingSampleDate({ weeksAhead: 4, weekday: 6, hour: 19 }), event_place: 'The Lounge function room',
     contact_name: "Love, Avery's Family", contact_phone: '+65-2222-3333'
   },
   baptism: {
     title: "Avery's Baptism Day", greeting_oneliner: 'A blessed first step',
     body: "Please join us as we celebrate\nAvery's baptism in the Lord.",
-    event_date: '2026-05-03T10:30:00.000Z', event_place: 'Grace Church, Main Sanctuary',
+    event_date: upcomingSampleDate({ weeksAhead: 4, weekday: 0, hour: 10, minute: 30 }), event_place: 'Grace Church, Main Sanctuary',
     contact_name: 'Love, David & Rachel', contact_phone: '+65-9999-1111'
   },
   meeting: {
     title: 'Spring Gathering', greeting_oneliner: 'See you again',
     body: "It has been too long.\nLet's gather and catch up.",
-    event_date: '2026-04-12T14:00:00.000Z', event_place: 'Hangang Park, Open Lawn',
+    event_date: upcomingSampleDate({ weeksAhead: 3, weekday: 6, hour: 12 }), event_place: 'Hangang Park, Open Lawn',
     contact_name: 'From the Hosts', contact_phone: '+65-3333-4444'
   },
   opening: {
     title: 'Round Cafe · Grand Opening', greeting_oneliner: 'A new beginning',
     body: "We're excited to open our doors\nand share this moment with you.",
-    event_date: '2026-09-20T17:00:00.000Z', event_place: 'Round Cafe, 1 Orchard Lane',
+    event_date: upcomingSampleDate({ weeksAhead: 3, weekday: 5, hour: 18 }), event_place: 'Round Cafe, 1 Orchard Lane',
     contact_name: 'The Round Cafe Team', contact_phone: '+65-7777-8888'
   },
   etc: {
     title: 'A Special Day', greeting_oneliner: 'A precious moment',
     body: "We'd love for you to share\nthis special moment with us.",
-    event_date: '2026-08-10T18:00:00.000Z', event_place: 'Sample Venue, City',
+    event_date: upcomingSampleDate({ weeksAhead: 4, weekday: 6, hour: 18 }), event_place: 'Sample Venue, City',
     contact_name: 'From the Host', contact_phone: '+65-1000-2000'
   },
   // Thank cards — 날짜/장소 없음, 메시지 중심

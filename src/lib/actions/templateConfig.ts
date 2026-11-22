@@ -6,6 +6,8 @@ import { pool } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { isAdminEmail } from '@/lib/admin';
 import type { LayoutId } from '@/lib/layouts';
+import type { TemplateTypography } from '@/lib/typography';
+import { sanitizeTypography, typographySchema } from '@/lib/typography-schema';
 
 /**
  * 템플릿 설정 override — admin이 코드 default(allowedLayouts)를 덮어씀.
@@ -37,6 +39,8 @@ export interface TemplateColors {
   content_side?: number | null;
   /** 날짜·장소 정보 박스 가로 최대폭(px) */
   box_max_width?: number | null;
+  /** 역할별 글꼴·크기·자간 override — 미지정 시 템플릿 코드 기본값 */
+  typography?: TemplateTypography | null;
 }
 
 /** 카드 배치 override — 배경 이미지에 맞춰 텍스트 시작 위치/카드 크기 조정 */
@@ -114,12 +118,14 @@ export async function getAllTemplateColors(): Promise<Map<string, TemplateColors
   try {
     const { rows } = await pool.query<TemplateColors & { template_id: string }>(
       `SELECT template_id, color_main, color_sub, color_box_text, box_bg_top, box_bg_bottom, color_title_accent, rsvp_button_color,
-              card_max_width, card_min_height, content_top, content_side, box_max_width
+              card_max_width, card_min_height, content_top, content_side, box_max_width, typography
          FROM dearday_template_config`
     );
     const map = new Map<string, TemplateColors>();
     for (const r of rows) {
-      const hasAny = r.color_main || r.color_sub || r.color_box_text || r.box_bg_top || r.box_bg_bottom || r.color_title_accent || r.rsvp_button_color
+      // DB 의 옛·잘못된 값이 화면을 깨지 않도록 속성 단위로 정리
+      const typography = sanitizeTypography(r.typography);
+      const hasAny = !!typography || r.color_main || r.color_sub || r.color_box_text || r.box_bg_top || r.box_bg_bottom || r.color_title_accent || r.rsvp_button_color
         || r.card_max_width != null || r.card_min_height != null || r.content_top != null || r.content_side != null || r.box_max_width != null;
       if (hasAny) {
         map.set(r.template_id, {
@@ -134,7 +140,8 @@ export async function getAllTemplateColors(): Promise<Map<string, TemplateColors
           card_min_height: r.card_min_height ?? null,
           content_top: r.content_top ?? null,
           content_side: r.content_side ?? null,
-          box_max_width: r.box_max_width ?? null
+          box_max_width: r.box_max_width ?? null,
+          typography
         });
       }
     }
@@ -242,6 +249,41 @@ export async function saveTemplateMetrics(
   } catch (e: any) {
     console.error('saveTemplateMetrics error:', e);
     return { ok: false, error: e.message || 'DB 저장 실패' };
+  }
+}
+
+/**
+ * admin: 템플릿 글꼴 override 저장 (upsert).
+ * 발행된 카드도 템플릿 설정을 실시간으로 읽으므로 저장 즉시 이미 보낸 초대장에도 반영된다(의도된 동작).
+ */
+export async function saveTemplateTypography(
+  templateId: string,
+  typography: unknown
+): Promise<{ ok: boolean; error?: string }> {
+  const session = await getServerSession(authOptions);
+  if (!isAdminEmail(session?.user?.email)) {
+    return { ok: false, error: 'Permission denied' };
+  }
+  if (!templateId) return { ok: false, error: 'templateId 누락' };
+  // 저장 경로는 엄격 검증 — 잘못된 값은 저장 자체를 거부해 운영자가 바로 알 수 있게
+  if (typography !== null && !typographySchema.safeParse(typography).success) {
+    return { ok: false, error: '글꼴 설정 값이 올바르지 않습니다' };
+  }
+  const clean = sanitizeTypography(typography);
+  try {
+    await pool.query(
+      `INSERT INTO dearday_template_config (template_id, allowed_layouts, typography, updated_at, updated_by)
+       VALUES ($1, '{}', $2, NOW(), $3)
+       ON CONFLICT (template_id) DO UPDATE SET typography = $2, updated_at = NOW(), updated_by = $3`,
+      [templateId, clean ? JSON.stringify(clean) : null, session?.user?.email || null]
+    );
+    revalidatePath('/admin/templates');
+    revalidatePath('/cards/new');
+    revalidatePath('/i/[slug]', 'page');
+    return { ok: true };
+  } catch (e: unknown) {
+    console.error('saveTemplateTypography error:', e);
+    return { ok: false, error: e instanceof Error ? e.message : 'DB 저장 실패' };
   }
 }
 

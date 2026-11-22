@@ -7,3 +7,11 @@ out
 .DS_Store
 .vercel
 next-env.d.ts
+
+# 원본 글꼴(TTF) — 웹용 변환본은 src/fonts 에 있음. 원본은 용량이 커서 저장소에 넣지 않음
+/fonts/
+# 에이전트 작업 기록(임시)
+.superpowers/
+.playwright-mcp/
+# 화면 검증용 스크린샷(용량 큼)
+docs/superpowers/qa/

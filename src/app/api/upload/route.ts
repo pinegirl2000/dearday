@@ -48,6 +48,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, url: pub.publicUrl, path: filename });
   } catch (e: any) {
     console.error('upload route error:', e);
-    return NextResponse.json({ error: e.message || '업로드 실패' }, { status: 500 });
+    return NextResponse.json({ error: '업로드 실패' }, { status: 500 });
   }
 }

@@ -68,12 +68,12 @@ export default function RsvpDeadlineEditor({ slug, ownerToken, initial, onSaved 
         <span className="text-[11px] text-hydrangea-500">회신 마감</span>
         <span className={`text-[11px] font-semibold ${passed ? 'text-rose-600' : 'text-hydrangea-700'}`}>
           {value ? fmtDeadline(value) : '없음'}
-          {passed && <span className="ml-1 text-[10px] font-medium text-rose-500">(지남)</span>}
+          {passed && <span className="ml-1 text-[11px] font-medium text-rose-500">(지남)</span>}
         </span>
         <button
           type="button"
           onClick={() => { setDraft(toLocalInput(value)); setEditing(true); }}
-          className="ml-auto inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold text-hydrangea-600 border border-hydrangea-200 hover:bg-hydrangea-50 active:scale-95 transition"
+          className="ml-auto inline-flex items-center gap-1 px-2.5 min-h-[36px] rounded-md text-[11px] font-semibold text-hydrangea-600 border border-hydrangea-200 hover:bg-hydrangea-50 active:scale-95 transition"
         >
           <Pencil className="w-3 h-3" /> 수정
         </button>
@@ -95,7 +95,7 @@ export default function RsvpDeadlineEditor({ slug, ownerToken, initial, onSaved 
         type="button"
         disabled={pending || !draft}
         onClick={() => save(draft ? new Date(draft).toISOString() : null)}
-        className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-hydrangea-600 text-white text-[10px] font-semibold hover:bg-hydrangea-700 active:scale-95 transition disabled:opacity-50"
+        className="inline-flex items-center gap-1 px-2.5 min-h-[36px] rounded-md bg-hydrangea-600 text-white text-[11px] font-semibold hover:bg-hydrangea-700 active:scale-95 transition disabled:opacity-50"
       >
         <Check className="w-3 h-3" /> 저장
       </button>
@@ -105,7 +105,7 @@ export default function RsvpDeadlineEditor({ slug, ownerToken, initial, onSaved 
           disabled={pending}
           onClick={() => { if (confirm('회신 마감일을 없앨까요? (마감 없이 계속 응답 가능)')) save(null); }}
           title="마감 없음"
-          className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-rose-200 text-rose-600 text-[10px] font-semibold hover:bg-rose-50 active:scale-95 transition disabled:opacity-50"
+          className="inline-flex items-center gap-1 px-2.5 min-h-[36px] rounded-md border border-rose-200 text-rose-600 text-[11px] font-semibold hover:bg-rose-50 active:scale-95 transition disabled:opacity-50"
         >
           <Trash2 className="w-3 h-3" />
         </button>
@@ -114,7 +114,7 @@ export default function RsvpDeadlineEditor({ slug, ownerToken, initial, onSaved 
         type="button"
         disabled={pending}
         onClick={() => setEditing(false)}
-        className="inline-flex items-center px-2 py-1 rounded-md text-[10px] text-hydrangea-500 hover:bg-hydrangea-50"
+        className="inline-flex items-center px-2.5 min-h-[36px] rounded-md text-[11px] text-hydrangea-500 hover:bg-hydrangea-50"
       >
         <X className="w-3 h-3" />
       </button>

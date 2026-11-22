@@ -30,15 +30,15 @@ export default async function FeedSection({ cardId, theme }: Props) {
       <div className="grid grid-cols-3 gap-2 mb-4">
         <div className="text-center p-3 rounded-xl" style={{ background: theme.colors.bg }}>
           <div className="text-xl font-bold" style={{ color: theme.colors.primary }}>{stats.attending_groups}</div>
-          <div className="text-[10px] mt-0.5" style={{ color: theme.colors.muted }}>{t('attendingGroup')}</div>
+          <div className="text-[11px] mt-0.5" style={{ color: theme.colors.muted }}>{t('attendingGroup')}</div>
         </div>
         <div className="text-center p-3 rounded-xl" style={{ background: theme.colors.bg }}>
           <div className="text-xl font-bold" style={{ color: theme.colors.primary }}>{stats.attending_count}</div>
-          <div className="text-[10px] mt-0.5" style={{ color: theme.colors.muted }}>{t('attendingPeople')}</div>
+          <div className="text-[11px] mt-0.5" style={{ color: theme.colors.muted }}>{t('attendingPeople')}</div>
         </div>
         <div className="text-center p-3 rounded-xl" style={{ background: theme.colors.bg }}>
           <div className="text-xl font-bold" style={{ color: theme.colors.muted }}>{stats.declined}</div>
-          <div className="text-[10px] mt-0.5" style={{ color: theme.colors.muted }}>{t('declined')}</div>
+          <div className="text-[11px] mt-0.5" style={{ color: theme.colors.muted }}>{t('declined')}</div>
         </div>
       </div>
 

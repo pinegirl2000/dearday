@@ -86,7 +86,8 @@ export async function submitRsvp(input: RsvpInput): Promise<RsvpResult> {
     return { ok: true };
   } catch (e: any) {
     console.error('submitRsvp error:', e);
-    return { ok: false, error: e.message || '응답 저장 실패' };
+    // 내부 오류 문구(DB 컬럼명 등)는 손님에게 보여 주지 않음 — 원인은 서버 로그로만 남기고 다시 시도할 수 있는 안내만 반환
+    return { ok: false, error: 'We could not save your reply. Please try again in a moment.' };
   }
 }
 

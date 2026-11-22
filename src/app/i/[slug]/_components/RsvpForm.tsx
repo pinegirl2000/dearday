@@ -168,6 +168,12 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
           <Check className="w-6 h-6 text-white" strokeWidth={3} />
         </div>
         <p className="font-semibold text-base" style={{ color: ACCENT_DEEP }}>{hasExisting ? 'Your reply has been updated!' : 'Thank you for replying!'}</p>
+        {/* 한 번의 탭으로 바로 저장되므로, 무엇으로 답했는지 다시 보여 줘 잘못 누른 경우를 알아챌 수 있게 */}
+        {attend !== null && (
+          <p className="text-sm mt-1.5" style={{ color: ACCENT_DEEP, opacity: 0.85 }}>
+            {attend ? "You replied: I'll be there" : "You replied: Sorry, can't make it"}
+          </p>
+        )}
         {attend && oneliner && (
           <p className="text-sm mt-2" style={{ color: ACCENT_DEEP, opacity: 0.7 }}>Your one-line greeting has been added to the feed</p>
         )}
@@ -198,13 +204,13 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
               status: existingRsvp!.attend ? t('alreadyAttend') : t('alreadyDecline'),
               attend: (chunks) => <span style={{ color: existingRsvp!.attend ? '#059669' : '#e11d48' }}>{chunks}</span>
             })}
-            <span className={compact ? 'block text-[9px] opacity-70 mt-0.5 font-normal' : 'block text-xs opacity-70 mt-0.5 font-normal'}>
+            <span className={compact ? 'block text-[10px] opacity-70 mt-0.5 font-normal' : 'block text-xs opacity-70 mt-0.5 font-normal'}>
               {t('noChange')}
             </span>
           </p>
         )}
         {hasExisting && !locked && (
-          <p className={`mt-1 ${compact ? 'text-[10px]' : 'text-xs'}`} style={{ color: ACCENT_DEEP, opacity: 0.75 }}>
+          <p className={`mt-1 ${compact ? 'text-[11px]' : 'text-xs'}`} style={{ color: ACCENT_DEEP, opacity: 0.75 }}>
             ✓ You already replied — edit and resubmit to update
           </p>
         )}
@@ -220,7 +226,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
           const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
           const timeStr = hasTime ? `${h12}:${String(d.getMinutes()).padStart(2, '0')}${ampm}` : '';
           return (
-            <p className={`mt-1 ${compact ? 'text-[10px]' : 'text-xs'}`} style={{ color: theme.colors.muted, opacity: 0.85 }}>
+            <p className={`mt-1 ${compact ? 'text-[11px]' : 'text-xs'}`} style={{ color: theme.colors.muted, opacity: 0.85 }}>
               Reply by {dateStr}{hasTime ? ` ${timeStr}` : ''}
             </p>
           );
@@ -234,7 +240,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
             whileTap={{ scale: 0.96 }}
             onClick={() => { setAttend(true); if (max <= 1) handleSubmit(true); }}
             disabled={pending || locked}
-            className="min-h-[34px] text-xs rounded-lg border font-medium transition flex items-center justify-center gap-1 disabled:opacity-50"
+            className="min-h-[44px] text-sm rounded-lg border font-medium transition flex items-center justify-center gap-1 disabled:opacity-50"
             style={{
               background: ACCENT,
               color: '#fff',
@@ -251,7 +257,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
             whileTap={{ scale: 0.96 }}
             onClick={() => { setAttend(false); if (max <= 1) handleSubmit(false); }}
             disabled={pending || locked}
-            className="min-h-[34px] text-xs rounded-lg border font-medium transition flex items-center justify-center gap-1 disabled:opacity-50"
+            className="min-h-[44px] text-sm rounded-lg border font-medium transition flex items-center justify-center gap-1 disabled:opacity-50"
             style={{
               background: ACCENT_DEEP,
               color: '#fff',
@@ -267,7 +273,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
           {attend === true && max > 1 && (
             <div className="min-h-[34px] rounded-lg border flex items-center justify-between gap-1 px-1.5"
               style={{ borderColor: ACCENT, background: ACCENT_SOFT }}>
-              <span className="text-[10px] font-medium shrink-0" style={{ color: ACCENT_DEEP }}>{L.pax}</span>
+              <span className="text-[11px] font-medium shrink-0" style={{ color: ACCENT_DEEP }}>{L.pax}</span>
               <button
                 type="button"
                 onClick={() => adjustCount(-1)}
@@ -368,7 +374,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
                 {Array.from({ length: count }).map((_, i) => (
                   <label key={i} className="flex flex-col gap-0.5 min-w-0">
                     <span
-                      className={`${compact ? 'text-[10px]' : 'text-[11px]'} font-medium`}
+                      className={`${compact ? 'text-[11px]' : 'text-[11px]'} font-medium`}
                       style={{ color: theme.colors.deep, opacity: 0.8 }}
                     >
                       attendee#{i + 1}

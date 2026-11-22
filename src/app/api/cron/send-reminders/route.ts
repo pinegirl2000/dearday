@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import webpush from 'web-push';
 import { pool } from '@/lib/db';
+import { buildReminderEmail, buildReminderPush, reminderChannels } from '@/lib/reminder-message';
 
 // Web Push VAPID 설정 (env vars 있을 때만 유효)
 const VAPID_PUB = process.env.VAPID_PUBLIC_KEY;
@@ -17,87 +18,9 @@ if (VAPID_PUB && VAPID_PRIV) {
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
+// 문구·발송 경로는 등록 화면 미리보기와 같은 공유 모듈을 쓴다 — 미리보기와 실제가 달라지지 않게
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'reminders@dearday.sg';
 const FROM_NAME = process.env.RESEND_FROM_NAME || 'DearDay';
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://dearday.sg';
-
-interface EmailCopy {
-  subjectFmt: (name: string, occasion: string, daysText: string) => string;
-  heading: (name: string, occasion: string, daysText: string) => string;
-  intro: string;
-  cta: string;
-  footer: string;
-  daysToText: (n: number) => string;
-}
-
-const COPY: Record<'en' | 'ko', EmailCopy> = {
-  en: {
-    subjectFmt: (n, o, d) => `🎂 ${n}'s ${o} ${d}`,
-    heading:    (n, o, d) => `${n}'s ${o} is ${d}`,
-    intro:      "A heartfelt card takes only 30 seconds.<br>Tap below to make one — we'll have everything ready.",
-    cta:        '💝 Make a card',
-    footer:     "You're receiving this because you registered a reminder on DearDay.",
-    daysToText: (n) => (n === 0 ? 'is today' : n === 1 ? 'is tomorrow' : `in ${n} days`)
-  },
-  ko: {
-    subjectFmt: (n, o, d) => `🎂 ${n}님의 ${o} ${d}`,
-    heading:    (n, o, d) => `${n}님의 ${o}이 ${d}`,
-    intro:      '마음을 담은 카드, 30초면 완성돼요.<br>아래 버튼으로 시작하면 미리 준비해 둘게요.',
-    cta:        '💝 카드 만들기',
-    footer:     'DearDay에 기념일 알림을 등록해 두셔서 이 메일을 받으셨습니다.',
-    daysToText: (n) => (n === 0 ? '오늘이에요' : n === 1 ? '내일이에요' : `${n}일 남았어요`)
-  }
-};
-
-const OCCASION_LABEL_BY_LOCALE: Record<string, { en: string; ko: string }> = {
-  'birthday':              { en: 'Birthday',            ko: '생일' },
-  'mothers-day':           { en: "Mother's Day",        ko: '어머니의 날' },
-  'fathers-day':           { en: "Father's Day",        ko: '아버지의 날' },
-  'wedding-anniversary':   { en: 'Wedding Anniversary', ko: '결혼기념일' },
-  'graduation':            { en: 'Graduation',          ko: '졸업' }
-};
-
-function buildEmailHtml(
-  locale: 'en' | 'ko',
-  personName: string,
-  occasionLabel: string,
-  occasionEmoji: string,
-  daysAway: number,
-  occasionId: string
-): { subject: string; html: string } {
-  const c = COPY[locale];
-  const daysText = c.daysToText(daysAway);
-  const cardUrl = `${BASE_URL}/cards/new?type=${occasionId}`;
-  const subject = c.subjectFmt(personName, occasionLabel, daysText);
-  const html = `<!DOCTYPE html>
-<html><body style="margin:0;padding:0;background:#f5f1fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f1fa;padding:40px 20px;">
-    <tr><td align="center">
-      <table width="480" cellpadding="0" cellspacing="0" style="background:white;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(123,94,167,0.1);">
-        <tr><td style="padding:36px 32px;text-align:center;">
-          <div style="font-size:48px;margin-bottom:8px;">${occasionEmoji}</div>
-          <h1 style="margin:0 0 8px;font-size:22px;color:#5A3D7A;font-weight:600;">
-            ${c.heading(personName, occasionLabel, daysText)}
-          </h1>
-          <p style="margin:0 0 24px;font-size:14px;color:#8B7A9E;line-height:1.6;">
-            ${c.intro}
-          </p>
-          <a href="${cardUrl}" style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#7B5EA7,#5A3D7A);color:white;text-decoration:none;border-radius:999px;font-size:14px;font-weight:600;">
-            ${c.cta}
-          </a>
-          <p style="margin:32px 0 0;font-size:11px;color:#B8AABE;line-height:1.5;">
-            ${c.footer}<br>
-            <a href="${BASE_URL}/reminders" style="color:#7B5EA7;">dearday.sg/reminders</a>
-          </p>
-        </td></tr>
-      </table>
-    </td></tr>
-  </table>
-</body></html>`;
-  return { subject, html };
-}
 
 export async function GET(req: NextRequest) {
   // 보안 — Vercel Cron의 Authorization header
@@ -124,6 +47,7 @@ export async function GET(req: NextRequest) {
       reminder_id: string;
       user_email: string | null;
       user_locale: string | null;
+      email_opt_in: boolean | null;
       push_subscription: any;
       person_name: string;
       occasion: string;
@@ -134,6 +58,7 @@ export async function GET(req: NextRequest) {
       last_notified_year: number | null;
     }>(`
       SELECT r.id AS reminder_id, u.email AS user_email, u.preferred_locale AS user_locale,
+             u.reminder_email_opt_in AS email_opt_in,
              u.reminder_push_subscription AS push_subscription,
              r.person_name, r.occasion, r.occasion_label,
              r.event_month, r.event_day, r.notify_days_before, r.last_notified_year
@@ -142,11 +67,6 @@ export async function GET(req: NextRequest) {
       WHERE r.email_enabled = true
         AND (u.reminder_email_opt_in = true OR u.reminder_push_subscription IS NOT NULL)
     `);
-
-    const occasionEmoji: Record<string, string> = {
-      'birthday': '🎂', 'mothers-day': '💝', 'fathers-day': '💙',
-      'wedding-anniversary': '💑', 'graduation': '🎓'
-    };
 
     let emailCount = 0;
     let pushCount = 0;
@@ -165,17 +85,15 @@ export async function GET(req: NextRequest) {
       if (r.last_notified_year === targetYear) continue;
 
       const locale: 'en' | 'ko' = (r.user_locale === 'ko' ? 'ko' : 'en');
-      const localeLabels = OCCASION_LABEL_BY_LOCALE[r.occasion];
-      const occasionLabel = localeLabels
-        ? localeLabels[locale]
-        : (r.occasion_label || (locale === 'ko' ? '특별한 날' : 'Special day'));
-      const emoji = occasionEmoji[r.occasion] || '📅';
+      const msgInput = { locale, personName: r.person_name, occasion: r.occasion, occasionLabel: r.occasion_label, daysAway };
+      // 이메일은 수신 동의한 사용자에게만 — 예전에는 동의를 꺼도 주소가 있으면 보냈음
+      const channels = reminderChannels({ emailOptIn: !!r.email_opt_in, hasEmail: !!r.user_email, pushSubscribed: !!r.push_subscription });
 
       let anySent = false;
 
       // (A) 이메일 — opt-in + email 있는 경우
-      if (r.user_email) {
-        const { subject, html } = buildEmailHtml(locale, r.person_name, occasionLabel, emoji, daysAway, r.occasion);
+      if (channels.email && r.user_email) {
+        const { subject, html } = buildReminderEmail(msgInput);
         try {
           await resend.emails.send({
             from: `${FROM_NAME} <${FROM_EMAIL}>`,
@@ -191,19 +109,18 @@ export async function GET(req: NextRequest) {
       }
 
       // (B) Web Push — subscription 있는 경우
-      if (r.push_subscription && VAPID_PUB && VAPID_PRIV) {
+      if (channels.push && VAPID_PUB && VAPID_PRIV) {
         try {
           const sub = typeof r.push_subscription === 'string'
             ? JSON.parse(r.push_subscription)
             : r.push_subscription;
-          const c = COPY[locale];
-          const daysText = c.daysToText(daysAway);
+          const push = buildReminderPush(msgInput);
           const pushPayload = JSON.stringify({
-            title: c.heading(r.person_name, occasionLabel, daysText),
-            body: locale === 'ko' ? '카드 만들러 가기 💝' : 'Tap to make a card 💝',
+            title: push.title,
+            body: push.body,
             icon: '/icon-192.png',
             tag: `reminder-${r.reminder_id}`,
-            data: { url: `/cards/new?type=${r.occasion}` }
+            data: { url: new URL(push.url).pathname + new URL(push.url).search }
           });
           await webpush.sendNotification(sub, pushPayload);
           pushCount++;

@@ -27,13 +27,14 @@ export default async function RemindersPage() {
     );
   }
 
+  // 등록 폼 옆에 알림 미리보기를 나란히 두기 위해 데스크톱에서는 넓은 폭(editor)
   const [reminders, optIn] = await Promise.all([
     listReminders(),
     getReminderOptIn()
   ]);
 
   return (
-    <PageContainer noPadding>
+    <PageContainer noPadding size="editor">
       <MobileHeader title="Reminders" back />
       <RemindersClient initialReminders={reminders} initialOptIn={optIn} />
     </PageContainer>

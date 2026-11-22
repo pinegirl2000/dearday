@@ -1,3 +1,4 @@
+import { FONT_STACKS } from '@/lib/font-keys';
 // 레이아웃: 텍스트 위치/스타일 정의 (배경과 독립)
 
 import type { ThemeMeta } from '@/lib/theme';
@@ -87,7 +88,7 @@ export function templateToTheme(t: LayoutMeta): Partial<ThemeMeta> {
       ink: t.fields.body?.color || '#333',
       muted: t.fields.subtitle?.color || '#888'
     },
-    fontFamily: t.fields.title.fontFamily || "'Noto Serif KR', serif"
+    fontFamily: t.fields.title.fontFamily || FONT_STACKS.notoSerif
   } as Partial<ThemeMeta>;
 }
 
