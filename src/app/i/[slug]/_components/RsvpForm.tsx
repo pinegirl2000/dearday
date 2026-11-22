@@ -9,6 +9,7 @@ import { submitRsvp } from '@/lib/actions/submitRsvp';
 import type { MyRsvp } from '@/lib/actions/submitRsvp';
 import type { ThemeMeta } from '@/lib/theme';
 import type { BaseCard } from '@/types/card';
+import { readableTextOn } from '@/lib/color-contrast';
 import { findTemplateByPair } from '@/lib/templates';
 
 interface Props {
@@ -79,6 +80,9 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
   const ACCENT = templateColorOverride?.color_main || tpl?.colorMain || envPalette.primary;        // 텍스트/이름/Reply 버튼 배경
   const ACCENT_SOFT = templateColorOverride?.rsvp_button_color || templateColorOverride?.color_sub || tpl?.colorSub || envPalette.soft;       // Attend/Decline 버튼 배경
   const ACCENT_DEEP = templateColorOverride?.color_main || tpl?.colorMain || envPalette.deep;       // 텍스트 진한 색상
+  // 버튼 글자색은 바탕에 맞춰 — 금색처럼 밝은 템플릿 색 위에서 흰 글자가 사라지던 문제
+  const ON_ACCENT = readableTextOn(ACCENT);
+  const ON_ACCENT_DEEP = readableTextOn(ACCENT_DEEP);
 
   const adjustAdult = (delta: number) => {
     const next = Math.max(0, Math.min(max - childCount, adultCount + delta));
@@ -164,8 +168,8 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
         animate={{ opacity: 1, scale: 1 }}
         className="p-4 text-center"
       >
-        <div className="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center" style={{ background: ACCENT }}>
-          <Check className="w-6 h-6 text-white" strokeWidth={3} />
+        <div className="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center" style={{ background: ACCENT, color: ON_ACCENT }}>
+          <Check className="w-6 h-6" strokeWidth={3} />
         </div>
         <p className="font-semibold text-base" style={{ color: ACCENT_DEEP }}>{hasExisting ? 'Your reply has been updated!' : 'Thank you for replying!'}</p>
         {/* 한 번의 탭으로 바로 저장되므로, 무엇으로 답했는지 다시 보여 줘 잘못 누른 경우를 알아챌 수 있게 */}
@@ -226,7 +230,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
           const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
           const timeStr = hasTime ? `${h12}:${String(d.getMinutes()).padStart(2, '0')}${ampm}` : '';
           return (
-            <p className={`mt-1 ${compact ? 'text-[11px]' : 'text-xs'}`} style={{ color: theme.colors.muted, opacity: 0.85 }}>
+            <p className={`mt-1 ${compact ? 'text-[11px]' : 'text-xs'}`} style={{ color: ACCENT_DEEP, opacity: 0.9 }}>
               Reply by {dateStr}{hasTime ? ` ${timeStr}` : ''}
             </p>
           );
@@ -243,7 +247,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
             className="min-h-[44px] text-sm rounded-lg border font-medium transition flex items-center justify-center gap-1 disabled:opacity-50"
             style={{
               background: ACCENT,
-              color: '#fff',
+              color: ON_ACCENT,
               borderColor: attend === true ? '#fff' : ACCENT_SOFT,
               borderWidth: attend === true ? 2 : 1,
               opacity: attend === null ? 1 : (attend === true ? 1 : 0.45),
@@ -260,7 +264,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
             className="min-h-[44px] text-sm rounded-lg border font-medium transition flex items-center justify-center gap-1 disabled:opacity-50"
             style={{
               background: ACCENT_DEEP,
-              color: '#fff',
+              color: ON_ACCENT_DEEP,
               borderColor: attend === false ? '#fff' : ACCENT_SOFT,
               borderWidth: attend === false ? 2 : 1,
               opacity: attend === null ? 1 : (attend === false ? 1 : 0.45),
@@ -305,7 +309,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
             className="min-h-[52px] rounded-xl border font-medium transition flex items-center justify-center gap-2 disabled:opacity-50"
             style={{
               background: ACCENT,
-              color: '#fff',
+              color: ON_ACCENT,
               borderColor: attend === true ? '#fff' : ACCENT_SOFT,
               borderWidth: attend === true ? 2 : 1,
               opacity: attend === null ? 1 : (attend === true ? 1 : 0.45),
@@ -322,7 +326,7 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
             className="min-h-[52px] rounded-xl border font-medium transition flex items-center justify-center gap-2 disabled:opacity-50"
             style={{
               background: ACCENT_DEEP,
-              color: '#fff',
+              color: ON_ACCENT_DEEP,
               borderColor: attend === false ? '#fff' : ACCENT_SOFT,
               borderWidth: attend === false ? 2 : 1,
               opacity: attend === null ? 1 : (attend === false ? 1 : 0.45),
@@ -406,10 +410,10 @@ export default function RsvpForm({ card, theme, recipientId, recipientName, exis
           whileTap={{ scale: 0.97 }}
           onClick={() => handleSubmit()}
           disabled={pending}
-          className={`w-full font-semibold text-white shadow disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1 ${compact ? 'min-h-[34px] text-xs rounded-lg' : 'min-h-[52px] text-base rounded-xl'}`}
+          className={`w-full font-semibold shadow disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1 ${compact ? 'min-h-[34px] text-xs rounded-lg' : 'min-h-[52px] text-base rounded-xl'}`}
           // Attend/Decline 버튼 행과 같은 폭 — 카드 전체 폭으로 늘어나 프레임을 넘지 않도록
           // 위 버튼 행보다 좁게 — 카드 폭을 가로지르지 않도록
-          style={{ background: ACCENT, maxWidth: compact ? 150 : 200, marginLeft: 'auto', marginRight: 'auto' }}
+          style={{ background: ACCENT, color: ON_ACCENT, maxWidth: compact ? 150 : 200, marginLeft: 'auto', marginRight: 'auto' }}
         >
           {pending ? L.sending : (<><Heart className={compact ? 'w-3 h-3' : 'w-4 h-4'} /> {hasExisting ? L.update : L.submit}</>)}
         </motion.button>

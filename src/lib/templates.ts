@@ -526,7 +526,7 @@ export const TEMPLATES: TemplateMeta[] = [
     // 아치형 프레임 안에 텍스트가 정확히 들어가는 2종만 허용
     allowedLayouts: ['layout-classic'] // 표지+내용 면 구조 전용 — 보조 레이아웃은 그림과 글이 겹쳐 제외
   },
-  // ── 코드로 그린 새 템플릿 (글 영역을 처음부터 비워 둔 디자인) — 공개 전 검토용으로 draft ──
+  // ── 코드로 그린 새 템플릿 (글 영역을 처음부터 비워 둔 디자인) — 2026-11-22 공개 ──
   {
     id: 'tpl-botanical-arch',
     typography: TYPO.elegant,
@@ -537,8 +537,7 @@ export const TEMPLATES: TemplateMeta[] = [
     colorMain: '#55705A',
     colorSub: '#7C9878',
     recommendEvents: ['meeting', 'baptism', 'etc'],
-    allowedLayouts: ['layout-classic'],
-    draft: true
+    allowedLayouts: ['layout-classic']
   },
   {
     id: 'tpl-confetti-party',
@@ -550,8 +549,7 @@ export const TEMPLATES: TemplateMeta[] = [
     colorMain: '#6B5B95',
     colorSub: '#8C7FB0',
     recommendEvents: ['birthday', 'meeting', 'etc'],
-    allowedLayouts: ['layout-classic'],
-    draft: true
+    allowedLayouts: ['layout-classic']
   },
   {
     id: 'tpl-lunar-red-gold',
@@ -563,8 +561,7 @@ export const TEMPLATES: TemplateMeta[] = [
     colorMain: '#F1D58E',
     colorSub: '#F6E6B8',
     recommendEvents: ['meeting', 'opening', 'etc'],
-    allowedLayouts: ['layout-classic'],
-    draft: true
+    allowedLayouts: ['layout-classic']
   }
 ];
 
