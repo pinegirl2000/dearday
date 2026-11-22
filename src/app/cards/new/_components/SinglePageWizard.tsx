@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { useSession, signIn } from 'next-auth/react';
 import { Check, ChevronDown, ChevronUp, Minus, Plus, Sparkles, Calendar, RotateCcw, Copy } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
+import { imgUrl } from '@/lib/imgUrl';
 import { PhraseSuggestions } from '@/components/cards/phrase-suggestions';
 import { MobileHeader } from '@/components/layout/MobileHeader';
 import { Input, Textarea, Button, PhoneInput } from '@/components/ui';
@@ -122,7 +123,7 @@ function SectionShell({ id, title, summary, open, done, enabled, onToggle, child
   // 닫힌 섹션은 렌더하지 않음 — 상단 탭바가 네비게이션 담당
   if (!open) return null;
   return (
-    <section className="rounded-2xl border border-hydrangea-100 bg-white overflow-hidden">
+    <section className="border-y sm:border sm:rounded-2xl border-hydrangea-100 bg-white overflow-hidden">
       {/* 활성 섹션 헤더 — 상단 탭바와 동일한 보라색으로 일관성 강조 */}
       <div className="w-full flex items-center gap-3 p-4 text-left bg-hydrangea-500 text-white">
         <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 bg-white/25">
@@ -151,7 +152,7 @@ function SectionShell({ id, title, summary, open, done, enabled, onToggle, child
         transition={{ duration: 0.2 }}
         className="overflow-hidden"
       >
-        <div className="p-4">{children}</div>
+        <div className="px-3 py-4 sm:p-4">{children}</div>
       </motion.div>
     </section>
   );
@@ -654,7 +655,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
   };
 
   return (
-    <PageContainer noPadding>
+    <PageContainer noPadding size="editor">
       <MobileHeader title={isEditMode ? 'Edit Invitation' : t('headerTitle')} back />
 
       {/* thank_* 상단 사진 업로드용 hidden input — 카드 미리보기의 원형 placeholder 클릭으로 트리거 */}
@@ -727,7 +728,8 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
         </div>
       </div>
 
-      <div className="px-4 py-4 space-y-3 pb-24">
+      {/* 휴대폰에선 좌우 여백 없이(섹션이 화면 끝까지) — 겹겹의 여백 때문에 카드 미리보기가 322px 로 줄던 문제 */}
+      <div className="px-0 sm:px-4 py-3 sm:py-4 space-y-3 pb-24">
         {/* 1. 이벤트 선택 */}
         <SectionShell
           id={1}
@@ -780,14 +782,14 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                           setEventType(e.id as EventType);
                           setDraft({ bg_id: undefined, layout_id: undefined } as any);
                         }}
-                        className={`relative flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 rounded-lg transition min-w-0 ${
+                        className={`relative flex flex-col items-center justify-center gap-1 px-1 py-2 min-h-[56px] rounded-lg transition min-w-0 ${
                           selected
                             ? 'bg-white text-hydrangea-700 border-2 border-hydrangea-500 font-semibold'
                             : 'bg-white text-hydrangea-700 border border-hydrangea-100 active:bg-hydrangea-50'
                         }`}
                       >
                         <span className="text-base leading-none">{e.emoji}</span>
-                        <span className="text-[10px] font-medium tracking-tight truncate max-w-full">{displayLabel}</span>
+                        <span className="text-[11px] font-medium tracking-tight leading-tight text-center line-clamp-2 max-w-full">{displayLabel}</span>
                         {selected && (
                           <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-hydrangea-500 border border-white flex items-center justify-center shadow-sm">
                             <Check className="w-2.5 h-2.5 text-white" strokeWidth={3.5} />
@@ -806,7 +808,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                           <span>📅</span><span>Invitation</span>
                           <span className="text-[10px] text-hydrangea-400 font-normal normal-case tracking-normal">{t('withDate')}</span>
                         </div>
-                        <div className="grid grid-cols-6 gap-1">
+                        <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-1.5">
                           {invitationEvents.map(renderEventBtn)}
                         </div>
                       </div>
@@ -816,7 +818,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                             <span>💌</span><span>Thank Card</span>
                             <span className="text-[10px] text-hydrangea-400 font-normal normal-case tracking-normal">{t('thanks')}</span>
                           </div>
-                          <div className="grid grid-cols-6 gap-1">
+                          <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-1.5">
                             {thankEvents.map(renderEventBtn)}
                           </div>
                         </div>
@@ -827,7 +829,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                             <span>🎉</span><span>Congrats</span>
                             <span className="text-[10px] text-hydrangea-400 font-normal normal-case tracking-normal">{t('congratsLabel')}</span>
                           </div>
-                          <div className="grid grid-cols-6 gap-1">
+                          <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-1.5">
                             {congratsEvents.map(renderEventBtn)}
                           </div>
                         </div>
@@ -846,7 +848,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                       {t('noTemplates')}
                     </div>
                   ) : (
-                    <div className="grid grid-cols-5 gap-1.5">
+                    <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-6 gap-2">
                       {tpls.map((t) => {
                         const bg = getBackground(t.bg_id);
                         // 카드의 layout_id가 template의 default와 다를 수 있음 (allowed_layouts 중 다른 것 선택)
@@ -866,7 +868,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
                             {/* 템플릿 이미지 — 3:4 비율 */}
                             <div className="relative w-full aspect-[3/4]">
                               {bg.imageUrl ? (
-                                <img src={bg.imageUrl} alt={t.name} className="absolute inset-0 w-full h-full object-cover" />
+                                <img src={imgUrl(bg.imageUrl)} alt={t.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
                               ) : (
                                 <div className="absolute inset-0" style={{ background: bg.gradient }} />
                               )}
@@ -1040,7 +1042,9 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
             };
             const nextEmptyNo = fieldsOrder.find((f) => isEmpty(f.key))?.no;
             return (
-          <div className="space-y-4 mt-2">
+          // 넓은 화면(lg)에서는 2단: 위쪽 안내·레이아웃 선택은 전체 폭, 그 아래 왼쪽=카드 미리보기 / 오른쪽=RSVP 설정·다음 버튼.
+          // DOM 순서는 그대로 두고 열만 지정 — 모바일의 위→아래 순서를 유지하기 위함
+          <div className="space-y-4 mt-2 lg:space-y-0 lg:grid lg:grid-cols-[minmax(0,440px)_minmax(0,1fr)] lg:gap-x-8 lg:gap-y-4 lg:items-start lg:[&>*]:col-span-2">
             {/* Sample 선택 — 상단 토글로 최대 3개 노출. 클릭 시 해당 sample data로 draft 적용 */}
             {availableSamples.length > 0 && (() => {
               const samplesToShow = availableSamples.slice(0, 3);
@@ -1153,7 +1157,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
               </div>
             </div>
             {/* 선택한 템플릿 미리보기 + 번호 가이드 오버레이 (카드 내부 좌표계 사용) */}
-            <div ref={previewWrapRef} className="rounded-2xl overflow-hidden border border-hydrangea-100">
+            <div ref={previewWrapRef} className="rounded-2xl overflow-hidden border border-hydrangea-100 lg:!col-span-1 lg:col-start-1">
               <TemplateCard
                 card={previewCard}
                 recipientName="John"
@@ -1291,6 +1295,8 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
               />
             </div>
 
+            {/* 카드 옆(넓은 화면) 또는 카드 아래(휴대폰)에 놓이는 설정 묶음 */}
+            <div className="space-y-4 lg:!col-span-1 lg:col-start-2">
             {layoutHasPhoto(draft.layout_id) && (
               <div className="pt-3 border-t border-hydrangea-100/60">
                 <h4 className="text-xs font-semibold text-hydrangea-700 mb-2">{t('topPhotoTitle')}</h4>
@@ -1403,6 +1409,7 @@ export default function SinglePageWizard({ skipRehydrate, initialOpen, templateC
             {!detailsCanProceed && (
               <p className="text-xs text-hydrangea-400 text-center">All fields marked with * are required</p>
             )}
+            </div>
           </div>
             );
           })()}
